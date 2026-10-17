@@ -1,0 +1,1453 @@
+<!doctype html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Tuxedo Tail</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&family=DM+Mono:wght@500&display=swap">
+<style>
+/* Layout: a full-bleed sunlit room in 3D; a paper name-tag top-left holds the stats, a stroke meter docks bottom-center */
+:root {
+  --wall: #b9cbc2;
+  --ink: #27231f;
+  --paper: #fbf5e8;
+  --paper-edge: #e3d5b8;
+  --mustard: #e0ad3a;
+  --rose: #d4485f;
+  --muted: #6f665a;
+  --display: "Baloo 2", "Trebuchet MS", sans-serif;
+  --body: "Nunito", system-ui, -apple-system, sans-serif;
+  --mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--wall);
+  color: var(--ink);
+  font-family: var(--body);
+  overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-user-select: none; user-select: none;
+}
+html.hand-cursor, html.hand-cursor * { cursor: none !important; }
+
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+/* ---------- name tag ---------- */
+.tag {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: max(16px, env(safe-area-inset-left, 0px));
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 12px 16px 14px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  max-width: calc(100vw - 32px);
+}
+.tag h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.tag h1 small {
+  display: block;
+  font-family: var(--body);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.stats { display: flex; gap: 20px; margin: 0; }
+.stats div { display: grid; gap: 2px; }
+.stats dt { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.stats dd { margin: 0; font-family: var(--mono); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.ladder {
+  margin: -2px 0 0;
+  max-width: 26ch;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--muted);
+  text-wrap: balance;
+}
+.ladder b { color: var(--ink); font-weight: 800; }
+.buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.buttons button {
+  font: 700 0.8rem var(--body);
+  color: var(--ink);
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.buttons button:hover { background: var(--mustard); }
+.buttons button:focus-visible { outline: 3px solid var(--rose); outline-offset: 2px; }
+#reset.armed { background: var(--rose); color: var(--paper); border-color: var(--rose); }
+
+/* ---------- stroke meter ---------- */
+.meter {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 32px));
+  display: grid;
+  gap: 6px;
+  pointer-events: none;
+}
+.track {
+  position: relative;
+  height: 14px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.fill {
+  position: absolute; inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--mustard);
+  transition: width 90ms linear, background-color 200ms;
+}
+.fill.done { background: var(--rose); }
+.tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .35; }
+.labels {
+  display: grid;
+  grid-template-columns: 15fr 35fr 50fr;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink);
+}
+.labels span:last-child { text-align: right; }
+#hint {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  padding: 6px 12px;
+  justify-self: center;
+  text-wrap: balance;
+}
+
+/* ---------- toast ---------- */
+#toast {
+  position: fixed;
+  top: 22%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  color: var(--paper);
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 3px 3px 0 var(--ink);
+  pointer-events: none;
+  opacity: 0;
+  white-space: nowrap;
+}
+#toast.show { animation: pop 1.6s ease-out forwards; }
+#toast.milestone { font-size: clamp(1.7rem, 5.4vw, 2.9rem); white-space: normal; width: min(90vw, 18em); text-align: center; text-wrap: balance; }
+#toast.milestone.show { animation-duration: 2.8s; }
+@keyframes pop {
+  0% { opacity: 0; transform: translate(-50%, 16px) scale(.8); }
+  15% { opacity: 1; transform: translate(-50%, 0) scale(1.06); }
+  25% { transform: translate(-50%, 0) scale(1); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -24px) scale(1); }
+}
+
+/* ---------- hand cursor ---------- */
+#hand {
+  position: fixed; left: 0; top: 0;
+  width: 60px; height: 60px;
+  pointer-events: none;
+  z-index: 10;
+  will-change: transform;
+}
+#hand[hidden] { display: none !important; }
+#hand svg {
+  width: 100%; height: 100%;
+  transform-origin: 50% 62%;
+  transition: transform 140ms ease-out;
+  filter: drop-shadow(2px 3px 0 rgba(39, 35, 31, .25));
+}
+#hand.over svg { transform: rotate(-14deg) scale(1.04); }
+#hand.press svg { transform: rotate(-8deg) scale(.9, .84); }
+#hand.over.press svg { transform: rotate(-16deg) scale(.92, .86); }
+
+@media (max-width: 480px) {
+  .tag { padding: 10px 12px 12px; gap: 8px; }
+  .tag h1 { font-size: 1.4rem; }
+  .stats dd { font-size: 1.05rem; }
+  #hint { font-size: 0.85rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #toast.show { animation-duration: 2.2s; }
+  #hand svg { transition: none; }
+}
+</style>
+
+<canvas id="scene" aria-label="A 3D tuxedo cat standing on a rug. Stroke it from head to tail tip to grow its tail."></canvas>
+
+<header class="tag">
+  <h1>Tuxedo Tail <small>Pet from nose to tail tip</small></h1>
+  <dl class="stats">
+    <div><dt>Strokes</dt><dd id="strokes">0</dd></div>
+    <div><dt>Tail</dt><dd id="length">28 cm</dd></div>
+  </dl>
+  <p class="ladder" id="ladder">Next up: a ruler, 30 cm</p>
+  <div class="buttons">
+    <button id="sound" type="button" aria-pressed="true">Purr: on</button>
+    <button id="reset" type="button">Reset tail</button>
+  </div>
+</header>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div class="meter" aria-hidden="true">
+  <div class="labels"><span>Head</span><span>Back</span><span>Tail tip</span></div>
+  <div class="track">
+    <div class="fill" id="fill"></div>
+    <span class="tick" style="left:15%"></span>
+    <span class="tick" style="left:50%"></span>
+  </div>
+  <p id="hint">Stroke from the head, along the back, to the very tip of the tail.</p>
+</div>
+
+<div id="hand" hidden aria-hidden="true">
+  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="enamel" x1="0.2" y1="0" x2="0.8" y2="1">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset="0.55" stop-color="#f6f5f1"/>
+        <stop offset="1" stop-color="#dfe1e6"/>
+      </linearGradient>
+    </defs>
+    <g fill="url(#enamel)" stroke="#27231f" stroke-width="2.6" stroke-linejoin="round">
+      <rect x="5" y="31" width="9" height="20" rx="4.5" transform="rotate(-48 9.5 41)"/>
+      <rect x="14.5" y="10" width="8.5" height="24" rx="4.25" transform="rotate(-12 18.75 30)"/>
+      <rect x="23.5" y="4.5" width="8.8" height="28" rx="4.4"/>
+      <rect x="32.8" y="6" width="8.8" height="27" rx="4.4"/>
+      <rect x="41.8" y="11" width="8.2" height="23" rx="4.1" transform="rotate(12 45.9 30)"/>
+      <path d="M14 30 Q14 26 18.5 26 L46 26 Q50.5 26 50.5 30.5 L50.5 43 Q50.5 59 33 59 Q15 59 14 44 Z"/>
+    </g>
+    <path d="M21 44 Q26 48 32 47" fill="none" stroke="#c3c7cf" stroke-width="2" stroke-linecap="round"/>
+    <!-- glossy enamel highlights -->
+    <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.95">
+      <path d="M26.5 9 L26.5 17"/>
+      <path d="M35.8 10.5 L35.8 17"/>
+      <path d="M18.5 32 Q18 38 20.5 41"/>
+    </g>
+  </svg>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const V3 = THREE.Vector3;
+const CM_PER_UNIT = 25;
+const START_LENGTH = 1.1;           // ~28 cm
+const MAX_LENGTH = 200;             // 50 m, so the geometry stays light
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- tail growth rule ----------
+// Called once per completed stroke. `strokes` already includes this stroke.
+// Lengths are in world units (1 unit = 25 cm). Return the new tail length.
+function nextTailLength(strokes, length) {
+  // TODO(human): choose how the tail grows. This default adds a flat 4 cm per stroke.
+  return length + 0.16;
+}
+
+// ---------- renderer / scene ----------
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const WALL = 0xb9cbc2;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(WALL);
+scene.fog = new THREE.Fog(WALL, 12, 40);
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 3000);
+
+scene.add(new THREE.HemisphereLight(0xfff6e6, 0x6a5040, 0.5));
+const sun = new THREE.DirectionalLight(0xfff0d2, 0.75);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0006;
+scene.add(sun, sun.target);
+const rim = new THREE.DirectionalLight(0xcfe2ff, 0.55);   // outlines the black fur against the wall
+rim.position.set(4, 4, -6);
+scene.add(rim);
+
+// ---------- floor + rug ----------
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+const boards = canvasTex(256, 256, (g, w, h) => {
+  const tones = ['#9c7350', '#93694a', '#a27a56', '#96704d'];
+  for (let i = 0; i < 4; i++) {
+    g.fillStyle = tones[i]; g.fillRect(0, i * 64, w, 64);
+    g.fillStyle = 'rgba(80,50,25,.35)'; g.fillRect(0, i * 64, w, 2);
+    g.fillRect(((i * 97) % 200) + 20, i * 64, 2, 64);
+  }
+});
+boards.wrapS = boards.wrapT = THREE.RepeatWrapping;
+boards.repeat.set(250, 250);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000),
+  new THREE.MeshStandardMaterial({ map: boards, roughness: 0.85 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const rugTex = canvasTex(512, 512, (g) => {
+  const rings = ['#c99430', '#e8d7b0', '#c99430', '#a86a24', '#e8d7b0', '#c99430', '#b83c50', '#c99430'];
+  rings.forEach((col, i) => { g.fillStyle = col; g.beginPath(); g.arc(256, 256, 256 - i * 30, 0, Math.PI * 2); g.fill(); });
+});
+const rug = new THREE.Mesh(new THREE.CircleGeometry(2.7, 72),
+  new THREE.MeshStandardMaterial({ map: rugTex, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+rug.rotation.x = -Math.PI / 2; rug.position.set(0.2, 0.012, 0);
+rug.receiveShadow = true;
+scene.add(rug);
+
+// ---------- the cat ----------
+const M = {
+  black: new THREE.MeshStandardMaterial({ color: 0x0e0d11, roughness: 0.6 }),
+  white: new THREE.MeshStandardMaterial({ color: 0xe9e4d8, roughness: 0.9 }),
+  pink:  new THREE.MeshStandardMaterial({ color: 0xe597a2, roughness: 0.6 }),
+  eye:   new THREE.MeshStandardMaterial({ color: 0x95ad4c, roughness: 0.3 }),
+  pupil: new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.15 }),
+  shine: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+};
+const SPHERE = new THREE.SphereGeometry(1, 40, 28);
+const pettables = [];
+function part(parent, geo, mat, zone, pos, scale, rot) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(pos[0], pos[1], pos[2]);
+  if (scale) m.scale.set(scale[0], scale[1], scale[2]);
+  if (rot) m.rotation.set(rot[0], rot[1], rot[2]);
+  m.castShadow = true; m.receiveShadow = true;
+  m.userData.zone = zone;
+  parent.add(m);
+  if (zone) pettables.push(m);
+  return m;
+}
+
+// ---------- sculpted cat: signed distance field ----------
+const smin = (a, b, k) => { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k * 0.25; };
+const smax = (a, b, k) => -smin(-a, -b, k);
+function sdEllipsoid(x, y, z, cx, cy, cz, rx, ry, rz) {
+  const px = x - cx, py = y - cy, pz = z - cz;
+  const k0 = Math.sqrt((px / rx) ** 2 + (py / ry) ** 2 + (pz / rz) ** 2);
+  const k1 = Math.sqrt((px / (rx * rx)) ** 2 + (py / (ry * ry)) ** 2 + (pz / (rz * rz)) ** 2);
+  return k1 === 0 ? -Math.min(rx, ry, rz) : k0 * (k0 - 1) / k1;
+}
+// round cone between a (radius r1) and b (radius r2), after Inigo Quilez
+function sdRoundCone(x, y, z, ax, ay, az, bx, by, bz, r1, r2) {
+  const bax = bx - ax, bay = by - ay, baz = bz - az;
+  const l2 = bax * bax + bay * bay + baz * baz, rr = r1 - r2, a2 = l2 - rr * rr, il2 = 1 / l2;
+  const pax = x - ax, pay = y - ay, paz = z - az;
+  const yy = pax * bax + pay * bay + paz * baz, zz = yy - l2;
+  const qx = pax * l2 - bax * yy, qy = pay * l2 - bay * yy, qz = paz * l2 - baz * yy;
+  const x2 = qx * qx + qy * qy + qz * qz, y2 = yy * yy * l2, z2 = zz * zz * l2;
+  const k = Math.sign(rr) * rr * rr * x2;
+  if (Math.sign(zz) * a2 * z2 > k) return Math.sqrt(x2 + z2) * il2 - r2;
+  if (Math.sign(yy) * a2 * y2 < k) return Math.sqrt(x2 + y2) * il2 - r1;
+  return (Math.sqrt(x2 * a2 * il2) + yy * rr) * il2 - r1;
+}
+
+const HEAD_C = [-1.3, 1.55, 0];
+const NECK_P = [-0.95, 1.25, 0];
+// Each ear is a rounded triangle, thin front to back, whose sides curl gently forward into a cup.
+// It's modelled in its own frame: U runs up the ear, F is the way it faces, V runs across it.
+const EAR_O = new V3(-1.28, 1.86, 0.25);
+const EAR_U = new V3(0.1, 1, 0.36).normalize();
+const EAR_F = (() => { const f = new V3(-1, 0, 0.32); return f.addScaledVector(EAR_U, -f.dot(EAR_U)).normalize(); })();
+const EAR_V = new V3().crossVectors(EAR_U, EAR_F);
+const EAR_BASE = EAR_O.toArray(), EAR_TIP = EAR_O.clone().addScaledVector(EAR_U, 0.3).toArray();
+
+// 2D distance to a triangle (after Inigo Quilez)
+function sdTri2(px, py, ax, ay, bx, by, cx, cy) {
+  const e0x = bx - ax, e0y = by - ay, e1x = cx - bx, e1y = cy - by, e2x = ax - cx, e2y = ay - cy;
+  const v0x = px - ax, v0y = py - ay, v1x = px - bx, v1y = py - by, v2x = px - cx, v2y = py - cy;
+  const c0 = Math.min(1, Math.max(0, (v0x * e0x + v0y * e0y) / (e0x * e0x + e0y * e0y)));
+  const c1 = Math.min(1, Math.max(0, (v1x * e1x + v1y * e1y) / (e1x * e1x + e1y * e1y)));
+  const c2 = Math.min(1, Math.max(0, (v2x * e2x + v2y * e2y) / (e2x * e2x + e2y * e2y)));
+  const q0x = v0x - e0x * c0, q0y = v0y - e0y * c0, q1x = v1x - e1x * c1, q1y = v1y - e1y * c1, q2x = v2x - e2x * c2, q2y = v2y - e2y * c2;
+  const sg = Math.sign(e0x * e2y - e0y * e2x);
+  const dd = Math.min(q0x * q0x + q0y * q0y, q1x * q1x + q1y * q1y, q2x * q2x + q2y * q2y);
+  const ss = Math.min(sg * (v0x * e0y - v0y * e0x), sg * (v1x * e1y - v1y * e1x), sg * (v2x * e2y - v2y * e2x));
+  return -Math.sqrt(dd) * Math.sign(ss);
+}
+function earLocal(x, y, az) {
+  const dx = x - EAR_O.x, dy = y - EAR_O.y, dz = az - EAR_O.z;
+  const u = dx * EAR_U.x + dy * EAR_U.y + dz * EAR_U.z;
+  const v = dx * EAR_V.x + dy * EAR_V.y + dz * EAR_V.z;
+  const w = dx * EAR_F.x + dy * EAR_F.y + dz * EAR_F.z - 1.1 * v * v;   // - v² curls the sides forward into a cup
+  return [u, v, w];
+}
+function earSDF(x, y, az) {
+  const [u, v, w] = earLocal(x, y, az);
+  const d2 = sdTri2(v, u, -0.17, -0.08, 0.17, -0.08, 0, 0.29) - 0.04;   // rounded corners and tip
+  const ex = d2, ey = Math.abs(w) - 0.018;                              // thin slab
+  return Math.min(Math.max(ex, ey), 0) + Math.hypot(Math.max(ex, 0), Math.max(ey, 0)) - 0.018;
+}
+function earPink(x, y, az) {
+  const [u, v, w] = earLocal(x, y, az);
+  const inner = sdTri2(v, u, -0.12, -0.04, 0.12, -0.04, 0, 0.22) - 0.02;
+  const soft2 = (d, wd) => { const t = Math.min(1, Math.max(0, (wd - d) / (2 * wd))); return t * t * (3 - 2 * t); };
+  return soft2(inner, 0.012) * soft2(-w, 0.008) * soft2(0.04 - u, 0.015);
+}
+
+// Toy-like build: chunky rounded parts joined with small blends, so each part still reads
+// on its own (like a plush or vinyl figure) but there are no hard seams.
+function catSDF(x, y, z) {
+  const az = Math.abs(z);                                                      // left/right symmetric
+  let d = sdEllipsoid(x, y, az, 0, 1.0, 0, 1.15, 0.52, 0.5);                   // body
+  d = smin(d, sdEllipsoid(x, y, az, -0.86, 0.95, 0, 0.4, 0.45, 0.42), 0.08);   // chest
+  d = smin(d, sdEllipsoid(x, y, az, -0.95, 1.22, 0, 0.4, 0.42, 0.36), 0.1);    // neck
+  d = smin(d, sdRoundCone(x, y, az, 0.9, 1.04, 0, 1.03, 1.17, 0, 0.11, 0.09), 0.08);   // tail root
+
+  if (y < 1.25) {                                                              // legs
+    let l = sdRoundCone(x, y, az, -0.68, 0.9, 0.24, -0.68, 0.12, 0.24, 0.125, 0.105);
+    l = smin(l, sdEllipsoid(x, y, az, -0.73, 0.075, 0.24, 0.16, 0.085, 0.13), 0.04);
+    l = smin(l, sdEllipsoid(x, y, az, 0.68, 0.78, 0.25, 0.34, 0.4, 0.2), 0.06);         // haunch
+    l = smin(l, sdRoundCone(x, y, az, 0.72, 0.6, 0.24, 0.72, 0.12, 0.24, 0.12, 0.105), 0.05);
+    l = smin(l, sdEllipsoid(x, y, az, 0.67, 0.075, 0.24, 0.16, 0.085, 0.13), 0.04);
+    d = smin(d, l, 0.07);
+  }
+
+  const hx = x - HEAD_C[0], hy = y - HEAD_C[1];
+  if (hx * hx + hy * hy + az * az < 1.2) {                                    // head
+    let h = sdEllipsoid(x, y, az, -1.3, 1.55, 0, 0.48, 0.44, 0.5);
+    h = smin(h, sdEllipsoid(x, y, az, -1.66, 1.42, 0.1, 0.17, 0.14, 0.16), 0.03);      // muzzle puffs
+    h = smin(h, sdEllipsoid(x, y, az, -1.6, 1.29, 0, 0.13, 0.1, 0.13), 0.03);          // chin
+    h = smin(h, sdEllipsoid(x, y, az, -1.8, 1.5, 0, 0.05, 0.035, 0.06), 0.02);         // nose
+    h = smin(h, earSDF(x, y, az), 0.05);
+    d = smin(d, h, 0.08);
+  }
+  return d;
+}
+
+// fur colour at a surface point: [white amount, pink amount]; narrow blends keep the patches crisp
+const soft = (d, w) => { const t = Math.min(1, Math.max(0, (w - d) / (2 * w))); return t * t * (3 - 2 * t); };
+function catPaint(x, y, z) {
+  const az = Math.abs(z);
+  const pink = Math.max(
+    soft(sdEllipsoid(x, y, az, -1.8, 1.5, 0, 0.065, 0.05, 0.075), 0.008),                         // nose
+    earPink(x, y, az)                                                                              // inner ear
+  );
+  const w = Math.min(
+    sdEllipsoid(x, y, az, -1.66, 1.42, 0.1, 0.19, 0.16, 0.18),  // muzzle puffs
+    sdEllipsoid(x, y, az, -1.6, 1.29, 0, 0.15, 0.12, 0.15),     // chin
+    sdEllipsoid(x, y, az, -1.76, 1.6, 0, 0.1, 0.16, 0.06),      // little blaze
+    sdEllipsoid(x, y, az, -0.86, 0.95, 0, 0.42, 0.47, 0.36),    // shirt front
+    sdEllipsoid(x, y, az, -0.15, 0.7, 0, 0.75, 0.24, 0.42),     // belly
+    x < 0 ? y - 0.32 : y - 0.14                                  // socks and back paws
+  );
+  return [soft(w, 0.012), pink];
+}
+
+// ---------- surface nets: polygonise the field on a grid ----------
+function surfaceNets(f, min, max, h) {
+  const nx = Math.ceil((max[0] - min[0]) / h) + 1, ny = Math.ceil((max[1] - min[1]) / h) + 1, nz = Math.ceil((max[2] - min[2]) / h) + 1;
+  const F = new Float32Array(nx * ny * nz);
+  for (let k = 0; k < nz; k++) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++)
+    F[i + nx * (j + ny * k)] = f(min[0] + i * h, min[1] + j * h, min[2] + k * h);
+
+  const cx = nx - 1, cy = ny - 1, cz = nz - 1;
+  const cellV = new Int32Array(cx * cy * cz).fill(-1);
+  const pos = [];
+  const EDGES = [];
+  for (let a = 0; a < 8; a++) for (const bit of [1, 2, 4]) if (!(a & bit)) EDGES.push(a, a | bit);
+  const v = new Float32Array(8);
+  for (let k = 0; k < cz; k++) for (let j = 0; j < cy; j++) for (let i = 0; i < cx; i++) {
+    let mask = 0;
+    for (let c = 0; c < 8; c++) {
+      v[c] = F[(i + (c & 1)) + nx * ((j + ((c >> 1) & 1)) + ny * (k + ((c >> 2) & 1)))];
+      if (v[c] < 0) mask |= 1 << c;
+    }
+    if (mask === 0 || mask === 255) continue;
+    let sx = 0, sy = 0, sz = 0, n = 0;
+    for (let e = 0; e < 24; e += 2) {
+      const a = EDGES[e], b = EDGES[e + 1];
+      if ((v[a] < 0) === (v[b] < 0)) continue;
+      const t = v[a] / (v[a] - v[b]);
+      sx += (a & 1) + t * ((b & 1) - (a & 1));
+      sy += ((a >> 1) & 1) + t * (((b >> 1) & 1) - ((a >> 1) & 1));
+      sz += ((a >> 2) & 1) + t * (((b >> 2) & 1) - ((a >> 2) & 1));
+      n++;
+    }
+    cellV[i + cx * (j + cy * k)] = pos.length / 3;
+    pos.push(min[0] + (i + sx / n) * h, min[1] + (j + sy / n) * h, min[2] + (k + sz / n) * h);
+  }
+
+  const idx = [];
+  const C = (i, j, k) => cellV[i + cx * (j + cy * k)];
+  const quad = (inside, a, b, c, d) => {
+    if (a < 0 || b < 0 || c < 0 || d < 0) return;
+    if (inside) idx.push(a, b, c, a, c, d); else idx.push(a, c, b, a, d, c);
+  };
+  for (let k = 0; k < nz; k++) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const p = F[i + nx * (j + ny * k)] < 0;
+    if (i < cx && j > 0 && k > 0 && j < ny && k < nz) {
+      if (p !== (F[i + 1 + nx * (j + ny * k)] < 0)) quad(p, C(i, j - 1, k - 1), C(i, j, k - 1), C(i, j, k), C(i, j - 1, k));
+    }
+    if (j < cy && i > 0 && k > 0) {
+      if (p !== (F[i + nx * (j + 1 + ny * k)] < 0)) quad(p, C(i - 1, j, k - 1), C(i - 1, j, k), C(i, j, k), C(i, j, k - 1));
+    }
+    if (k < cz && i > 0 && j > 0) {
+      if (p !== (F[i + nx * (j + ny * (k + 1))] < 0)) quad(p, C(i - 1, j - 1, k), C(i, j - 1, k), C(i, j, k), C(i - 1, j, k));
+    }
+  }
+
+  // snap each vertex onto the surface and take the normal from the field's gradient
+  const nrm = new Float32Array(pos.length);
+  const e = h * 0.5;
+  for (let q = 0; q < pos.length; q += 3) {
+    for (let pass = 0; pass < 2; pass++) {
+      const x = pos[q], y = pos[q + 1], z = pos[q + 2];
+      let gx = f(x + e, y, z) - f(x - e, y, z), gy = f(x, y + e, z) - f(x, y - e, z), gz = f(x, y, z + e) - f(x, y, z - e);
+      const gl = Math.hypot(gx, gy, gz) || 1; gx /= gl; gy /= gl; gz /= gl;
+      if (pass === 0) { const d = f(x, y, z); pos[q] -= d * gx; pos[q + 1] -= d * gy; pos[q + 2] -= d * gz; }
+      else { nrm[q] = gx; nrm[q + 1] = gy; nrm[q + 2] = gz; }
+    }
+  }
+  return { positions: new Float32Array(pos), normals: nrm, indices: idx };
+}
+
+// ---------- build the cat: one smooth skinned mesh ----------
+// Bones: 0 body, 1 head (pivots at the neck), 2 left ear, 3 right ear.
+const catRig = (() => {
+  const NECK = new V3(...NECK_P), HEADC = new V3(...HEAD_C);
+  const m = surfaceNets(catSDF, [-1.95, -0.03, -0.62], [1.25, 2.32, 0.62], 0.022);
+  const n = m.positions.length / 3;
+  const colors = new Float32Array(n * 3);
+  const skinIdx = new Uint16Array(n * 4), skinW = new Float32Array(n * 4);
+  const FUR = [new THREE.Color(0x0e0d11), new THREE.Color(0xe9e4d8), new THREE.Color(0xe597a2)];
+  const neckAxis = new V3(-0.76, 0.65, 0).normalize();
+  const earA = new V3(...EAR_BASE), earAx = new V3(...EAR_TIP).sub(earA);
+  const earLen = earAx.length(); earAx.normalize();
+  const p = new V3(), q = new V3(), c = new THREE.Color();
+  const ss = THREE.MathUtils.smoothstep;
+  for (let i = 0; i < n; i++) {
+    p.fromArray(m.positions, i * 3);
+    const [white, pink] = catPaint(p.x, p.y, p.z);
+    c.copy(FUR[0]).lerp(FUR[1], white).lerp(FUR[2], pink);
+    c.toArray(colors, i * 3);
+    // head weight fades in across the neck so the tilt bends fur instead of creasing it
+    const wh = ss(q.copy(p).sub(NECK).dot(neckAxis), -0.12, 0.16);
+    q.set(p.x, p.y, Math.abs(p.z)).sub(earA);
+    const along = q.dot(earAx) / earLen;
+    const radial = q.addScaledVector(earAx, -along * earLen).length();
+    const we = Math.min(wh, ss(along, 0.25, 0.5) * (1 - ss(radial, 0.2, 0.3)));
+    skinIdx.set([0, 1, p.z > 0 ? 3 : 2, 0], i * 4);
+    skinW.set([1 - wh, wh - we, we, 0], i * 4);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(m.positions, 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(skinIdx, 4));
+  geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(skinW, 4));
+  geo.setIndex(m.indices);
+  geo.computeBoundingSphere();
+
+  const mesh = new THREE.SkinnedMesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, skinning: true, roughness: 0.62 }));
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  mesh.userData.zone = 'cat';
+  const root = new THREE.Bone(), head = new THREE.Bone(), earL = new THREE.Bone(), earR = new THREE.Bone();
+  head.position.copy(NECK);
+  earL.position.set(EAR_BASE[0], EAR_BASE[1], -EAR_BASE[2]).sub(NECK);
+  earR.position.set(EAR_BASE[0], EAR_BASE[1], EAR_BASE[2]).sub(NECK);
+  root.add(head); head.add(earL, earR);
+  mesh.add(root);
+  mesh.updateMatrixWorld(true);
+  mesh.bind(new THREE.Skeleton([root, head, earL, earR]));
+  scene.add(mesh);
+  pettables.push(mesh);
+
+  // Eyes face forward on the front of the face and sit flush with it (aligned to the surface
+  // normal), so both read from the front instead of staring off to the sides.
+  const eyes = [];
+  const gradAt = p => {
+    const e = 0.004;
+    return new V3(catSDF(p.x + e, p.y, p.z) - catSDF(p.x - e, p.y, p.z),
+      catSDF(p.x, p.y + e, p.z) - catSDF(p.x, p.y - e, p.z),
+      catSDF(p.x, p.y, p.z + e) - catSDF(p.x, p.y, p.z - e)).normalize();
+  };
+  for (const s of [-1, 1]) {
+    const dir = new V3(-0.9, 0.24, s * 0.4).normalize();
+    let lo = 0, hi = 0.7;
+    for (let k = 0; k < 24; k++) { const mid = (lo + hi) / 2; const e = HEADC.clone().addScaledVector(dir, mid); (catSDF(e.x, e.y, e.z) < 0 ? (lo = mid) : (hi = mid)); }
+    const surf = HEADC.clone().addScaledVector(dir, lo), nrm = gradAt(surf);
+    const g = new THREE.Group();
+    g.position.copy(surf).addScaledVector(nrm, -0.012);
+    g.lookAt(g.position.clone().add(nrm));
+    g.position.sub(NECK);
+    // small, mostly-dark "button" eyes with a thin green rim read as calm rather than startled
+    part(g, SPHERE, M.eye, 'head', [0, 0, 0], [0.058, 0.064, 0.032]);
+    g.userData.pupil = part(g, SPHERE, M.pupil, 'head', [0, 0, 0.012], [0.046, 0.052, 0.024]);
+    part(g, SPHERE, M.shine, null, [0.016, 0.02, 0.034], [0.012, 0.012, 0.008]);
+    head.add(g);
+    eyes.push(g);
+  }
+
+  { // whiskers fan out from the whisker pads
+    const v = [];
+    for (const s of [-1, 1]) for (const dy of [-0.035, 0, 0.035]) {
+      v.push(-1.72, 1.42 + dy * 0.4, s * 0.17, -1.66 - Math.abs(dy) * 1.5, 1.4 + dy * 3, s * 0.66);
+    }
+    for (let i = 0; i < v.length; i += 3) { v[i] -= NECK.x; v[i + 1] -= NECK.y; }
+    const wg = new THREE.BufferGeometry();
+    wg.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+    head.add(new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: 0xf6f2ea })));
+  }
+  return { mesh, root, head, earL, earR, eyes };
+})();
+const eyes = catRig.eyes;
+
+// ---------- the tail ----------
+// A chain of rings spaced exactly DS apart along a fixed path. Growing only appends rings and
+// reveals them with a draw range, so the part that already exists never moves or re-samples.
+const ROOT = new V3(1.0, 1.12, 0);
+const DS = 0.03;
+const TAIL = {
+  L: START_LENGTH, shown: START_LENGTH, shownRing: 0, airLen: null, pts: [], s: [],
+  mesh: null, proxy: null,
+  cap: part(scene, SPHERE, M.black, 'tail', [0, 0, 0]),
+  happy: 0,
+};
+TAIL.cap.userData.tip = true;
+const proxyMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false });
+
+// thick at the root, an even width along the length, and a short taper at the tip
+function radiusAt(s, L) {
+  const base = 0.066 + 0.024 * Math.max(0, 1 - s / 0.9);
+  const tip = Math.min(1, Math.max(0, (L - s) / 0.45));
+  return base * (0.6 + 0.4 * Math.sqrt(tip));
+}
+
+// Arc up off the rump, curve over and down, round off onto the floor, then meander away.
+function tailPath(L) {
+  const floorY = 0.075, k = 3.2;
+  const p = ROOT.clone(); const pts = [p.clone()], sArr = [0];
+  let th = 0.95, s = 0, mode = 'air', leveling = false, airLen = null, sf = 0;
+  while (s < L - 1e-6) {
+    const step = Math.min(DS, L - s);
+    if (mode === 'air') {
+      if (!leveling && th < -0.3 && p.y - floorY <= (1 - Math.cos(th)) / k) leveling = true;
+      th = leveling ? Math.min(th + k * step, 0) : Math.max(th - 1.9 * step, -1.35);
+      p.x += Math.cos(th) * step; p.y += Math.sin(th) * step;
+      if (leveling && th === 0) { p.y = floorY; mode = 'floor'; airLen = s + step; }
+      else if (p.y < floorY) p.y = floorY;
+    } else {
+      const phi = 1.25 * Math.sin(2 * Math.PI * sf / 3.2);
+      p.x += Math.cos(phi) * step; p.z += Math.sin(phi) * step; sf += step;
+    }
+    s += step; pts.push(p.clone()); sArr.push(s);
+  }
+  return { pts, sArr, airLen };
+}
+
+function buildTube(pts, sArr, stride, radial, rFn) {
+  const idx = [];
+  for (let i = 0; i < pts.length; i += stride) idx.push(i);
+  if (idx[idx.length - 1] !== pts.length - 1) idx.push(pts.length - 1);
+  const n = idx.length, R = radial + 1;
+  const pos = new Float32Array(n * R * 3), nor = new Float32Array(n * R * 3);
+  const ringS = new Float32Array(n), centers = new Float32Array(n * 3);
+  const T = new V3(), N = new V3(), B = new V3(), d = new V3();
+  for (let r = 0; r < n; r++) {
+    const i = idx[r], p = pts[i];
+    T.subVectors(pts[Math.min(pts.length - 1, i + 1)], pts[Math.max(0, i - 1)]).normalize();
+    if (r === 0) N.set(0, 0, 1).cross(T).normalize();
+    else N.addScaledVector(T, -N.dot(T)).normalize();     // parallel transport, so the tube never twists
+    B.crossVectors(T, N);
+    const rad = rFn(sArr[i]);
+    ringS[r] = sArr[i];
+    p.toArray(centers, r * 3);
+    for (let j = 0; j <= radial; j++) {
+      const a = (j / radial) * Math.PI * 2;
+      d.copy(N).multiplyScalar(Math.cos(a)).addScaledVector(B, Math.sin(a));
+      const k = (r * R + j) * 3;
+      pos[k] = p.x + d.x * rad; pos[k + 1] = p.y + d.y * rad; pos[k + 2] = p.z + d.z * rad;
+      nor[k] = d.x; nor[k + 1] = d.y; nor[k + 2] = d.z;
+    }
+  }
+  const index = new Uint32Array((n - 1) * radial * 6);
+  let q = 0;
+  for (let r = 0; r < n - 1; r++) for (let j = 0; j < radial; j++) {
+    const a = r * R + j, b = a + R, c = b + 1, e = a + 1;
+    index[q++] = a; index[q++] = e; index[q++] = b;
+    index[q++] = b; index[q++] = e; index[q++] = c;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  geo.setIndex(new THREE.BufferAttribute(index, 1));
+  geo.computeBoundingSphere();
+  geo.boundingSphere.radius += 0.6;     // room for the sway
+  return { geo, ringS, centers, base: Float32Array.from(pos), radial };
+}
+
+function rebuildTail(L) {
+  const { pts, sArr, airLen } = tailPath(L);
+  TAIL.L = L; TAIL.pts = pts; TAIL.s = sArr; TAIL.airLen = airLen;
+  const main = buildTube(pts, sArr, 1, 14, s => radiusAt(s, L));
+  const pr = 0.14 + 0.022 * (frame.dist || 6);  // fatter invisible tube makes a thin tail easy to follow
+  const prox = buildTube(pts, sArr, 2, 6, () => pr);
+
+  for (const [key, built, mat] of [['mesh', main, M.black], ['proxy', prox, proxyMat]]) {
+    if (TAIL[key]) { scene.remove(TAIL[key]); TAIL[key].geometry.dispose(); }
+    const m = new THREE.Mesh(built.geo, mat);
+    m.userData = { zone: 'tail', ...built };
+    if (key === 'mesh') { m.castShadow = true; m.receiveShadow = true; }
+    scene.add(m);
+    TAIL[key] = m;
+  }
+  showTail(L);
+  computeFrame();
+}
+
+// reveal the tail up to length `len` (used to animate growth without rebuilding)
+function showTail(len) {
+  const ud = TAIL.mesh.userData;
+  const k = Math.max(1, Math.min(ud.ringS.length - 1, Math.round(len / DS)));
+  TAIL.shown = len; TAIL.shownRing = k;
+  TAIL.mesh.geometry.setDrawRange(0, k * ud.radial * 6);
+  TAIL.cap.scale.setScalar(radiusAt(ud.ringS[k], TAIL.L));
+}
+
+// ---------- tail motion ----------
+// The tail speaks cat: a slow swish at rest, held up with a quivering tip while being petted,
+// a big loose swish when happy, fast lashing when stroked against the fur, and the odd lazy
+// flick of the tip. Each layer has its own strength that eases in and out, so moods blend.
+const TM = {
+  swish: 0.1, swishPhase: 0, lift: 0, quiver: 0, quivPhase: 0, lash: 0, lashPhase: 0,
+  flick: 0, flickLift: 0, flickT: -1, flickDir: 1, nextFlick: 3, tipDirty: false,
+};
+const TIP_LEN = 0.6;   // the last 15 cm, which can still flick when the rest of the tail lies on the floor
+const _o = { y: 0, z: 0 };
+
+// Offset of the tail's centre line at distance s from the root. Weights keep the root fixed and,
+// once the tail reaches the floor, keep the landing point still too (sin² has no kink there).
+function tailOffset(s, o) {
+  const air = TAIL.airLen, end = TAIL.shown;
+  let w, lw;
+  if (air === null) { const u = Math.min(1, s / end); w = Math.pow(u, 1.4); lw = u * u; }
+  else if (s < air) { w = Math.sin(Math.PI * s / air) ** 2; lw = w; }
+  else { w = 0; lw = 0; }
+  const tu = Math.max(0, 1 - (end - s) / TIP_LEN), tip = tu * tu * (3 - 2 * tu);
+  const freeTip = air === null ? tip : 0;
+  o.z = w * (TM.swish * Math.sin(TM.swishPhase - s * 2.4) + TM.lash * Math.sin(TM.lashPhase - s * 4.5))
+    + freeTip * TM.quiver * Math.sin(TM.quivPhase - s * 14)
+    + tip * TM.flick;
+  o.y = lw * TM.lift + tip * TM.flickLift;
+  return o;
+}
+
+function updateTailMood(dt, annoyK) {
+  const rm = reduceMotion ? 0.35 : 1, ease = k => Math.min(1, dt * k), happy = TAIL.happy;
+  const swishT = (0.1 + 0.26 * happy) * (1 - 0.55 * petAmt) * rm;   // calmer while being petted
+  const liftT = (0.22 * petAmt + 0.14 * happy) * rm;                // a content cat's tail goes up
+  const quivT = reduceMotion ? 0 : 0.03 * petAmt;
+  const lashT = reduceMotion ? 0 : 0.32 * annoyK;
+  TM.swish += (swishT - TM.swish) * ease(3);
+  TM.lift += (liftT - TM.lift) * ease(2.5);
+  TM.quiver += (quivT - TM.quiver) * ease(4);
+  TM.lash += (lashT - TM.lash) * ease(10);
+  TM.swishPhase += dt * (1.3 + 2.2 * happy);
+  TM.quivPhase += dt * 38;
+  TM.lashPhase += dt * 17;
+  TM.nextFlick -= dt;
+  if (TM.flickT < 0 && TM.nextFlick <= 0 && !reduceMotion) {
+    TM.flickT = 0; TM.flickDir = Math.random() < 0.5 ? -1 : 1; TM.nextFlick = 3 + Math.random() * 5;
+  }
+  if (TM.flickT >= 0) {
+    TM.flickT += dt;
+    const u = Math.min(1, TM.flickT / 0.45), env = Math.sin(Math.PI * u) * (1 - 0.3 * u);
+    TM.flick = 0.13 * env * TM.flickDir; TM.flickLift = 0.06 * env;
+    if (u >= 1) { TM.flickT = -1; TM.flick = 0; TM.flickLift = 0; }
+  }
+}
+
+// Rebuild rings i0..i1 of the visible tail along the moved centre line, re-aiming each ring
+// so a fast lash bends the tube instead of shearing it flat.
+const _T = new V3(), _N = new V3(), _B = new V3(), _d = new V3();
+function reshapeRings(i0, i1) {
+  const m = TAIL.mesh, { ringS, centers, base, radial } = m.userData, R = radial + 1, last = ringS.length - 1;
+  const pos = m.geometry.attributes.position.array, nor = m.geometry.attributes.normal.array;
+  const a = Math.max(0, i0 - 1), b = Math.min(last, i1 + 1);
+  const oy = new Float32Array(b - a + 1), oz = new Float32Array(b - a + 1);
+  for (let i = a; i <= b; i++) { tailOffset(ringS[i], _o); oy[i - a] = _o.y; oz[i - a] = _o.z; }
+  const cx = i => centers[i * 3], cy = i => centers[i * 3 + 1] + oy[i - a], cz = i => centers[i * 3 + 2] + oz[i - a];
+  for (let i = i0; i <= i1; i++) {
+    const p0 = Math.max(a, i - 1), p1 = Math.min(b, i + 1);
+    _T.set(cx(p1) - cx(p0), cy(p1) - cy(p0), cz(p1) - cz(p0)).normalize();
+    if (i === i0) {
+      if (i0 === 0) _N.set(0, 0, 1).cross(_T);
+      else { const k = i0 * R * 3; _N.set(base[k] - centers[i0 * 3], base[k + 1] - centers[i0 * 3 + 1], base[k + 2] - centers[i0 * 3 + 2]); }
+    }
+    _N.addScaledVector(_T, -_N.dot(_T)).normalize();
+    _B.crossVectors(_T, _N);
+    const r = radiusAt(ringS[i], TAIL.L), x = cx(i), y = cy(i), z = cz(i);
+    for (let j = 0; j <= radial; j++) {
+      const ang = (j / radial) * Math.PI * 2;
+      _d.copy(_N).multiplyScalar(Math.cos(ang)).addScaledVector(_B, Math.sin(ang));
+      const k = (i * R + j) * 3;
+      pos[k] = x + _d.x * r; pos[k + 1] = y + _d.y * r; pos[k + 2] = z + _d.z * r;
+      nor[k] = _d.x; nor[k + 1] = _d.y; nor[k + 2] = _d.z;
+    }
+  }
+}
+
+function applyTailMotion() {
+  const m = TAIL.mesh, { ringS, radial } = m.userData, R = radial + 1;
+  const last = Math.min(ringS.length - 1, TAIL.shownRing), air = TAIL.airLen;
+
+  // the raised part moves every frame
+  let nAir = last;
+  if (air !== null) { nAir = 0; while (nAir < last && ringS[nAir] <= air) nAir++; }
+  reshapeRings(0, nAir);
+  let hi = nAir;
+
+  // a tip lying on the floor only moves while it flicks, plus one pass to settle it back down
+  const flicking = TM.flick !== 0 || TM.flickLift !== 0;
+  const tipActive = air !== null && (flicking || TM.tipDirty);
+  if (tipActive) {
+    let t0 = last;
+    while (t0 > nAir + 1 && ringS[t0] > TAIL.shown - TIP_LEN - 0.03) t0--;
+    if (t0 > nAir) { reshapeRings(t0, last); hi = last; }
+  }
+  TM.tipDirty = air !== null && flicking;
+  for (const attr of [m.geometry.attributes.position, m.geometry.attributes.normal]) {
+    attr.updateRange.offset = 0; attr.updateRange.count = (hi + 1) * R * 3;
+    attr.needsUpdate = true;
+  }
+
+  // the invisible grab tube follows by sliding its rings
+  const px = TAIL.proxy, pu = px.userData, PR = pu.radial + 1, arr = px.geometry.attributes.position.array;
+  let phi = -1;
+  for (let i = 0; i < pu.ringS.length; i++) {
+    const s = pu.ringS[i];
+    const inAir = air === null || s <= air + 0.05;
+    const inTip = tipActive && s >= TAIL.shown - TIP_LEN - 0.05;
+    if (!inAir && !inTip) { if (!tipActive) break; continue; }
+    tailOffset(s, _o);
+    for (let j = 0; j < PR; j++) {
+      const k = (i * PR + j) * 3;
+      arr[k + 1] = pu.base[k + 1] + _o.y; arr[k + 2] = pu.base[k + 2] + _o.z;
+    }
+    phi = i;
+  }
+  const pa = px.geometry.attributes.position;
+  pa.updateRange.offset = 0; pa.updateRange.count = Math.min(arr.length, (phi + 2) * PR * 3);
+  pa.needsUpdate = true;
+
+  const { centers } = m.userData;
+  tailOffset(ringS[last], _o);
+  TAIL.cap.position.set(centers[last * 3], centers[last * 3 + 1] + _o.y, centers[last * 3 + 2] + _o.z);
+}
+
+// ---------- camera framing ----------
+const frame = { target: new V3(-0.2, 1, 0), dist: 6, dir: new V3(-0.5, 0.45, 1).normalize() };
+const camState = { target: frame.target.clone(), dist: frame.dist };
+const CAT_BOX = new THREE.Box3(new V3(-1.95, 0, -0.6), new V3(1.25, 2.15, 0.6));
+
+function computeFrame() {
+  const box = CAT_BOX.clone();
+  for (let i = 0; i < TAIL.pts.length; i += 3) box.expandByPoint(TAIL.pts[i]);
+  box.expandByScalar(0.2);
+  const sph = box.getBoundingSphere(new THREE.Sphere());
+  const vfov = THREE.MathUtils.degToRad(camera.fov);
+  const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect);
+  frame.dist = Math.max(4.5, sph.radius / Math.sin(Math.min(vfov, hfov) / 2) * 1.02);
+  frame.target.copy(sph.center).add(new V3(0, -0.12 * sph.radius, 0));   // leave room for the meter
+  const side = THREE.MathUtils.smoothstep(TAIL.L, 2.5, 18);               // long tails read best side-on
+  frame.dir.set(THREE.MathUtils.lerp(-0.5, 0.05, side), 0.45 + 0.25 * side, 1).normalize();
+
+  const r = sph.radius * 1.15;
+  const sc = sun.shadow.camera;
+  sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 0.1; sc.far = r * 6;
+  sc.updateProjectionMatrix();
+  sun.target.position.copy(sph.center);
+  sun.position.copy(sph.center).add(new V3(-0.35, 0.85, 0.4).normalize().multiplyScalar(r * 3));
+}
+
+// ---------- hearts ----------
+const heartTex = canvasTex(128, 128, (g) => {
+  g.fillStyle = '#d4485f'; g.strokeStyle = '#27231f'; g.lineWidth = 7;
+  g.beginPath();
+  g.moveTo(64, 112);
+  g.bezierCurveTo(8, 72, 8, 22, 40, 20);
+  g.bezierCurveTo(54, 19, 62, 30, 64, 38);
+  g.bezierCurveTo(66, 30, 74, 19, 88, 20);
+  g.bezierCurveTo(120, 22, 120, 72, 64, 112);
+  g.closePath(); g.fill(); g.stroke();
+});
+const hearts = Array.from({ length: 16 }, () => {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthWrite: false }));
+  s.visible = false; scene.add(s);
+  return { s, v: new V3(), life: 0 };
+});
+function spawnHearts() {
+  const k = camState.dist / 7;
+  const head = new V3(); eyes[0].getWorldPosition(head); head.y += 0.4;
+  const tip = TAIL.cap.position.clone().add(new V3(0, 0.3, 0));
+  const n = reduceMotion ? 4 : hearts.length;
+  for (let i = 0; i < n; i++) {
+    const h = hearts[i];
+    h.s.position.copy(i % 2 ? head : tip).add(new V3((Math.random() - .5) * .5 * k, 0, (Math.random() - .5) * .3 * k));
+    h.v.set((Math.random() - .5) * .6, 1.1 + Math.random() * .9, (Math.random() - .5) * .4).multiplyScalar(k);
+    h.life = 1.6 + Math.random() * 0.5;
+    h.base = (0.16 + Math.random() * 0.1) * k;
+    h.s.visible = true;
+  }
+}
+
+// ---------- audio ----------
+let audio = null, noiseBuf = null, soundOn = true;
+function initAudio() {
+  if (audio) { if (audio.state === 'suspended') audio.resume(); return; }
+  try {
+    audio = new (window.AudioContext || window.webkitAudioContext)();
+    audio.resume?.();
+    noiseBuf = audio.createBuffer(1, audio.sampleRate * 2, audio.sampleRate);
+    const d = noiseBuf.getChannelData(0); let last = 0;
+    for (let i = 0; i < d.length; i++) { last = (last + 0.04 * (Math.random() * 2 - 1)) / 1.04; d[i] = last * 3.2; }
+    ensurePurrLoop();
+  } catch (e) { audio = null; }
+}
+// A purr is a rattle, not a tone: the larynx snaps open ~25 times a second and each snap is a short
+// crackle that dies away fast. So the sound is rendered once as a train of tiny noise bursts with
+// slightly uneven timing (an in-breath that is quicker and softer, then a slower, stronger
+// out-breath), a little low warmth under each burst, and gentle filtering. No tones, no swells.
+let purrBuf = null;
+function buildPurr() {
+  const sr = audio.sampleRate, len = Math.floor(sr * 2.05);
+  const buf = audio.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  const breaths = [
+    { start: 0.0, dur: 0.86, rate: 27, amp: 0.55 },   // in-breath
+    { start: 0.95, dur: 1.05, rate: 23, amp: 1.0 },   // out-breath
+  ];
+  const burst = Math.floor(sr * 0.032), atk = sr * 0.0012, decay = sr * 0.0075;
+  for (const br of breaths) {
+    let t = br.start;
+    while (t < br.start + br.dur) {
+      const u = (t - br.start) / br.dur;
+      const swell = Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, u))), 0.6);   // fade the breath in and out
+      const a = br.amp * swell * (0.8 + 0.4 * Math.random());
+      const i0 = Math.floor(t * sr);
+      for (let n = 0; n < burst && i0 + n < len; n++) {
+        const env = (1 - Math.exp(-n / atk)) * Math.exp(-n / decay);
+        d[i0 + n] += a * env * ((Math.random() * 2 - 1) + 0.6 * Math.sin(2 * Math.PI * 70 * n / sr));
+      }
+      t += (1 / br.rate) * (1 + (Math.random() - 0.5) * 0.12);   // uneven, like a real larynx
+    }
+  }
+  // soften: high-pass away rumble no speaker can play, low-pass the hiss (one-pole filters, twice)
+  let hpPrev = 0, hpOut = 0, lp1 = 0, lp2 = 0, peak = 0;
+  const hpA = Math.exp(-2 * Math.PI * 60 / sr), lpA = Math.exp(-2 * Math.PI * 1300 / sr);
+  for (let i = 0; i < len; i++) {
+    hpOut = hpA * (hpOut + d[i] - hpPrev); hpPrev = d[i];
+    lp1 = lp1 * lpA + hpOut * (1 - lpA);
+    lp2 = lp2 * lpA + lp1 * (1 - lpA);
+    d[i] = lp2; peak = Math.max(peak, Math.abs(lp2));
+  }
+  for (let i = 0; i < len; i++) d[i] *= 0.5 / (peak || 1);
+  return buf;
+}
+// The purr loops for as long as the hand is on the cat. Each breath fades to silence at its edges,
+// so the loop point lands in a quiet gap and never clicks; a gain fades it in and out.
+let purrSrc = null, purrGain = null, purrWant = 0, purrUntil = 0;
+function ensurePurrLoop() {
+  if (!audio || purrSrc) return;
+  if (!purrBuf) purrBuf = buildPurr();
+  purrGain = audio.createGain(); purrGain.gain.value = 0;
+  purrSrc = audio.createBufferSource(); purrSrc.buffer = purrBuf; purrSrc.loop = true;
+  purrSrc.connect(purrGain).connect(audio.destination);
+  purrSrc.start();
+}
+function keepPurring(ms) { purrUntil = Math.max(purrUntil, performance.now() + ms); }
+function updatePurr(now) {
+  if (!purrGain) return;
+  const want = soundOn && now < purrUntil ? 0.7 : 0;
+  if (want === purrWant) return;
+  purrWant = want;
+  purrGain.gain.cancelScheduledValues(audio.currentTime);
+  purrGain.gain.setTargetAtTime(want, audio.currentTime, want ? 0.12 : 0.45);
+}
+
+// Browsers only allow sound after a click, tap or key press, so switch audio on at the first one anywhere.
+const unlockAudio = () => { initAudio(); if (audio && audio.state === 'running') removeUnlock(); };
+const removeUnlock = () => ['pointerdown', 'keydown', 'touchend'].forEach(e => window.removeEventListener(e, unlockAudio, true));
+['pointerdown', 'keydown', 'touchend'].forEach(e => window.addEventListener(e, unlockAudio, true));
+let askedForSound = false;
+
+// ---------- milestones: real things the tail outgrows ----------
+const MILESTONES = [
+  { cm: 30, name: 'a ruler', line: 'Longer than a ruler!' },
+  { cm: 65, name: 'a baguette', line: 'Longer than a baguette!' },
+  { cm: 75, name: 'the whole cat', line: 'The tail is now longer than the cat.' },
+  { cm: 100, name: 'a metre stick', line: 'A whole metre of tail.' },
+  { cm: 200, name: 'a door', line: 'Longer than a door is tall.' },
+  { cm: 450, name: 'a car', line: 'Longer than a car.' },
+  { cm: 550, name: 'a giraffe', line: 'Longer than a giraffe is tall.' },
+  { cm: 1200, name: 'a city bus', line: 'Longer than a city bus.' },
+  { cm: 2500, name: 'a blue whale', line: 'As long as a blue whale.' },
+  { cm: 5000, name: 'an Olympic pool', line: "As long as an Olympic pool. That's the limit." },
+];
+function renderLadder(cm) {
+  const passed = MILESTONES.filter(m => cm >= m.cm).pop();
+  const next = MILESTONES.find(m => cm < m.cm);
+  const el = document.getElementById('ladder');
+  el.textContent = '';
+  if (passed) {
+    const b = document.createElement('b');
+    b.textContent = next ? `Longer than ${passed.name}.` : passed.line;
+    el.append(b);
+  }
+  if (next) el.append(`${passed ? ' ' : ''}Next up: ${next.name}, ${next.cm >= 100 ? `${next.cm / 100} m` : `${next.cm} cm`}`);
+}
+
+// A little meow, built like a cat makes one, pitched up into a kitten-like range:
+//  - a soft voice (harmonics falling off steeply, plus a little breath) instead of a buzzy sawtooth;
+//  - the pitch jumps up quickly and then slides down slowly, on curves rather than straight lines;
+//  - the mouth opens and closes ("m-EE-AH-ow"): a filter sweeps open and shut over the sound,
+//    while two vowel resonances glide from "ee" through "ah" to "oo".
+// `excited` makes it a little higher and longer, for milestones.
+// Meow pitch in Hz. Everything else in the meow (vowel shapes, mouth filter) scales with it.
+const MEOW_PITCH = 3200;
+let meowWave = null;
+function meow(excited = false) {
+  if (!audio || !soundOn) return;
+  if (!meowWave) {
+    const n = 32, re = new Float32Array(n), im = new Float32Array(n);
+    for (let k = 1; k < n; k++) im[k] = 1 / Math.pow(k, 1.5);
+    meowWave = audio.createPeriodicWave(re, im);
+  }
+  const t = audio.currentTime + 0.02, dur = excited ? 0.8 : 0.65;
+  const f0 = MEOW_PITCH * (excited ? 1.12 : 1) * (0.95 + Math.random() * 0.1);
+  const sc = Math.min(2.6, MEOW_PITCH / 1250);   // move the resonances up with the pitch
+
+  const voice = audio.createOscillator(); voice.setPeriodicWave(meowWave);
+  voice.frequency.setValueAtTime(f0 * 0.82, t);
+  voice.frequency.exponentialRampToValueAtTime(f0 * 1.15, t + dur * 0.25);
+  voice.frequency.exponentialRampToValueAtTime(f0, t + dur * 0.6);
+  voice.frequency.exponentialRampToValueAtTime(f0 * 0.78, t + dur);
+  const vib = audio.createOscillator(); vib.frequency.value = 6;
+  const vibDepth = audio.createGain(); vibDepth.gain.value = f0 * 0.012;
+  vib.connect(vibDepth).connect(voice.frequency);
+
+  const breath = audio.createBufferSource(); breath.buffer = noiseBuf; breath.loop = true;
+  const breathBand = audio.createBiquadFilter(); breathBand.type = 'highpass'; breathBand.frequency.value = 2600;
+  const breathGain = audio.createGain(); breathGain.gain.value = 0.05;
+  breath.connect(breathBand).connect(breathGain);
+
+  // vowel resonances, scaled up for a small cat: F1 low→high→low, F2 high→mid→low ("ee" → "ah" → "oo")
+  const vowels = audio.createGain();
+  const body = audio.createGain(); body.gain.value = 0.35;
+  voice.connect(body).connect(vowels);
+  for (const fm of [{ f: [1100, 2000, 1300].map(v => v * sc), q: 4, g: 1.0 }, { f: [4300, 3100, 2200].map(v => v * sc), q: 6, g: 0.55 }]) {
+    const bp = audio.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = fm.q;
+    bp.frequency.setValueAtTime(fm.f[0], t);
+    bp.frequency.linearRampToValueAtTime(fm.f[1], t + dur * 0.35);
+    bp.frequency.linearRampToValueAtTime(fm.f[2], t + dur);
+    const g = audio.createGain(); g.gain.value = fm.g;
+    voice.connect(bp).connect(g).connect(vowels);
+    breathGain.connect(bp);
+  }
+
+  // the mouth: closed "m", wide open, then closing into "ow"
+  const mouth = audio.createBiquadFilter(); mouth.type = 'lowpass'; mouth.Q.value = 0.8;
+  mouth.frequency.setValueAtTime(1500 * sc, t);
+  mouth.frequency.exponentialRampToValueAtTime(Math.min(16000, 7500 * sc), t + dur * 0.3);
+  mouth.frequency.exponentialRampToValueAtTime(Math.min(14000, 5000 * sc), t + dur * 0.7);
+  mouth.frequency.exponentialRampToValueAtTime(1900 * sc, t + dur);
+
+  const env = audio.createGain();
+  env.gain.setValueAtTime(0, t);
+  env.gain.linearRampToValueAtTime(0.45, t + 0.07);
+  env.gain.setValueAtTime(0.45, t + dur * 0.55);
+  env.gain.linearRampToValueAtTime(0.25, t + dur * 0.85);
+  env.gain.linearRampToValueAtTime(0, t + dur);
+  vowels.connect(mouth).connect(env).connect(audio.destination);
+
+  for (const node of [voice, vib, breath]) { node.start(t); node.stop(t + dur + 0.05); }
+}
+
+// ---------- first-visit guide: dots that flow from nose to tail tip ----------
+const guide = { mesh: null, cone: null, pts: [], alpha: 0, dummy: new THREE.Object3D() };
+const guideMat = new THREE.MeshBasicMaterial({ color: 0xfbf5e8, transparent: true, opacity: 0, depthTest: false });
+function buildGuide() {
+  if (guide.mesh) { scene.remove(guide.mesh, guide.cone); guide.mesh.dispose?.(); }
+  const ctrl = [[-1.74, 1.86, 0], [-1.52, 2.02, 0], [-1.3, 2.07, 0], [-1.05, 1.97, 0], [-0.85, 1.76, 0],
+    [-0.5, 1.63, 0], [0, 1.6, 0], [0.5, 1.53, 0], [0.85, 1.38, 0]].map(a => new V3(...a));
+  for (let i = 4; i < TAIL.pts.length; i += 4) ctrl.push(TAIL.pts[i].clone().add(new V3(0, 0.11, 0)));
+  ctrl.push(TAIL.pts[TAIL.pts.length - 1].clone().add(new V3(0, 0.11, 0)));
+  const curve = new THREE.CatmullRomCurve3(ctrl);
+  const n = Math.max(24, Math.round(curve.getLength() / 0.09));
+  guide.pts = curve.getSpacedPoints(n);
+  guide.mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.032, 12, 8), guideMat, guide.pts.length - 1);
+  guide.mesh.renderOrder = 10;
+  const end = guide.pts[guide.pts.length - 1], before = guide.pts[guide.pts.length - 2];
+  guide.cone = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.15, 16), guideMat);
+  guide.cone.renderOrder = 10;
+  guide.cone.position.copy(end);
+  guide.cone.quaternion.setFromUnitVectors(new V3(0, 1, 0), end.clone().sub(before).normalize());
+  scene.add(guide.mesh, guide.cone);
+}
+function updateGuide(t, dt) {
+  if (!guide.mesh) return;
+  const want = strokes === 0 && !stroke.active ? 0.92 : 0;
+  guide.alpha += (want - guide.alpha) * Math.min(1, dt * 5);
+  guideMat.opacity = guide.alpha;
+  guide.mesh.visible = guide.cone.visible = guide.alpha > 0.01;
+  if (!guide.mesh.visible) return;
+  const count = guide.pts.length - 1, wave = (t * 0.55) % 1.35 - 0.15;
+  for (let i = 0; i < count; i++) {
+    const u = i / (count - 1);
+    const k = reduceMotion ? 0 : Math.exp(-(((u - wave) / 0.07) ** 2));
+    guide.dummy.position.copy(guide.pts[i]);
+    guide.dummy.scale.setScalar(0.75 + 0.9 * k);
+    guide.dummy.updateMatrix();
+    guide.mesh.setMatrixAt(i, guide.dummy.matrix);
+  }
+  guide.mesh.instanceMatrix.needsUpdate = true;
+}
+
+// ---------- HUD ----------
+const $ = id => document.getElementById(id);
+const ui = { strokes: $('strokes'), length: $('length'), fill: $('fill'), hint: $('hint'), toast: $('toast'), sound: $('sound'), reset: $('reset'), hand: $('hand') };
+const DEFAULT_HINT = 'Stroke from the head, along the back, to the very tip of the tail.';
+let strokes = 0;
+
+function fmtLength(L) {
+  const cm = L * CM_PER_UNIT;
+  return cm < 100 ? `${Math.round(cm)} cm` : `${(cm / 100).toFixed(2)} m`;
+}
+function renderStats() {
+  const L = TAIL.anim ? TAIL.anim.to : TAIL.L;
+  ui.strokes.textContent = strokes.toLocaleString();
+  ui.length.textContent = fmtLength(L);
+  renderLadder(L * CM_PER_UNIT);
+}
+let hintTimer = 0;
+function setHint(text, holdMs = 0) {
+  if (ui.hint.textContent !== text) ui.hint.textContent = text;
+  clearTimeout(hintTimer);
+  if (holdMs) hintTimer = setTimeout(() => { if (!stroke.active) ui.hint.textContent = DEFAULT_HINT; }, holdMs);
+}
+const TOASTS = ['Prrrrrr.', 'Mrrp!', 'Slow blink.', 'Happy tail!', 'Biscuits!', 'Purrfect.'];
+function toast(text, milestone = false) {
+  ui.toast.textContent = text;
+  ui.toast.classList.toggle('milestone', milestone);
+  ui.toast.classList.remove('show'); void ui.toast.offsetWidth; ui.toast.classList.add('show');
+}
+function save() { try { localStorage.setItem('tuxedo-tail', JSON.stringify({ L: TAIL.L, strokes })); } catch (e) {} }
+
+ui.sound.addEventListener('click', () => {
+  soundOn = !soundOn;
+  ui.sound.setAttribute('aria-pressed', String(soundOn));
+  ui.sound.textContent = soundOn ? 'Purr: on' : 'Purr: off';
+  if (soundOn) { initAudio(); meow(); keepPurring(1500); }
+});
+let resetArmed = 0;
+ui.reset.addEventListener('click', () => {
+  if (!resetArmed) {
+    ui.reset.classList.add('armed'); ui.reset.textContent = 'Tap again to reset';
+    resetArmed = setTimeout(() => { resetArmed = 0; ui.reset.classList.remove('armed'); ui.reset.textContent = 'Reset tail'; }, 3000);
+    return;
+  }
+  clearTimeout(resetArmed); resetArmed = 0;
+  ui.reset.classList.remove('armed'); ui.reset.textContent = 'Reset tail';
+  TAIL.anim = null; strokes = 0;
+  rebuildTail(START_LENGTH); buildGuide(); renderStats(); save();
+  setHint('Tail reset to 28 cm.', 2000);
+});
+
+// ---------- stroke detection ----------
+// One number tracks the hand along the cat: 0 = nose, 0.15 = neck, 0.5 = base of tail, 1 = tail tip.
+const stroke = { active: false, maxP: 0, lastHit: 0, shown: 0 };
+const GAP_MS = 450;          // how long the hand may slip off the cat mid-stroke
+const BACKSLIDE = 0.14;      // how far backward counts as "wrong way"
+const clamp01 = x => Math.min(1, Math.max(0, x));
+
+function progressFromHit(hit) {
+  const ud = hit.object.userData;
+  if (ud.zone !== 'tail') {
+    const x = hit.point.x;
+    return x < -0.95 ? 0.15 * clamp01((x + 1.85) / 0.9) : 0.15 + 0.35 * clamp01((x + 0.95) / 2.05);
+  }
+  if (ud.tip) return 1;
+  return 0.5 + 0.5 * tailFractionAlongRay(ray.ray);
+}
+
+// The fat grab-tube gets hit on its side before the hand is over that part of the tail,
+// so measure where the cursor ray passes closest to the tail's centre line instead.
+const _tp = new V3();
+function tailFractionAlongRay(r) {
+  const pts = TAIL.pts, n = pts.length - 1;
+  const step = n > 4000 ? 2 : 1;
+  let best = Infinity, bestI = 0;
+  for (let i = 0; i <= n; i += step) {
+    _tp.copy(pts[i]);
+    tailOffset((i / n) * TAIL.L, _o);
+    _tp.y += _o.y; _tp.z += _o.z;
+    const d = r.distanceSqToPoint(_tp);
+    if (d < best) { best = d; bestI = i; }
+  }
+  return bestI / n;
+}
+
+function breakStroke(reason) {
+  if (stroke.active && stroke.maxP > 0.3) {
+    setHint(reason === 'backward' ? 'Against the fur! Start again at the head.' : 'Your hand slipped off. Start again at the head.', 2400);
+  }
+  if (reason === 'backward' && stroke.active) mood.annoyed = 0;
+  stroke.active = false; stroke.maxP = 0;
+}
+
+function onPetSample(p, now) {
+  if (!stroke.active) {
+    if (p > 0.16) {
+      if (pointer.down && now - stroke.shown > 1500) { setHint('Start at the head.', 1800); stroke.shown = now; }
+      return;
+    }
+    stroke.active = true; stroke.maxP = p; stroke.lastHit = now;
+    setHint('Now along the back…');
+    return;
+  }
+  if (p < stroke.maxP - BACKSLIDE) { breakStroke('backward'); onPetSample(p, now); return; }
+  if (p > stroke.maxP + 0.25) return;           // ignore jumps; the hand has to travel the cat
+  stroke.lastHit = now;
+  if (p > stroke.maxP) {
+    stroke.maxP = p;
+    if (p > 0.5) {
+      const left = (1 - (p - 0.5) / 0.5) * TAIL.L;
+      setHint(TAIL.L * CM_PER_UNIT > 300 && left > 0.2 ? `Keep going… ${fmtLength(left)} of tail left` : 'All the way to the tip…');
+    }
+  }
+  if (stroke.maxP >= 0.95) completeStroke();
+}
+
+function completeStroke() {
+  stroke.active = false; stroke.maxP = 0;
+  strokes++;
+  const from = TAIL.L;
+  const to = Math.min(MAX_LENGTH, Math.max(from, nextTailLength(strokes, from)));
+  const shownFrom = TAIL.shown;
+  rebuildTail(to);
+  showTail(shownFrom);
+  TAIL.anim = { from: shownFrom, to, t0: performance.now(), dur: 900 };
+  TAIL.happy = 1;
+  const gained = (to - from) * CM_PER_UNIT;
+  const gainText = gained >= 100 ? `+${(gained / 100).toFixed(2)} m` : `+${gained.toFixed(gained < 10 ? 1 : 0)} cm`;
+  const reached = MILESTONES.filter(m => from * CM_PER_UNIT < m.cm && to * CM_PER_UNIT >= m.cm).pop();
+  if (reached) { toast(reached.line, true); mood.proud = 0; }
+  else toast(`${TOASTS[strokes % TOASTS.length]} ${gainText}`);
+  ui.fill.classList.add('done'); ui.fill.style.width = '100%';
+  setTimeout(() => ui.fill.classList.remove('done'), 700);
+  setHint('Again! Start back at the head.', 2600);
+  spawnHearts();
+  meow(!!reached);       // a little meow when the stroke reaches the tail tip; a bigger one at milestones
+  keepPurring(3000);     // and a contented purr that carries on for a bit
+  renderStats();
+  // stroking by hover never counts as a click, so ask once for one
+  if (soundOn && (!audio || audio.state !== 'running') && !askedForSound) {
+    askedForSound = true;
+    setTimeout(() => setHint('Click anywhere once to hear the purring and meows.', 4000), 1400);
+  }
+}
+
+// ---------- pointer + hand ----------
+const pointer = { x: 0, y: 0, down: false, inside: false, type: 'mouse' };
+const ndc = new THREE.Vector2();
+const ray = new THREE.Raycaster();
+const HOT_X = 30, HOT_Y = 38;   // palm centre of the 60px hand
+let overCat = false;
+
+if (matchMedia('(pointer: fine)').matches) document.documentElement.classList.add('hand-cursor');
+
+function moveHand(e) {
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.type = e.pointerType;
+  ui.hand.style.transform = `translate3d(${e.clientX - HOT_X}px, ${e.clientY - HOT_Y}px, 0)`;
+  if (e.pointerType !== 'touch' || pointer.down) ui.hand.hidden = false;
+}
+function sample() {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((pointer.x - r.left) / r.width) * 2 - 1, -((pointer.y - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects([...pettables, TAIL.proxy, TAIL.cap], false);
+  overCat = hits.length > 0;
+  ui.hand.classList.toggle('over', overCat);
+  if (overCat) onPetSample(progressFromHit(hits[0]), performance.now());
+}
+
+window.addEventListener('pointermove', moveHand, { passive: true });
+canvas.addEventListener('pointermove', e => { pointer.inside = true; sample(); });
+canvas.addEventListener('pointerdown', e => {
+  initAudio();
+  pointer.down = true; pointer.inside = true;
+  moveHand(e);
+  ui.hand.classList.add('press');
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  sample();
+});
+const release = e => {
+  pointer.down = false;
+  ui.hand.classList.remove('press');
+  if (e.pointerType === 'touch') { ui.hand.hidden = true; pointer.inside = false; breakStroke('lifted'); }
+};
+window.addEventListener('pointerup', release);
+window.addEventListener('pointercancel', release);
+document.documentElement.addEventListener('pointerleave', () => { ui.hand.hidden = true; pointer.inside = false; });
+canvas.addEventListener('pointerleave', () => { overCat = false; ui.hand.classList.remove('over'); });
+
+// ---------- resize ----------
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  computeFrame();
+}
+addEventListener('resize', resize);
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+const lookAt = new V3(), _look = new V3();
+const mood = { proud: -1, annoyed: -1 };   // seconds since a milestone / a stroke against the fur
+let petAmt = 0, nextBlink = 2, blinkT = -1, twitchT = -1, nextTwitch = 4;
+
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  const now = performance.now();
+
+  if (stroke.active && now - stroke.lastHit > GAP_MS) breakStroke('lifted');
+
+  // tail growth animation
+  if (TAIL.anim) {
+    const a = TAIL.anim;
+    const u = Math.min(1, (now - a.t0) / a.dur);
+    const e = 1 - Math.pow(1 - u, 3);
+    showTail(a.from + (a.to - a.from) * e);
+    if (u >= 1) { TAIL.anim = null; save(); }
+  }
+
+  // cat reacts while being stroked
+  petAmt += ((stroke.active ? 1 : 0) - petAmt) * Math.min(1, dt * 6);
+  TAIL.happy = Math.max(0, TAIL.happy - dt * 0.6);
+  const breathe = 1 + 0.018 * Math.sin(t * 1.7);
+  catRig.root.scale.y = breathe + petAmt * 0.03;
+  // proud: chin up and a slow happy blink; annoyed: ears flat and a quick head shake
+  let proudK = 0, annoyK = 0;
+  if (mood.proud >= 0) { mood.proud += dt; proudK = Math.sin(Math.PI * Math.min(1, mood.proud / 1.6)); if (mood.proud > 1.6) mood.proud = -1; }
+  if (mood.annoyed >= 0) { mood.annoyed += dt; annoyK = Math.sin(Math.PI * Math.min(1, mood.annoyed / 0.9)); if (mood.annoyed > 0.9) mood.annoyed = -1; }
+  catRig.head.rotation.z = -0.16 * petAmt - 0.24 * proudK + 0.02 * Math.sin(t * 0.9);
+  catRig.head.rotation.y = 0.06 * Math.sin(t * 0.37) + (reduceMotion ? 0 : 0.22 * annoyK * Math.sin(mood.annoyed * 26));
+
+  if (t > nextBlink && blinkT < 0) { blinkT = 0; nextBlink = t + 2.5 + Math.random() * 3.5; }
+  let lid = 1;
+  if (blinkT >= 0) { blinkT += dt; lid = Math.abs(Math.cos(Math.min(1, blinkT / 0.18) * Math.PI)); if (blinkT > 0.18) blinkT = -1; }
+  const squint = Math.min(THREE.MathUtils.lerp(0.86, 0.18, petAmt), THREE.MathUtils.lerp(1, 0.12, proudK));   // a little relaxed even at rest
+  for (const g of eyes) g.scale.y = Math.max(0.08, Math.min(lid, squint));
+
+  if (t > nextTwitch && twitchT < 0) { twitchT = 0; nextTwitch = t + 3 + Math.random() * 5; }
+  if (twitchT >= 0) { twitchT += dt; catRig.earR.rotation.x = 0.4 * Math.sin(Math.min(1, twitchT / 0.25) * Math.PI); if (twitchT > 0.25) twitchT = -1; }
+  if (annoyK > 0) { catRig.earR.rotation.x = 0.75 * annoyK; catRig.earL.rotation.x = -0.75 * annoyK; }
+  else if (twitchT < 0) catRig.earL.rotation.x = 0;
+
+  updateGuide(t, dt);
+
+  updateTailMood(dt, annoyK);
+  applyTailMotion();
+
+  // purr whenever the hand is on the cat, and for a moment after it leaves
+  if (stroke.active || (overCat && pointer.inside)) keepPurring(1200);
+  updatePurr(now);
+
+  // pupils follow the hand, or look at you when it's away
+  if (pointer.inside) lookAt.copy(ray.ray.origin).addScaledVector(ray.ray.direction, camState.dist * 0.85);
+  else lookAt.copy(camera.position);
+  for (const g of eyes) {
+    _look.copy(lookAt); g.worldToLocal(_look); _look.normalize();
+    g.userData.pupil.position.set(_look.x * 0.008, _look.y * 0.008, 0.012);
+  }
+
+  // meter
+  if (!ui.fill.classList.contains('done')) ui.fill.style.width = `${(stroke.active ? stroke.maxP : 0) * 100}%`;
+
+  // hearts
+  for (const h of hearts) {
+    if (!h.s.visible) continue;
+    h.life -= dt;
+    if (h.life <= 0) { h.s.visible = false; continue; }
+    h.s.position.addScaledVector(h.v, dt);
+    h.v.multiplyScalar(0.985);
+    h.s.material.opacity = Math.min(1, h.life * 1.5);
+    h.s.scale.setScalar(h.base * (1 + 0.12 * Math.sin(h.life * 9)));
+  }
+
+  // camera eases to fit cat + tail
+  const ease = Math.min(1, dt * 2.2);
+  camState.target.lerp(frame.target, ease);
+  camState.dist += (frame.dist - camState.dist) * ease;
+  camera.position.copy(camState.target).addScaledVector(frame.dir, camState.dist);
+  camera.lookAt(camState.target);
+  camera.near = Math.max(0.05, camState.dist * 0.03);
+  camera.far = camState.dist * 12 + 60;
+  camera.updateProjectionMatrix();
+  scene.fog.near = camState.dist * 1.8;
+  scene.fog.far = camState.dist * 5.5;
+
+  // tail moves under a resting hand, so keep checking
+  if (pointer.inside && (pointer.type !== 'touch' || pointer.down)) sample();
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+
+// ---------- boot ----------
+function start(data) {
+  let saved = data && data.L ? data : null;
+  if (!saved) { try { saved = JSON.parse(localStorage.getItem('tuxedo-tail') || 'null'); } catch (e) {} }
+  strokes = (saved && saved.strokes) | 0;
+  const L = saved && saved.L > 0 ? Math.min(MAX_LENGTH, saved.L) : START_LENGTH;
+  resize();
+  rebuildTail(L);
+  buildGuide();
+  camState.target.copy(frame.target); camState.dist = frame.dist;
+  renderStats();
+  window.claude?.hot?.snapshot?.(() => ({ L: TAIL.anim ? TAIL.anim.to : TAIL.L, strokes }));
+  requestAnimationFrame(tick);
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</html>
