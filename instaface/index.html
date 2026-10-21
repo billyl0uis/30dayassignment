@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>InstaFace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pacifico&display=swap">
+<style>
+/* Layout: one centered column like a phone feed; header with logo + text-size control, stories strip, composer, posts; tab bar docked at the bottom */
+:root {
+  --bg: #f3efe8;
+  --card: #ffffff;
+  --ink: #1d1b19;
+  --muted: #5c5650;
+  --line: #e2dbd0;
+  --blue: #1f5fd1;
+  --blue-soft: #e6eefc;
+  --heart: #d81b55;
+  --ok: #1d7a46;
+  --grad: linear-gradient(45deg, #f9a03f, #e1306c 45%, #833ab4 75%, #1f5fd1);
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+  --script: "Pacifico", "Brush Script MT", cursive;
+  --radius: 18px;
+  --tap: 56px;
+  color-scheme: light;
+  font-size: 20px;
+}
+:root[data-size="2"] { font-size: 23px; }
+:root[data-size="3"] { font-size: 27px; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  line-height: 1.45;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 4px solid var(--blue); outline-offset: 2px; border-radius: 10px; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+.hidden { display: none !important; }
+
+/* ---------- header ---------- */
+header {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 72px; }
+.logo { margin: 0; font-size: 1.7rem; line-height: 1; white-space: nowrap; }
+.logo .insta { font-family: var(--script); font-weight: 400; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.logo .face { font-weight: 700; color: var(--blue); letter-spacing: -0.02em; }
+.sizer { display: flex; border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; background: var(--card); }
+.sizer button { border: 0; background: none; width: 48px; height: 44px; font-weight: 700; line-height: 1; }
+.sizer button + button { border-left: 2px solid var(--ink); }
+.sizer button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
+.sizer button:nth-child(1) { font-size: 15px; }
+.sizer button:nth-child(2) { font-size: 19px; }
+.sizer button:nth-child(3) { font-size: 24px; }
+
+/* ---------- cards ---------- */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin: 16px 0; overflow: hidden; }
+.pad { padding: 16px; }
+.avatar {
+  flex: none; width: 52px; height: 52px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 1.05rem; color: #fff;
+}
+.avatar.big { width: 96px; height: 96px; font-size: 2rem; }
+
+/* ---------- stories ---------- */
+.stories { display: flex; gap: 14px; overflow-x: auto; padding: 16px 0 6px; scrollbar-width: none; }
+.stories::-webkit-scrollbar { display: none; }
+.story { border: 0; background: none; padding: 0; display: grid; justify-items: center; gap: 6px; width: 84px; flex: none; }
+.story .ring { padding: 4px; border-radius: 50%; background: var(--grad); }
+.story.seen .ring { background: var(--line); }
+.story .ring .avatar { width: 68px; height: 68px; border: 3px solid var(--bg); font-size: 1.2rem; }
+.story span { font-size: 0.8rem; max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.story.mine .ring { background: none; border: 3px dashed var(--muted); padding: 2px; }
+
+/* ---------- composer ---------- */
+.composer .row { display: flex; gap: 12px; align-items: flex-start; }
+.composer textarea {
+  flex: 1; min-width: 0; resize: vertical; min-height: 96px;
+  border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #fbfaf7;
+}
+.composer textarea:focus { border-color: var(--blue); outline: none; background: #fff; }
+.composer .preview { position: relative; margin-top: 12px; }
+.composer .preview img { width: 100%; border-radius: 14px; display: block; max-height: 360px; object-fit: cover; }
+.composer .preview button { position: absolute; top: 10px; right: 10px; }
+.composer .tools { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.btn {
+  min-height: var(--tap); padding: 0 22px; border-radius: 14px;
+  border: 2px solid var(--ink); background: var(--card); font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  white-space: nowrap;
+}
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; flex: 1; }
+.btn.primary:disabled { background: #9db6e6; border-color: #9db6e6; cursor: not-allowed; }
+.btn.small { min-height: 44px; padding: 0 14px; font-size: 0.85rem; }
+.btn svg { width: 1.2em; height: 1.2em; }
+
+/* ---------- posts ---------- */
+.post-head { display: flex; gap: 12px; align-items: center; padding: 14px 16px; }
+.post-head .who { min-width: 0; }
+.post-head strong { display: block; font-size: 1.05rem; }
+.post-head small { color: var(--muted); font-size: 0.8rem; }
+.post-text { padding: 0 16px 14px; font-size: 1.05rem; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.photo { position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo .art { font-size: 6rem; line-height: 1; text-align: center; filter: drop-shadow(0 6px 12px rgba(0,0,0,.18)); }
+.photo .label { position: absolute; left: 12px; bottom: 12px; background: rgba(0,0,0,.55); color: #fff; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; }
+.photo .pop { position: absolute; font-size: 7rem; opacity: 0; transform: scale(.4); pointer-events: none; color: #fff; }
+.photo .pop.go { animation: pop .8s ease-out; }
+@keyframes pop { 20% { opacity: 1; transform: scale(1.1); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+.counts { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; color: var(--muted); font-size: 0.85rem; }
+.counts button { border: 0; background: none; padding: 0; color: inherit; text-decoration: underline; font-size: inherit; }
+.actions { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+.actions button {
+  border: 0; background: none; min-height: var(--tap);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-weight: 700; font-size: 0.95rem; color: var(--muted);
+}
+.actions button:hover { background: #f6f3ee; }
+.actions button svg { width: 1.4em; height: 1.4em; }
+.actions button.on { color: var(--heart); }
+.actions button.on svg path { fill: currentColor; }
+.comments { border-top: 1px solid var(--line); padding: 12px 16px 16px; display: grid; gap: 12px; }
+.comment { display: flex; gap: 10px; align-items: flex-start; }
+.comment .avatar { width: 40px; height: 40px; font-size: 0.8rem; }
+.comment .bubble { background: #f1ede6; border-radius: 16px; padding: 8px 14px; min-width: 0; overflow-wrap: anywhere; }
+.comment .bubble b { display: block; font-size: 0.85rem; }
+.comment.fresh .bubble { animation: fresh 1.6s ease-out; }
+@keyframes fresh { from { background: #fff1b8; } }
+.reply { display: flex; gap: 10px; }
+.reply input { flex: 1; min-width: 0; min-height: 52px; border: 2px solid var(--line); border-radius: 14px; padding: 0 14px; }
+.reply input:focus { border-color: var(--blue); outline: none; }
+
+/* ---------- alerts + profile ---------- */
+.notice { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.notice:last-child { border-bottom: 0; }
+.notice.unread { background: var(--blue-soft); }
+.notice p { margin: 0; }
+.notice small { color: var(--muted); font-size: 0.8rem; }
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+.profile { text-align: center; padding: 28px 16px; display: grid; justify-items: center; gap: 8px; }
+.profile h2 { margin: 6px 0 0; }
+.profile .stats { display: flex; gap: 28px; color: var(--muted); }
+.profile .stats b { display: block; color: var(--ink); font-size: 1.3rem; }
+.section-title { font-size: 1.1rem; margin: 24px 0 0; }
+
+/* ---------- tab bar ---------- */
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  background: var(--card); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+nav.tabs .wrap { display: grid; grid-template-columns: repeat(3, 1fr); }
+nav.tabs button {
+  border: 0; background: none; min-height: 76px; position: relative;
+  display: grid; justify-items: center; align-content: center; gap: 2px;
+  font-size: 0.8rem; font-weight: 700; color: var(--muted);
+}
+nav.tabs button svg { width: 30px; height: 30px; }
+nav.tabs button[aria-current="page"] { color: var(--blue); }
+nav.tabs button[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 4px; border-radius: 0 0 4px 4px; background: var(--blue); }
+.badge { position: absolute; top: 10px; left: calc(50% + 6px); background: var(--heart); color: #fff; font-size: 0.7rem; min-width: 24px; height: 24px; border-radius: 12px; display: grid; place-items: center; padding: 0 6px; }
+
+/* ---------- toast ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 30;
+  transform: translate(-50%, 20px); opacity: 0; transition: .25s;
+  background: var(--ink); color: #fff; padding: 14px 22px; border-radius: 14px; font-weight: 700;
+  max-width: calc(100vw - 32px); text-align: center; pointer-events: none;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+/* ---------- full-screen overlays (welcome, story viewer, likes list) ---------- */
+.overlay { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(20,18,16,.6); }
+.sheet { background: var(--card); border-radius: 22px; width: 100%; max-width: 480px; padding: 24px; display: grid; gap: 14px; max-height: 85vh; overflow: auto; }
+.sheet h2 { margin: 0; }
+.sheet p { margin: 0; color: var(--muted); }
+.sheet input { min-height: var(--tap); border: 2px solid var(--line); border-radius: 14px; padding: 0 16px; }
+.sheet input:focus { border-color: var(--blue); outline: none; }
+.sheet .person { display: flex; gap: 12px; align-items: center; }
+
+.viewer { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-rows: auto 1fr auto; color: #fff; user-select: none; -webkit-user-select: none; }
+.viewer .bars { display: flex; gap: 6px; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0; }
+.viewer .bars i { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.4); overflow: hidden; }
+.viewer .bars i b { display: block; height: 100%; width: 0; background: #fff; }
+.viewer .top { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.viewer .top strong { flex: 1; min-width: 0; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.viewer .close { border: 0; width: 56px; height: 56px; border-radius: 50%; background: rgba(0,0,0,.35); color: #fff; font-size: 1.6rem; line-height: 1; }
+.viewer .stage { display: grid; place-items: center; text-align: center; padding: 16px; gap: 20px; align-content: center; }
+.viewer .stage .art { font-size: 8rem; line-height: 1; }
+.viewer .stage p { font-size: 1.5rem; font-weight: 700; margin: 0; max-width: 18ch; text-shadow: 0 2px 8px rgba(0,0,0,.35); }
+.viewer .hint { text-align: center; padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 20px); font-size: 0.85rem; opacity: .85; }
+.viewer .tapzone { position: absolute; top: 140px; bottom: 0; width: 50%; border: 0; background: none; }
+.viewer .tapzone.prev { left: 0; }
+.viewer .tapzone.next { right: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+
+<header>
+  <div class="wrap">
+    <h1 class="logo"><span class="insta">Insta</span><span class="face">face</span></h1>
+    <div class="sizer" role="group" aria-label="Text size">
+      <button data-size="1" aria-label="Normal text">A</button>
+      <button data-size="2" aria-label="Large text">A</button>
+      <button data-size="3" aria-label="Largest text">A</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="tab-home">
+    <div class="stories" id="stories" aria-label="Stories"></div>
+
+    <form class="card pad composer" id="composer">
+      <div class="row">
+        <div class="avatar" id="composer-avatar"></div>
+        <label class="hidden" for="post-text">Write a post</label>
+        <textarea id="post-text" maxlength="2000" placeholder="What's on your mind?"></textarea>
+      </div>
+      <div class="preview hidden" id="photo-preview">
+        <img alt="Your chosen photo">
+        <button type="button" class="btn small" id="photo-remove">Remove photo</button>
+      </div>
+      <div class="tools">
+        <label class="btn" for="photo-input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5-8 8"/></svg>
+          Add photo
+        </label>
+        <input type="file" id="photo-input" accept="image/*" class="hidden">
+        <button type="submit" class="btn primary" id="post-btn" disabled>Share post</button>
+      </div>
+    </form>
+
+    <div id="feed"></div>
+  </section>
+
+  <section id="tab-alerts" class="hidden">
+    <h2 class="section-title">Notifications</h2>
+    <div class="card" id="alerts"></div>
+  </section>
+
+  <section id="tab-me" class="hidden">
+    <div class="card profile" id="profile"></div>
+    <h2 class="section-title">Your posts</h2>
+    <div id="my-posts"></div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Main">
+  <div class="wrap">
+    <button data-tab="home" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      Home
+    </button>
+    <button data-tab="alerts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+      Alerts
+      <span class="badge hidden" id="badge"></span>
+    </button>
+    <button data-tab="me">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      Me
+    </button>
+  </div>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="overlay hidden" id="welcome">
+  <form class="sheet" id="welcome-form">
+    <h1 class="logo"><span class="insta">Insta</span><span class="face">face</span></h1>
+    <h2>Welcome!</h2>
+    <p>Your family and friends are already here. What should we call you?</p>
+    <label class="hidden" for="welcome-name">Your name</label>
+    <input id="welcome-name" maxlength="40" placeholder="For example, Grandma Pat" autocomplete="off">
+    <button class="btn primary" type="submit">Let's go</button>
+  </form>
+</div>
+
+<div class="overlay hidden" id="likers" role="dialog" aria-modal="true" aria-labelledby="likers-title">
+  <div class="sheet">
+    <h2 id="likers-title">People who liked this</h2>
+    <div id="likers-list" style="display:grid;gap:12px"></div>
+    <button class="btn" data-close>Close</button>
+  </div>
+</div>
+
+<div class="viewer hidden" id="viewer" role="dialog" aria-modal="true" aria-label="Story">
+  <div class="bars" id="viewer-bars"></div>
+  <div class="top"><div class="avatar" id="viewer-avatar"></div><strong id="viewer-name"></strong><button class="close" id="viewer-close" aria-label="Close story">✕</button></div>
+  <div class="stage"><div class="art" id="viewer-art"></div><p id="viewer-text"></p></div>
+  <div class="hint">Tap the right side for the next one, the left side to go back</div>
+  <button class="tapzone prev" aria-label="Previous"></button>
+  <button class="tapzone next" aria-label="Next"></button>
+</div>
+
+<script>
+// ---------- people & seed content ----------
+const PEOPLE = {
+  me:     { name: "You",              color: "#1f5fd1" },
+  emma:   { name: "Emma (granddaughter)", color: "#e1306c" },
+  jake:   { name: "Jake (grandson)",  color: "#2f8f5b" },
+  linda:  { name: "Linda Hoffman",    color: "#b5651d" },
+  carol:  { name: "Carol from Church", color: "#833ab4" },
+  dave:   { name: "Dave (neighbor)",  color: "#2b6d8f" },
+  susan:  { name: "Susan (daughter)", color: "#c0392b" },
+  bob:    { name: "Bob's Fishing Club", color: "#4f6d2f" },
+};
+
+const MIN = 60 * 1000, HOUR = 60 * MIN, DAY = 24 * HOUR;
+
+function seedPosts(now) {
+  return [
+    { id: "p1", who: "emma", at: now - 25 * MIN, text: "Made Grandma's lemon bars for my roommates and they were GONE in ten minutes 🍋 Thank you for the recipe card!!",
+      photo: { bg: "linear-gradient(135deg,#fff3b0,#ffd166)", art: "🍋🍰", label: "Lemon bars" }, likedBy: ["susan", "carol", "jake"], liked: false,
+      comments: [{ who: "susan", text: "They look just like Mom's!" }] },
+    { id: "p2", who: "carol", at: now - 2 * HOUR, text: "Good morning everyone!! ☀️ Have a BLESSED Tuesday 🌷🌷🌷 Share if you love your family!!",
+      photo: { bg: "linear-gradient(160deg,#ffafcc,#cdb4db 60%,#a2d2ff)", art: "🌷☕🌷", label: "Good Morning" }, likedBy: ["linda", "dave"], liked: false, comments: [] },
+    { id: "p3", who: "dave", at: now - 5 * HOUR, text: "First tomatoes of the season. Squirrels got two of them but I'll take the win.",
+      photo: { bg: "linear-gradient(180deg,#b7e4c7,#52b788)", art: "🍅🍅🍅", label: "Dave's garden" }, likedBy: ["linda"], liked: false,
+      comments: [{ who: "linda", text: "Save me one for a BLT!" }, { who: "dave", text: "No promises 😄" }] },
+    { id: "p4", who: "jake", at: now - 1 * DAY, text: "Scored my first goal of the season! Coach says I'm getting faster ⚽",
+      photo: { bg: "linear-gradient(180deg,#90e0ef,#2a9d8f)", art: "⚽🥅", label: "Saturday game" }, likedBy: ["susan", "emma"], liked: false, comments: [] },
+    { id: "p5", who: "bob", at: now - 2 * DAY, text: "Reminder: Fishing Club potluck is Saturday at the lake pavilion. Bring a dish and a lawn chair. Ernie is bringing his famous chili again, so plan accordingly.",
+      photo: null, likedBy: ["dave"], liked: false, comments: [{ who: "dave", text: "I'll bring the coleslaw." }] },
+    { id: "p6", who: "susan", at: now - 3 * DAY, text: "Sunset from the porch tonight. Wish you were here, Mom ❤️",
+      photo: { bg: "linear-gradient(180deg,#ff9e6d,#e85d75 50%,#5b3a8c)", art: "🌅", label: "Lake house" }, likedBy: ["emma", "jake", "linda", "carol"], liked: false, comments: [] },
+  ];
+}
+
+const STORIES = [
+  { who: "emma",  frames: [ { bg: "linear-gradient(160deg,#e1306c,#833ab4)", art: "📚", text: "Finals week. Send snacks." }, { bg: "linear-gradient(160deg,#833ab4,#1f5fd1)", art: "☕☕☕", text: "Coffee number three" } ] },
+  { who: "jake",  frames: [ { bg: "linear-gradient(160deg,#2a9d8f,#264653)", art: "🏆", text: "We won 3–1!" } ] },
+  { who: "susan", frames: [ { bg: "linear-gradient(160deg,#f4a261,#e76f51)", art: "🐶", text: "Biscuit learned to sit!" }, { bg: "linear-gradient(160deg,#e9c46a,#f4a261)", art: "🦴", text: "Okay, he sat once." } ] },
+  { who: "dave",  frames: [ { bg: "linear-gradient(160deg,#52b788,#1b4332)", art: "🐿️", text: "Caught the tomato thief." } ] },
+  { who: "carol", frames: [ { bg: "linear-gradient(160deg,#ffafcc,#a2d2ff)", art: "🎶⛪", text: "Choir practice Thursday at 7!" } ] },
+];
+
+const INITIAL_ALERTS = [
+  { at: -40 * MIN, text: "Emma (granddaughter) posted a new photo.", who: "emma" },
+  { at: -3 * HOUR, text: "Carol from Church invited you to Thursday choir practice.", who: "carol" },
+  { at: -1 * DAY, text: "It's Linda Hoffman's birthday tomorrow! 🎂", who: "linda" },
+];
+
+// ---------- storage: everything stays in this browser ----------
+const KEY = "instaface:v1";
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch { // usually a photo too big for storage: keep the session going, just don't persist photos
+    try { localStorage.setItem(KEY, JSON.stringify({ ...state, posts: state.posts.map(p => p.photo?.src ? { ...p, photo: null } : p) })); } catch {}
+  }
+}
+
+const now = Date.now();
+let state = load() || {
+  name: "",
+  size: 1,
+  posts: seedPosts(now),
+  seenStories: [],
+  alerts: INITIAL_ALERTS.map((a, i) => ({ id: "a" + i, at: now + a.at, text: a.text, who: a.who, read: false })),
+};
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const person = who => who === "me" ? { ...PEOPLE.me, name: state.name || "You" } : PEOPLE[who];
+const initials = name => name.replace(/\(.*\)/, "").trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+function avatar(who, cls = "") {
+  const p = person(who);
+  return `<div class="avatar ${cls}" style="background:${p.color}" aria-hidden="true">${esc(initials(p.name))}</div>`;
+}
+function ago(t) {
+  const d = Date.now() - t;
+  if (d < MIN) return "Just now";
+  if (d < HOUR) { const m = Math.floor(d / MIN); return m + (m === 1 ? " minute ago" : " minutes ago"); }
+  if (d < DAY) { const h = Math.floor(d / HOUR); return h + (h === 1 ? " hour ago" : " hours ago"); }
+  const days = Math.floor(d / DAY);
+  return days === 1 ? "Yesterday" : days + " days ago";
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+const ICON = {
+  heart: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.3 4.5 6.9 4.5c2.1 0 3.6 1.1 5.1 3 1.5-1.9 3-3 5.1-3 3.6 0 5.9 3.5 4.4 7.2C19.5 16.4 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  comment: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7 8l5-5 5 5"/></svg>`,
+};
+
+// ---------- rendering ----------
+const openComments = new Set();
+const freshComments = new Set();
+
+function photoHTML(p) {
+  if (!p.photo) return "";
+  const inner = p.photo.src
+    ? `<img src="${p.photo.src}" alt="Photo shared by ${esc(person(p.who).name)}">`
+    : `<div class="art" role="img" aria-label="${esc(p.photo.label)}">${p.photo.art}</div><span class="label">${esc(p.photo.label)}</span>`;
+  return `<div class="photo" data-action="dbl" style="background:${p.photo.bg || "#ddd"}">${inner}<div class="pop">${ICON.heart.replace('fill="none"', 'fill="currentColor"')}</div></div>`;
+}
+
+function likeSummary(p) {
+  const names = p.likedBy.map(w => person(w).name.replace(/ \(.*\)/, ""));
+  if (p.liked) names.unshift("You");
+  if (!names.length) return "Be the first to like this";
+  if (names.length === 1) return `${names[0]} liked this`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} liked this`;
+  return `${names[0]} and ${names.length - 1} others liked this`;
+}
+
+function postHTML(p) {
+  const author = person(p.who);
+  const nComments = p.comments.length;
+  const open = openComments.has(p.id);
+  return `
+  <article class="card" data-id="${p.id}">
+    <div class="post-head">${avatar(p.who)}<div class="who"><strong>${esc(author.name)}</strong><small>${ago(p.at)}</small></div></div>
+    ${p.text ? `<p class="post-text">${esc(p.text)}</p>` : ""}
+    ${photoHTML(p)}
+    <div class="counts">
+      <button data-action="likers">${esc(likeSummary(p))}</button>
+      <button data-action="comments">${nComments} ${nComments === 1 ? "comment" : "comments"}</button>
+    </div>
+    <div class="actions">
+      <button data-action="like" class="${p.liked ? "on" : ""}" aria-pressed="${p.liked}">${ICON.heart}${p.liked ? "Liked" : "Like"}</button>
+      <button data-action="comments" aria-expanded="${open}">${ICON.comment}Comment</button>
+      <button data-action="share">${ICON.share}Share</button>
+    </div>
+    ${open ? `
+    <div class="comments">
+      ${p.comments.map((c, i) => `<div class="comment ${freshComments.has(p.id + ":" + i) ? "fresh" : ""}">${avatar(c.who)}<div class="bubble"><b>${esc(person(c.who).name)}</b>${esc(c.text)}</div></div>`).join("")}
+      <form class="reply" data-action="reply">
+        <label class="hidden" for="r-${p.id}">Write a comment</label>
+        <input id="r-${p.id}" placeholder="Write a comment…" maxlength="500" autocomplete="off">
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </div>` : ""}
+  </article>`;
+}
+
+function renderStories() {
+  const mine = `<button class="story mine" data-story="me">${`<div class="ring">${avatar("me")}</div>`}<span>Your story</span></button>`;
+  $("#stories").innerHTML = mine + STORIES.map((s, i) =>
+    `<button class="story ${state.seenStories.includes(s.who) ? "seen" : ""}" data-story="${i}"><div class="ring">${avatar(s.who)}</div><span>${esc(person(s.who).name.replace(/ \(.*\)/, ""))}</span></button>`
+  ).join("");
+}
+
+function renderFeed() {
+  $("#feed").innerHTML = state.posts.map(postHTML).join("");
+  const mine = state.posts.filter(p => p.who === "me");
+  $("#my-posts").innerHTML = mine.length ? mine.map(postHTML).join("") : `<div class="card empty">You haven't posted anything yet. Go to Home and share something!</div>`;
+  const likes = mine.reduce((n, p) => n + p.likedBy.length, 0);
+  $("#profile").innerHTML = `${avatar("me", "big")}<h2>${esc(state.name || "You")}</h2>
+    <div class="stats"><div><b>${mine.length}</b>posts</div><div><b>${Object.keys(PEOPLE).length - 1}</b>friends</div><div><b>${likes}</b>likes</div></div>
+    <button class="btn small" id="rename">Change my name</button>`;
+}
+
+function renderAlerts() {
+  const list = [...state.alerts].sort((a, b) => b.at - a.at);
+  $("#alerts").innerHTML = list.length
+    ? list.map(a => `<div class="notice ${a.read ? "" : "unread"}">${avatar(a.who)}<div><p>${esc(a.text)}</p><small>${ago(a.at)}</small></div></div>`).join("")
+    : `<div class="empty">Nothing new right now.</div>`;
+  const unread = state.alerts.filter(a => !a.read).length;
+  $("#badge").textContent = unread;
+  $("#badge").classList.toggle("hidden", !unread);
+}
+
+function renderAll() {
+  $("#composer-avatar").outerHTML = `<div class="avatar" id="composer-avatar" style="background:${PEOPLE.me.color}" aria-hidden="true">${esc(initials(state.name || "You"))}</div>`;
+  $("#post-text").placeholder = `What's on your mind${state.name ? ", " + state.name.split(" ")[0] : ""}?`;
+  renderStories();
+  renderFeed();
+  renderAlerts();
+}
+
+// ---------- text size ----------
+function applySize() {
+  document.documentElement.dataset.size = state.size;
+  document.querySelectorAll(".sizer button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.size === state.size)));
+}
+document.querySelector(".sizer").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.size = +b.dataset.size; applySize(); save();
+});
+
+// ---------- tabs ----------
+function showTab(name) {
+  for (const t of ["home", "alerts", "me"]) $("#tab-" + t).classList.toggle("hidden", t !== name);
+  document.querySelectorAll("nav.tabs button").forEach(b => b.dataset.tab === name ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  if (name === "alerts") {
+    renderAlerts();                       // show what was unread, then mark it read
+    state.alerts.forEach(a => a.read = true); save();
+    setTimeout(() => { $("#badge").classList.add("hidden"); }, 0);
+  }
+  window.scrollTo({ top: 0 });
+}
+document.querySelector("nav.tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab);
+});
+
+// ---------- post interactions (feed and profile share one handler) ----------
+const findPost = id => state.posts.find(p => p.id === id);
+function setLiked(p, val) {
+  p.liked = val; save(); renderFeed();
+}
+let lastTap = 0;
+function onPostClick(e) {
+  const el = e.target.closest("[data-action]"); if (!el) return;
+  const card = el.closest("article"); const p = card && findPost(card.dataset.id); if (!p) return;
+  const act = el.dataset.action;
+  if (act === "like") setLiked(p, !p.liked);
+  else if (act === "comments") {
+    openComments.has(p.id) ? openComments.delete(p.id) : openComments.add(p.id);
+    renderFeed();
+    if (openComments.has(p.id)) document.querySelector(`#feed [data-id="${p.id}"] .reply input, #my-posts [data-id="${p.id}"] .reply input`)?.focus({ preventScroll: true });
+  }
+  else if (act === "share") toast("Shared with your friends! 💌");
+  else if (act === "likers") showLikers(p);
+  else if (act === "dbl") {
+    const t = Date.now();
+    if (t - lastTap < 350) {
+      const pop = el.querySelector(".pop"); pop.classList.remove("go"); void pop.offsetWidth; pop.classList.add("go");
+      if (!p.liked) setTimeout(() => setLiked(p, true), 450);
+      lastTap = 0;
+    } else lastTap = t;
+  }
+}
+function onReply(e) {
+  const form = e.target.closest("form[data-action=reply]"); if (!form) return;
+  e.preventDefault();
+  const input = form.querySelector("input"); const text = input.value.trim(); if (!text) return;
+  const p = findPost(form.closest("article").dataset.id);
+  p.comments.push({ who: "me", text });
+  freshComments.add(p.id + ":" + (p.comments.length - 1));
+  save(); renderFeed();
+  document.querySelector(`[data-id="${p.id}"] .reply input`)?.focus({ preventScroll: true });
+}
+for (const id of ["#feed", "#my-posts"]) {
+  $(id).addEventListener("click", onPostClick);
+  $(id).addEventListener("submit", onReply);
+}
+
+function showLikers(p) {
+  const who = (p.liked ? ["me"] : []).concat(p.likedBy);
+  $("#likers-list").innerHTML = who.length
+    ? who.map(w => `<div class="person">${avatar(w)}<strong>${esc(person(w).name)}</strong></div>`).join("")
+    : `<p>No likes yet.</p>`;
+  $("#likers").classList.remove("hidden");
+  $("#likers [data-close]").focus();
+}
+$("#likers").addEventListener("click", e => { if (e.target.id === "likers" || e.target.closest("[data-close]")) $("#likers").classList.add("hidden"); });
+
+// ---------- composer: the post looks shared, but it never leaves this browser ----------
+let pendingPhoto = null;
+const postText = $("#post-text"), postBtn = $("#post-btn");
+const refreshPostBtn = () => { postBtn.disabled = !postText.value.trim() && !pendingPhoto; };
+postText.addEventListener("input", refreshPostBtn);
+
+$("#photo-input").addEventListener("change", async e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if (!file) return;
+  try { pendingPhoto = await shrink(file); }
+  catch { toast("Sorry, that photo didn't work. Try another one."); return; }
+  $("#photo-preview img").src = pendingPhoto;
+  $("#photo-preview").classList.remove("hidden");
+  refreshPostBtn();
+});
+$("#photo-remove").addEventListener("click", () => {
+  pendingPhoto = null; $("#photo-preview").classList.add("hidden"); refreshPostBtn();
+});
+
+// phone photos are huge; scale down so they fit in localStorage
+function shrink(file, max = 1000) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL("image/jpeg", 0.8));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+$("#composer").addEventListener("submit", e => {
+  e.preventDefault();
+  const text = postText.value.trim();
+  if (!text && !pendingPhoto) return;
+  postBtn.disabled = true; postBtn.textContent = "Sharing…";
+  setTimeout(() => {                       // a short pause so it feels like it went somewhere
+    const post = { id: "m" + Date.now(), who: "me", at: Date.now(), text, photo: pendingPhoto ? { src: pendingPhoto } : null, likedBy: [], liked: false, comments: [] };
+    state.posts.unshift(post);
+    save(); renderFeed();
+    postText.value = ""; pendingPhoto = null; $("#photo-preview").classList.add("hidden");
+    postBtn.textContent = "Share post"; refreshPostBtn();
+    toast("Your post is up! 🎉");
+    scheduleReactions(post);
+  }, 900);
+});
+
+// ---------- pretend friends respond ----------
+// Each reaction: { who: a PEOPLE key, delay: ms after posting, type: "like" | "comment", text?: string }
+// Friends read the post for keywords and answer what it's about. First matching topic wins, so sadder topics go first.
+const TOPICS = [
+  { match: /\b(miss(ing)?|passed|funeral|sad|lonely|hospital|sick|surgery|pray(ers?)? for)\b/i, lines: [
+    "Sending you a big hug ❤️", "Thinking of you. Call me anytime.", "Keeping you in my prayers 🙏", "Oh, I'm so sorry. Let me know if you need anything." ] },
+  { match: /\b(birthday|anniversary|bday|turned \d+)\b/i, lines: [
+    "Happy birthday!! 🎂🎉", "Many happy returns! 🎈", "Celebrate big today! 🥳", "Wishing you the best year yet!" ] },
+  { match: /\b(grand(kids?|children|son|daughter|baby)|baby|kids|family|reunion)\b/i, lines: [
+    "What a beautiful family ❤️", "They grow up so fast!", "Give them a squeeze from me!", "Family is everything 💕" ] },
+  { match: /\b(garden(ing)?|flowers?|roses?|tomato(es)?|plants?|bloom(ing)?|tulips?|weeds?)\b/i, lines: [
+    "Your garden is the best on the street 🌻", "What's your secret? Mine never look like that!", "Save me a cutting!", "Gorgeous! All that hard work paid off 🌷" ] },
+  { match: /\b(bak(e|ed|ing)|cook(ed|ing)?|recipe|pie|cake|cookies?|dinner|lunch|breakfast|soup|casserole|delicious)\b/i, lines: [
+    "That looks delicious! Recipe please? 😋", "Save me a plate!", "Now I'm hungry 😄", "Nobody cooks like you do!" ] },
+  { match: /\b(dog|puppy|cat|kitty|kitten|bird|pets?)\b/i, lines: [
+    "What a sweetheart! 🐾", "Give them a treat from me!", "So cute I can't stand it 😍", "Best friend there is." ] },
+  { match: /\b(church|god|bless(ed|ing)?|amen|sunday service|choir|pray(ing)?)\b/i, lines: [
+    "Amen! 🙏", "God is good!", "Blessings to you 🙏🌷", "See you Sunday!" ] },
+  { match: /\b(trip|travel(ing)?|vacation|beach|cruise|lake|visit(ing)?|drive)\b/i, lines: [
+    "Have a wonderful time! ☀️", "Take lots of pictures!", "Jealous! Bring me back a souvenir 😄", "Safe travels!" ] },
+  { match: /\b(weather|sun(ny|shine)?|rain(y|ing)?|snow(ing)?|cold|hot|storm|walk(ing)?)\b/i, lines: [
+    "Such a lovely day for it ☀️", "Bundle up out there!", "Enjoy it while it lasts!", "Same here! Stay safe." ] },
+  { match: /\b(doctor|knee|hip|back|pills?|appointment|feeling better|tired)\b/i, lines: [
+    "Take it easy and rest up!", "Feel better soon ❤️", "Don't overdo it now!", "Glad you're on the mend!" ] },
+  { match: /\?\s*$/, lines: [
+    "Good question! I'll call you later 📞", "Hmm, not sure, let me ask around!", "I was wondering the same thing!" ] },
+];
+const PHOTO_LINES = ["Beautiful picture! 😍", "Great shot!", "Love this photo!", "You should frame this one!"];
+const GENERAL_LINES = ["Love this! ❤️", "So good to hear from you!", "Thanks for sharing!", "This made my day 😊", "Couldn't agree more!"];
+// a little personality tacked onto some comments
+const SIGNOFFS = { emma: " 💕", jake: " 😄", susan: " Love you Mom!", carol: " 🙏", linda: "", dave: "", bob: "" };
+
+const pick = list => list[Math.floor(Math.random() * list.length)];
+
+function friendReactions(post) {
+  const topic = TOPICS.find(t => t.match.test(post.text));
+  const pool = topic ? topic.lines : post.photo ? PHOTO_LINES : GENERAL_LINES;
+  const unused = [...pool];   // no two friends say the exact same thing
+  // two to four friends, in random order; the first shows up fast, the rest trickle in over the next half minute
+  const friends = Object.keys(SIGNOFFS).sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 3));
+  let delay = 2500;
+  return friends.map(who => {
+    let r = { who, delay, type: "like" };
+    if (unused.length && Math.random() < 0.6) {
+      const line = unused.splice(Math.floor(Math.random() * unused.length), 1)[0];
+      r = { who, delay, type: "comment", text: line + (Math.random() < 0.5 ? SIGNOFFS[who] : "") };
+    }
+    delay += 4000 + Math.random() * 6000;
+    return r;
+  });
+}
+
+function scheduleReactions(post) {
+  for (const r of friendReactions(post)) {
+    setTimeout(() => {
+      const p = findPost(post.id); if (!p || !PEOPLE[r.who]) return;
+      const name = PEOPLE[r.who].name;
+      if (r.type === "comment" && r.text) {
+        p.comments.push({ who: r.who, text: r.text });
+        freshComments.add(p.id + ":" + (p.comments.length - 1));
+        state.alerts.push({ id: "a" + Date.now() + r.who, at: Date.now(), who: r.who, text: `${name} commented: "${r.text}"`, read: false });
+      } else if (!p.likedBy.includes(r.who)) {
+        p.likedBy.push(r.who);
+        state.alerts.push({ id: "a" + Date.now() + r.who, at: Date.now(), who: r.who, text: `${name} liked your post.`, read: false });
+      } else return;
+      save(); renderFeed(); renderAlerts();
+    }, r.delay);
+  }
+}
+
+// ---------- story viewer ----------
+const FRAME_MS = 5000;
+let story = null, raf = 0;
+function openStory(idx) {
+  const s = STORIES[idx];
+  story = { idx, frame: 0, start: performance.now() };
+  $("#viewer-bars").innerHTML = s.frames.map(() => "<i><b></b></i>").join("");
+  $("#viewer-avatar").outerHTML = avatar(s.who).replace('class="avatar ', 'id="viewer-avatar" class="avatar ');
+  $("#viewer-name").textContent = person(s.who).name;
+  $("#viewer").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  showFrame();
+  $("#viewer-close").focus();
+  if (!state.seenStories.includes(s.who)) { state.seenStories.push(s.who); save(); }
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+}
+function showFrame() {
+  const f = STORIES[story.idx].frames[story.frame];
+  $("#viewer").style.background = f.bg;
+  $("#viewer-art").textContent = f.art;
+  $("#viewer-text").textContent = f.text;
+  story.start = performance.now();
+}
+function step(dir) {
+  const frames = STORIES[story.idx].frames;
+  story.frame += dir;
+  if (story.frame < 0) story.frame = 0;
+  if (story.frame >= frames.length) {   // next person's story, or close at the end
+    if (story.idx + 1 < STORIES.length) return openStory(story.idx + 1);
+    return closeStory();
+  }
+  showFrame();
+}
+function tick(t) {
+  if (!story) return;
+  const bars = document.querySelectorAll("#viewer-bars b");
+  const k = Math.min(1, (t - story.start) / FRAME_MS);
+  bars.forEach((b, i) => b.style.width = i < story.frame ? "100%" : i === story.frame ? k * 100 + "%" : "0");
+  if (k >= 1) step(1);
+  raf = requestAnimationFrame(tick);
+}
+function closeStory() {
+  story = null; cancelAnimationFrame(raf);
+  $("#viewer").classList.add("hidden");
+  document.body.style.overflow = "";
+  renderStories();
+}
+$("#viewer .prev").addEventListener("click", () => step(-1));
+$("#viewer .next").addEventListener("click", () => step(1));
+$("#viewer-close").addEventListener("click", closeStory);
+$("#stories").addEventListener("click", e => {
+  const b = e.target.closest("[data-story]"); if (!b) return;
+  if (b.dataset.story === "me") { postText.focus(); toast("Write something below to share it 👇"); }
+  else openStory(+b.dataset.story);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { if (story) closeStory(); $("#likers").classList.add("hidden"); }
+  if (story && e.key === "ArrowRight") step(1);
+  if (story && e.key === "ArrowLeft") step(-1);
+});
+
+// ---------- welcome + rename ----------
+function askName() {
+  $("#welcome-name").value = state.name;
+  $("#welcome").classList.remove("hidden");
+  $("#welcome-name").focus();
+}
+$("#welcome-form").addEventListener("submit", e => {
+  e.preventDefault();
+  state.name = $("#welcome-name").value.trim() || "Friend";
+  $("#welcome").classList.add("hidden");
+  save(); renderAll();
+});
+$("#profile").addEventListener("click", e => { if (e.target.id === "rename") askName(); });
+
+// ---------- start ----------
+applySize();
+renderAll();
+if (!state.name) askName();
+// keep "5 minutes ago" honest, but never redraw under someone mid-comment
+setInterval(() => { if (!story && !document.activeElement?.closest(".reply")) { renderFeed(); renderAlerts(); } }, MIN);
+</script>
