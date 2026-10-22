@@ -1,0 +1,2058 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Silverbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a dark workbench. Tool rail left, soldering board centre, lesson/notes panel right. Mechanisms tab swaps in a 3D viewer. */
+:root {
+  --bench: #171513;
+  --panel: #211e1b;
+  --panel-2: #2a2622;
+  --line: #3a3430;
+  --ink: #efe9df;
+  --muted: #a99f91;
+  --dim: #7a7166;
+  --silver: #d6dadf;
+  --flame: #ff8b3d;
+  --flame-2: #ffc65c;
+  --cool: #7db9ff;
+  --ok: #8fd19e;
+  --warn: #ffb347;
+  --bad: #ff6b5b;
+  --ochre: #d9a43b;
+  --display: "Fraunces", Georgia, serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bench); color: var(--ink);
+  font: 15px/1.5 var(--body);
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--flame-2); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- header ---------- */
+.top {
+  display: flex; align-items: center; gap: 18px;
+  padding: 10px max(16px, env(safe-area-inset-left)) 10px max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line); background: #1b1917;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.brand b { font: 700 22px/1 var(--display); letter-spacing: -0.01em; }
+.brand b i { font-style: normal; color: var(--flame); }
+.brand em { font-style: normal; color: var(--dim); font-size: 13px; white-space: nowrap; }
+.tabs { display: flex; gap: 4px; background: var(--panel); padding: 3px; border-radius: 10px; border: 1px solid var(--line); }
+.tabs button {
+  border: 0; background: none; padding: 6px 14px; border-radius: 7px; cursor: pointer; color: var(--muted); font-weight: 500;
+}
+.tabs button[aria-selected="true"] { background: var(--panel-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.top-actions { margin-left: auto; display: flex; gap: 6px; }
+.chipbtn {
+  border: 1px solid var(--line); background: var(--panel); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--muted);
+}
+.chipbtn:hover { color: var(--ink); border-color: #554c44; }
+
+/* ---------- bench view ---------- */
+main { min-height: 0; position: relative; }
+.view { position: absolute; inset: 0; }
+#benchView { display: grid; grid-template-columns: 84px 1fr 340px; min-height: 0; }
+#rail {
+  border-right: 1px solid var(--line); background: #1b1917; overflow-y: auto; padding: 8px 6px 16px;
+  display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin;
+}
+#rail h4 { margin: 10px 0 2px; font: 600 10px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); text-align: center; }
+.tool {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px 6px; border-radius: 9px;
+  border: 1px solid transparent; background: none; cursor: pointer; color: var(--muted); font-size: 11px; line-height: 1.1; position: relative;
+}
+.tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.tool:hover { background: var(--panel); color: var(--ink); }
+.tool[aria-pressed="true"] { background: var(--panel-2); color: var(--flame-2); border-color: #4a3f33; }
+.tool.want::after {
+  content: ""; position: absolute; inset: -2px; border-radius: 11px; border: 2px solid var(--flame);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.tool kbd { font: 500 9px var(--mono); color: var(--dim); }
+@keyframes pulse { 50% { opacity: .25; } }
+
+#stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: radial-gradient(120% 90% at 50% 40%, #2a241f 0%, #171513 70%); }
+#bench { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+#bench.grab { cursor: grab; } #bench.grabbing { cursor: grabbing; } #bench.torch { cursor: none; }
+
+#opts {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  background: rgba(27,25,23,.92); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; backdrop-filter: blur(6px);
+}
+#opts .hint { color: var(--muted); font-size: 13px; flex: 1 1 220px; min-width: 0; }
+#opts .hint b { color: var(--ink); font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 4px 9px; font-size: 12px; cursor: pointer; color: var(--muted); font-family: var(--mono); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--flame-2); }
+.seglabel { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; margin-right: 6px; }
+.heat { flex: 1 1 100%; position: relative; height: 30px; }
+.heat .bar {
+  position: absolute; left: 0; right: 0; top: 4px; height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, #39424d 0%, #3d3a3a 44%, #5e1a10 52%, #a8260d 64%, #e2531a 77%, #ff8f3a 88%, #ffd38a 100%);
+}
+.heat .tick { position: absolute; top: 0; height: 14px; width: 1px; background: rgba(255,255,255,.35); }
+.heat .tick span { position: absolute; top: 15px; transform: translateX(-50%); font: 500 9.5px var(--mono); color: var(--dim); white-space: nowrap; }
+.heat .tick.hi span { color: var(--ink); }
+.heat .marker { position: absolute; top: -2px; width: 3px; height: 18px; margin-left: -1px; background: var(--ink); border-radius: 2px; box-shadow: 0 0 6px rgba(255,255,255,.6); transition: left .08s linear; }
+.heat .readout { position: absolute; right: 0; top: -18px; font: 500 11px var(--mono); color: var(--muted); }
+
+#tip {
+  position: absolute; pointer-events: none; z-index: 3; min-width: 150px; max-width: 240px;
+  background: rgba(20,18,16,.94); border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; font-size: 12px; color: var(--muted);
+}
+#tip b { display: block; color: var(--ink); font-size: 13px; font-weight: 600; }
+#tip .t { font: 500 18px var(--mono); color: var(--ink); }
+#tip .state { display: block; }
+
+#toasts { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; z-index: 4; width: min(560px, calc(100% - 32px)); pointer-events: none; }
+.toast {
+  background: rgba(26,24,22,.96); border: 1px solid var(--line); border-left: 3px solid var(--cool); border-radius: 9px; padding: 8px 12px; font-size: 13.5px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35); animation: tin .25s ease-out; max-width: 100%;
+}
+.toast.good { border-left-color: var(--ok); } .toast.warn { border-left-color: var(--warn); } .toast.bad { border-left-color: var(--bad); }
+.toast.out { opacity: 0; transform: translateY(-6px); transition: .35s; }
+@keyframes tin { from { opacity: 0; transform: translateY(-8px); } }
+
+#zoomCtl { position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+#zoomCtl button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: rgba(27,25,23,.9); cursor: pointer; color: var(--muted); font: 500 15px var(--mono); }
+#zoomCtl button:hover { color: var(--ink); }
+
+/* ---------- side panel ---------- */
+aside { border-left: 1px solid var(--line); background: var(--panel); overflow-y: auto; padding: 18px 18px 28px; min-height: 0; scrollbar-width: thin; }
+aside h2 { font: 700 22px/1.15 var(--display); margin: 0 0 6px; letter-spacing: -0.01em; }
+aside h3 { font: 600 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin: 22px 0 10px; }
+aside p { margin: 0 0 10px; color: var(--muted); }
+aside p b, aside li b { color: var(--ink); font-weight: 600; }
+.lede { font-size: 14px; }
+.lesson-card {
+  display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
+}
+.lesson-card:hover { border-color: #5c4f42; }
+.lesson-card strong { display: block; font: 600 15px var(--display); }
+.lesson-card span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.lesson-card .meta { font: 500 11px var(--mono); color: var(--flame-2); margin-top: 6px; }
+.lesson-card.done strong::after { content: "  ✓"; color: var(--ok); }
+table.chart { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.chart td { padding: 5px 0; border-bottom: 1px solid var(--line); color: var(--muted); }
+table.chart td:last-child { text-align: right; font-family: var(--mono); color: var(--ink); }
+table.chart .sw { display: inline-block; width: 10px; height: 8px; border-radius: 2px; margin-right: 8px; vertical-align: 0; border: 1px solid rgba(0,0,0,.4); }
+.steps { list-style: none; padding: 0; margin: 14px 0 0; counter-reset: s; }
+.steps li { position: relative; padding: 0 0 12px 34px; color: var(--dim); font-size: 13.5px; counter-increment: s; }
+.steps li::before {
+  content: counter(s); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line);
+  display: grid; place-items: center; font: 500 11px var(--mono); color: var(--dim);
+}
+.steps li.done { color: var(--muted); }
+.steps li.done::before { content: "✓"; background: #2f3b31; border-color: #3f5a44; color: var(--ok); }
+.steps li.now { color: var(--ink); font-size: 15px; }
+.steps li.now::before { border-color: var(--flame); color: var(--flame-2); background: #3a2a1d; }
+.steps li.now .why { display: block; color: var(--muted); font-size: 13px; margin-top: 6px; }
+.steps li:not(.now) .why { display: none; }
+.steps li.later { opacity: .55; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 9px; padding: 8px 14px; cursor: pointer; font-weight: 500; font-size: 14px; }
+.btn:hover { border-color: #5c4f42; }
+.btn.primary { background: var(--flame); color: #1d120a; border-color: var(--flame); font-weight: 600; }
+.btn.primary:hover { background: var(--flame-2); }
+.btn.quiet { background: none; color: var(--muted); }
+.progress { display: flex; gap: 4px; margin: 10px 0 2px; }
+.progress i { flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
+.progress i.on { background: var(--flame); }
+.note { font-size: 12.5px; color: var(--dim); }
+kbd.k { font: 500 11px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--muted); }
+.legend { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; font-size: 13px; color: var(--muted); align-items: center; }
+.legend i { width: 18px; height: 10px; border-radius: 3px; display: block; }
+
+/* ---------- mechanisms ---------- */
+#mechView { display: grid; grid-template-columns: 1fr 380px; }
+#mechStage { position: relative; min-width: 0; background: radial-gradient(90% 80% at 50% 45%, #3a332c 0%, #1d1a17 65%, #141210 100%); }
+#mech3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#mech3d:active { cursor: grabbing; }
+.mech-hint { position: absolute; left: 16px; bottom: 14px; font-size: 12px; color: var(--dim); pointer-events: none; }
+.mech-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.mech-list button { border: 1px solid var(--line); background: var(--panel-2); border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: var(--muted); }
+.mech-list button[aria-selected="true"] { color: #1d120a; background: var(--silver); border-color: var(--silver); font-weight: 600; }
+.slider { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.slider input { width: 100%; accent-color: var(--flame); }
+.slider output { font: 500 12px var(--mono); color: var(--ink); min-width: 70px; text-align: right; }
+ol.make { padding-left: 20px; margin: 0; }
+ol.make li { margin-bottom: 8px; color: var(--muted); font-size: 14px; }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 860px) {
+  .brand em { display: none; }
+  .top { flex-wrap: wrap; gap: 10px; }
+  .top-actions { margin-left: 0; }
+  #benchView { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) auto auto; }
+  #stage { grid-row: 1; }
+  #rail { grid-row: 2; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: 0; border-top: 1px solid var(--line); padding: 4px 8px; }
+  #rail h4 { display: none; }
+  .tool { min-width: 58px; }
+  #benchView > aside { grid-row: 3; max-height: 34vh; border-left: 0; border-top: 1px solid var(--line); padding: 14px 16px 20px; }
+  #opts { left: 8px; right: 8px; bottom: 8px; padding: 7px 9px; gap: 6px 10px; }
+  #opts .hint { font-size: 12px; }
+  #mechView { grid-template-columns: 1fr; grid-template-rows: minmax(260px, 48vh) 1fr; }
+  #mechView > aside { border-left: 0; border-top: 1px solid var(--line); }
+}
+@media (prefers-reduced-motion: reduce) { .tool.want::after { animation: none; } .toast { animation: none; } }
+</style>
+
+<header class="top">
+  <div class="brand"><b>Silver<i>bench</i></b><em>a jeweler's bench simulator</em></div>
+  <nav class="tabs" role="tablist" aria-label="View">
+    <button role="tab" data-view="bench" aria-selected="true">Bench</button>
+    <button role="tab" data-view="mech" aria-selected="false">Mechanisms</button>
+  </nav>
+  <div class="top-actions">
+    <button class="chipbtn" id="undoBtn" title="Undo (Ctrl/⌘ Z)">Undo</button>
+    <button class="chipbtn" id="clearBtn">Clear bench</button>
+    <button class="chipbtn" id="soundBtn" aria-pressed="true">Sound on</button>
+  </div>
+</header>
+
+<main>
+  <section id="benchView" class="view">
+    <nav id="rail" aria-label="Tools"></nav>
+    <div id="stage">
+      <canvas id="bench" aria-label="Soldering board. Use the tools to make and join silver pieces."></canvas>
+      <div id="tip" hidden></div>
+      <div id="toasts" aria-live="polite"></div>
+      <div id="zoomCtl"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zfit" aria-label="Fit board">⤢</button></div>
+      <div id="opts"></div>
+    </div>
+    <aside id="side"></aside>
+  </section>
+
+  <section id="mechView" class="view" hidden>
+    <div id="mechStage"><canvas id="mech3d" aria-label="3D view of the selected mechanism"></canvas><div class="mech-hint">Drag to orbit · scroll or pinch to zoom</div></div>
+    <aside id="mechSide">
+      <div class="mech-list" role="tablist" id="mechList"></div>
+      <h2 id="mName"></h2>
+      <p class="lede" id="mBlurb"></p>
+      <label class="slider"><span id="mSlLabel"></span><input type="range" id="mSlider" min="0" max="1000" value="0"><output id="mSlState"></output></label>
+      <div class="row"><button class="btn" id="mPlay">Play</button><button class="btn" id="mExplode" aria-pressed="false">Exploded view</button></div>
+      <h3>Why it works</h3>
+      <p id="mWhy"></p>
+      <h3>How it's made</h3>
+      <ol class="make" id="mSteps"></ol>
+      <div class="row" id="mLessonRow"><button class="btn primary" id="mLesson">Build one on the bench →</button></div>
+    </aside>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const fmt = v => (Math.round(v * 10) / 10).toString();
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =====================================================================
+   Metallurgy. Temperatures in °C, sizes in mm.
+   Sterling silver solder flow points are the common US hard/medium/easy/extra-easy grades.
+   ===================================================================== */
+const AMBIENT = 20;
+const SILVER = { glow: 430, fluxClear: 595, anneal: 650, solidus: 802, liquidus: 893 };
+const SOLDERS = {
+  hard:   { name: 'Hard',       flow: 788, letter: 'H', color: '#eceef0' },
+  medium: { name: 'Medium',     flow: 754, letter: 'M', color: '#e6e2d8' },
+  easy:   { name: 'Easy',       flow: 718, letter: 'E', color: '#e4d9c2' },
+  xeasy:  { name: 'Extra easy', flow: 688, letter: 'X', color: '#dfcca6' },
+};
+const RHO_C = 2.45e-3;          // J/(K·mm³): sterling density × specific heat
+const TOUCH = 0.25;             // gap in mm that still counts as touching
+const TIPS = {
+  small:  { label: 'Small',  P: 70,  sigma: 2.8 },
+  medium: { label: 'Medium', P: 120, sigma: 5.5 },
+  large:  { label: 'Large',  P: 260, sigma: 9 },
+};
+
+// Decides what a solder chip does right now, given the chip and the metal pieces it touches.
+// Return 'flow' (melts and runs into the seam), 'ball' (melts but beads up instead of wetting), or 'wait'.
+// chip: { grade, temp, flux }   metals[i]: { temp, flux, oxide, kind }   SOLDERS[chip.grade].flow is the flow point.
+function solderVerdict(chip, metals) {
+  const flow = SOLDERS[chip.grade].flow;
+  if (chip.temp < flow) return 'wait';
+  // the metal has to be at flow temperature too; a chip melting on cold work just beads up
+  const hot = metals.filter(m => m.temp >= flow - 10);
+  if (!hot.length) return 'ball';
+  // solder only wets clean, fluxed metal: no flux, or oxide the flux couldn't hold off, means a bead
+  const fluxed = chip.flux > 0 || hot.some(m => m.flux > 0.15);
+  if (!fluxed) return 'ball';
+  if (hot.every(m => m.oxide > 0.5)) return 'ball';
+  return 'flow';
+}
+
+/* =====================================================================
+   Geometry
+   ===================================================================== */
+function toLocal(p, wx, wy) { const dx = wx - p.x, dy = wy - p.y, c = Math.cos(p.rot), s = Math.sin(p.rot); return [dx * c + dy * s, -dx * s + dy * c]; }
+function toWorld(p, lx, ly) { const c = Math.cos(p.rot), s = Math.sin(p.rot); return [p.x + lx * c - ly * s, p.y + lx * s + ly * c]; }
+function segDist(px, py, ax, ay, bx, by) {
+  const vx = bx - ax, vy = by - ay, L = vx * vx + vy * vy;
+  const t = L ? clamp(((px - ax) * vx + (py - ay) * vy) / L, 0, 1) : 0;
+  return Math.hypot(px - ax - vx * t, py - ay - vy * t);
+}
+function pointInPoly(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function polyEdgeDist(x, y, poly) {
+  let d = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) d = Math.min(d, segDist(x, y, poly[j][0], poly[j][1], poly[i][0], poly[i][1]));
+  return d;
+}
+function boxDist(x, y, hw, hh) {
+  const dx = Math.abs(x) - hw, dy = Math.abs(y) - hh;
+  return Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) + Math.min(Math.max(dx, dy), 0);
+}
+function polyArea(poly) { let a = 0; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) a += poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1]; return a / 2; }
+function centroid(poly) {
+  let a = 0, cx = 0, cy = 0;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const f = poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1];
+    a += f; cx += (poly[j][0] + poly[i][0]) * f; cy += (poly[j][1] + poly[i][1]) * f;
+  }
+  if (Math.abs(a) < 1e-6) return [poly.reduce((s, p) => s + p[0], 0) / poly.length, poly.reduce((s, p) => s + p[1], 0) / poly.length];
+  return [cx / (3 * a), cy / (3 * a)];
+}
+// keep the side of the polygon where n·v >= c (Sutherland–Hodgman against one half-plane)
+function clipHalf(poly, nx, ny, c) {
+  const out = [], f = v => v[0] * nx + v[1] * ny - c;
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length], fa = f(a), fb = f(b);
+    if (fa >= 0) out.push(a);
+    if ((fa >= 0) !== (fb >= 0)) { const t = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+  }
+  return out;
+}
+const rectPoly = (w, h) => [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
+const discPoly = r => { const n = clamp(Math.round(r * 5), 24, 80); return Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return [Math.cos(a) * r, Math.sin(a) * r]; }); };
+
+/* =====================================================================
+   Parts
+   ===================================================================== */
+const S = { parts: [], joints: [], nextId: 1, hinge: {} };   // hinge: pinId -> { angle, mover }
+const opt = { gauge: 1.0, wire: 1.3, tube: '3.0/1.5', ringID: 6, ringWire: 1.0, grade: 'hard', tip: 'medium', drill: 1.3 };
+let derived = { contacts: [], touch: new Map(), rigid: new Map(), asm: new Map(), hinges: [], pivots: [], jointKeys: new Set() };
+const byIdMap = new Map();
+const byId = id => byIdMap.get(id);
+
+function newPart(kind, props) {
+  return Object.assign({ id: S.nextId++, kind, x: 0, y: 0, rot: 0, temp: AMBIENT, flux: 0, fluxDry: false, glass: false, oxide: 0, stopoff: false, surface: 'mill', burn: 0, pools: [] }, props);
+}
+function sheetFromWorld(points, t, extra) {
+  const [cx, cy] = centroid(points);
+  return newPart('sheet', Object.assign({ x: cx, y: cy, t, holes: [], domed: false, shape: 'free', poly: points.map(([x, y]) => [x - cx, y - cy]) }, extra));
+}
+const mkRect = (x, y, w, h, t, rot = 0) => newPart('sheet', { x, y, rot, t, holes: [], domed: false, shape: 'rect', w, h, poly: rectPoly(w, h) });
+const mkDisc = (x, y, r, t) => newPart('sheet', { x, y, t, holes: [], domed: false, shape: 'disc', r, poly: discPoly(r) });
+const mkWire = (x, y, len, d, rot = 0) => newPart('wire', { x, y, rot, len, d });
+const mkTube = (x, y, len, od, bore, rot = 0) => newPart('tube', { x, y, rot, len, od, bore });
+const mkRing = (x, y, r, d) => newPart('ring', { x, y, r, d });
+const isMetal = p => p && p.kind !== 'chip';
+
+function partName(p) {
+  switch (p.kind) {
+    case 'sheet':
+      if (p.melted) return 'Melted blob';
+      if (p.shape === 'disc') return `Disc Ø${fmt(p.r * 2)}, ${p.t} mm`;
+      if (p.shape === 'rect') return `Sheet ${fmt(p.w)}×${fmt(p.h)}, ${p.t} mm`;
+      return `Sheet, ${p.t} mm`;
+    case 'wire': return `Wire Ø${p.d} × ${fmt(p.len)} mm`;
+    case 'tube': return `Tube ${p.od}/${p.bore} × ${fmt(p.len)} mm`;
+    case 'ring': return `Jump ring, ${fmt((p.r - p.d / 2) * 2)} mm ID`;
+    case 'chip': return `${SOLDERS[p.grade].name} solder${p.state === 'ball' ? ' (balled)' : ''}`;
+    case 'rivet': return 'Rivet';
+  }
+}
+
+function dirty(p) { delete p._lo; delete p._ls; delete p._br; delete p._C; delete p._A; }
+
+function localDist(p, x, y) {
+  switch (p.kind) {
+    case 'sheet': {
+      for (const h of p.holes) { const d = Math.hypot(x - h.x, y - h.y); if (d < h.r) return h.r - d; }
+      const e = polyEdgeDist(x, y, p.poly);
+      return pointInPoly(x, y, p.poly) ? -e : e;
+    }
+    case 'wire': return segDist(x, y, -p.len / 2, 0, p.len / 2, 0) - p.d / 2;
+    case 'tube': return boxDist(x, y, p.len / 2, p.od / 2);
+    case 'ring': return Math.abs(Math.hypot(x, y) - p.r) - p.d / 2;
+    case 'chip': return p.state === 'ball' ? Math.hypot(x, y) - 0.55 : boxDist(x, y, 0.6, 0.45);
+    case 'rivet': return Math.hypot(x, y) - p.d * 0.8;
+  }
+  return Infinity;
+}
+const partDist = (p, wx, wy) => { const [x, y] = toLocal(p, wx, wy); return localDist(p, x, y); };
+
+function outline(p) {
+  if (p._lo) return p._lo;
+  const pts = [], step = 0.7;
+  const seg = (ax, ay, bx, by) => { const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / step)); for (let i = 0; i < n; i++) { const t = i / n; pts.push([ax + (bx - ax) * t, ay + (by - ay) * t]); } };
+  const circ = (cx, cy, r) => { const n = Math.max(6, Math.ceil(2 * Math.PI * r / step)); for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } };
+  switch (p.kind) {
+    case 'sheet': p.poly.forEach((a, i) => { const b = p.poly[(i + 1) % p.poly.length]; seg(a[0], a[1], b[0], b[1]); }); p.holes.forEach(h => circ(h.x, h.y, h.r)); break;
+    case 'wire': seg(-p.len / 2, -p.d / 2, p.len / 2, -p.d / 2); seg(-p.len / 2, p.d / 2, p.len / 2, p.d / 2); circ(-p.len / 2, 0, p.d / 2); circ(p.len / 2, 0, p.d / 2); break;
+    case 'tube': rectPoly(p.len, p.od).forEach((a, i, r) => { const b = r[(i + 1) % 4]; seg(a[0], a[1], b[0], b[1]); }); break;
+    case 'ring': circ(0, 0, p.r + p.d / 2); circ(0, 0, Math.max(0.05, p.r - p.d / 2)); break;
+    case 'chip': if (p.state === 'ball') circ(0, 0, 0.55); else rectPoly(1.2, 0.9).forEach((a, i, r) => { const b = r[(i + 1) % 4]; seg(a[0], a[1], b[0], b[1]); }); break;
+    case 'rivet': circ(0, 0, p.d * 0.8); break;
+  }
+  return (p._lo = pts);
+}
+function br(p) { if (p._br == null) p._br = outline(p).reduce((m, [x, y]) => Math.max(m, Math.hypot(x, y)), 0); return p._br; }
+
+// interior sample points [x, y, areaWeight] used for torch heating
+function samples(p) {
+  if (p._ls) return p._ls;
+  const s = [];
+  switch (p.kind) {
+    case 'sheet': {
+      const xs = p.poly.map(v => v[0]), ys = p.poly.map(v => v[1]);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      const step = Math.max(0.6, Math.sqrt((x1 - x0) * (y1 - y0) / 320));
+      for (let x = x0 + step / 2; x < x1; x += step) for (let y = y0 + step / 2; y < y1; y += step) if (localDist(p, x, y) <= 0) s.push([x, y, step * step]);
+      if (!s.length) s.push([0, 0, Math.abs(polyArea(p.poly))]);
+      break;
+    }
+    case 'wire': case 'tube': { const n = Math.max(1, Math.ceil(p.len / 0.8)), w = p.kind === 'wire' ? p.d : p.od; for (let i = 0; i < n; i++) s.push([-p.len / 2 + (i + 0.5) * p.len / n, 0, p.len / n * w]); break; }
+    case 'ring': { const n = Math.max(8, Math.ceil(2 * Math.PI * p.r / 0.8)); for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; s.push([Math.cos(a) * p.r, Math.sin(a) * p.r, 2 * Math.PI * p.r / n * p.d]); } break; }
+    case 'chip': s.push([0, 0, 1.08]); break;
+    case 'rivet': s.push([0, 0, Math.PI * p.d * p.d / 4]); break;
+  }
+  return (p._ls = s);
+}
+function volume(p) {
+  switch (p.kind) {
+    case 'sheet': return Math.max(0.05, Math.abs(polyArea(p.poly)) - p.holes.reduce((a, h) => a + Math.PI * h.r * h.r, 0)) * p.t;
+    case 'wire': return Math.PI * p.d * p.d / 4 * p.len;
+    case 'tube': return Math.PI * (p.od * p.od - p.bore * p.bore) / 4 * p.len;
+    case 'ring': return Math.PI * p.d * p.d / 4 * 2 * Math.PI * p.r;
+    case 'chip': return 0.3;
+    case 'rivet': return Math.PI * p.d * p.d / 4 * 3;
+  }
+}
+const cap = p => p._C || (p._C = Math.max(1e-4, volume(p) * RHO_C));
+const surf = p => p._A || (p._A = samples(p).reduce((a, s) => a + s[2], 0) * 1.4 + 0.5);
+
+/* =====================================================================
+   Contacts, rigid groups, assemblies, hinges, pivots
+   ===================================================================== */
+function contactPoint(A, B) {
+  if (Math.hypot(A.x - B.x, A.y - B.y) > br(A) + br(B) + TOUCH) return null;
+  let sx = 0, sy = 0, n = 0;
+  for (const [lx, ly] of outline(A)) { const [wx, wy] = toWorld(A, lx, ly); if (partDist(B, wx, wy) <= TOUCH) { sx += wx; sy += wy; n++; } }
+  for (const [lx, ly] of outline(B)) { const [wx, wy] = toWorld(B, lx, ly); if (partDist(A, wx, wy) <= TOUCH) { sx += wx; sy += wy; n++; } }
+  return n ? { x: sx / n, y: sy / n, n } : null;
+}
+const pairKey = (a, b) => a < b ? a + '|' + b : b + '|' + a;
+function makeUF() {
+  const par = new Map();
+  const find = x => { if (!par.has(x)) par.set(x, x); let r = x; while (par.get(r) !== r) r = par.get(r); while (par.get(x) !== r) { const n = par.get(x); par.set(x, r); x = n; } return r; };
+  return { find, union: (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) par.set(ra, rb); } };
+}
+
+function rebuild() {
+  byIdMap.clear(); S.parts.forEach(p => byIdMap.set(p.id, p));
+  S.joints = S.joints.filter(j => byId(j.a) && byId(j.b));
+  derived.jointKeys = new Set(S.joints.map(j => pairKey(j.a, j.b)));
+
+  // contacts
+  const list = [], touch = new Map(), P = S.parts;
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+    const a = P[i], b = P[j];
+    if (a.kind === 'chip' && b.kind === 'chip') continue;
+    const c = contactPoint(a, b);
+    if (!c) continue;
+    let G;
+    if (a.kind === 'chip' || b.kind === 'chip') G = 0.02;
+    else if (derived.jointKeys.has(pairKey(a.id, b.id))) G = 0.15;
+    else if (a.kind === 'rivet' || b.kind === 'rivet') G = 0.02;
+    else G = 0.12 * Math.min(1, c.n / 4);
+    list.push({ a, b, x: c.x, y: c.y, n: c.n, G });
+    (touch.get(a.id) || touch.set(a.id, []).get(a.id)).push(b.id);
+    (touch.get(b.id) || touch.set(b.id, []).get(b.id)).push(a.id);
+  }
+  derived.contacts = list; derived.touch = touch;
+
+  // rigid groups: solder joints, plus any two pieces held by two or more rivets
+  const uf = makeUF();
+  P.forEach(p => uf.find(p.id));
+  S.joints.forEach(j => uf.union(j.a, j.b));
+  const rivets = P.filter(p => p.kind === 'rivet');
+  rivets.forEach(r => { r.links = r.links.filter(byId); if (r.links.length) uf.union(r.id, r.links[0]); });
+  let pivots = [];
+  for (let pass = 0; pass < 3; pass++) {
+    const between = new Map();
+    for (const r of rivets) {
+      const roots = [...new Set(r.links.map(uf.find))];
+      for (let i = 0; i < roots.length; i++) for (let k = i + 1; k < roots.length; k++) {
+        const key = pairKey(roots[i], roots[k]); if (!between.has(key)) between.set(key, []); between.get(key).push(r);
+      }
+    }
+    let merged = false; pivots = [];
+    for (const [key, rs] of between) {
+      const [a, b] = key.split('|').map(Number);
+      if (rs.length >= 2) { uf.union(a, b); merged = true; } else pivots.push({ rivet: rs[0], gA: a, gB: b });
+    }
+    if (!merged) break;
+  }
+  const rigid = new Map(); P.forEach(p => rigid.set(p.id, uf.find(p.id)));
+  pivots = pivots.map(pv => ({ rivet: pv.rivet, gA: uf.find(pv.gA), gB: uf.find(pv.gB) })).filter(pv => pv.gA !== pv.gB);
+
+  // hinges: a wire running through tube knuckles that belong to two different rigid groups
+  const hinges = [];
+  for (const w of P.filter(p => p.kind === 'wire')) {
+    const dx = Math.cos(w.rot), dy = Math.sin(w.rot);
+    const knuckles = P.filter(t => {
+      if (t.kind !== 'tube') return false;
+      if (Math.abs(Math.cos(t.rot) * dy - Math.sin(t.rot) * dx) > 0.12) return false;
+      const vx = t.x - w.x, vy = t.y - w.y, along = vx * dx + vy * dy, off = Math.abs(-vx * dy + vy * dx);
+      return off < t.od * 0.3 && Math.abs(along) < w.len / 2 && w.d <= t.bore + 0.05;
+    });
+    const groups = new Map();
+    knuckles.forEach(t => { const g = rigid.get(t.id); groups.set(g, (groups.get(g) || 0) + 1); });
+    if (groups.size < 2) continue;
+    const [gA, gB] = [...groups.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
+    const k0 = knuckles[0];
+    hinges.push({ pin: w, gA, gB, ax: k0.x, ay: k0.y, dx, dy });
+  }
+
+  // assemblies: everything that moves together when you pick it up
+  const ua = makeUF();
+  P.forEach(p => ua.union(p.id, rigid.get(p.id)));
+  rivets.forEach(r => r.links.forEach(l => ua.union(r.id, l)));
+  hinges.forEach(h => { ua.union(h.pin.id, h.gA); ua.union(h.pin.id, h.gB); });
+  const asm = new Map(); P.forEach(p => asm.set(p.id, ua.find(p.id)));
+
+  // drop hinge state for hinges that no longer exist
+  const live = new Set(hinges.map(h => h.pin.id));
+  for (const k of Object.keys(S.hinge)) if (!live.has(+k)) delete S.hinge[k];
+  derived.rigid = rigid; derived.asm = asm; derived.hinges = hinges; derived.pivots = pivots;
+}
+const rigidMembers = root => S.parts.filter(p => derived.rigid.get(p.id) === root);
+function asmMembers(p) {
+  const root = derived.asm.get(p.id);
+  const members = S.parts.filter(q => derived.asm.get(q.id) === root);
+  if (p.kind === 'chip') return members;
+  // chips resting on the work ride along
+  const ids = new Set(members.map(m => m.id));
+  const chips = S.parts.filter(c => c.kind === 'chip' && !ids.has(c.id) && (derived.touch.get(c.id) || []).some(id => ids.has(id)));
+  return members.concat(chips);
+}
+
+/* =====================================================================
+   Undo, save
+   ===================================================================== */
+const undoStack = [];
+const snap = () => JSON.stringify(S, (k, v) => k[0] === '_' ? undefined : v);
+function load(json) {
+  const d = JSON.parse(json);
+  S.parts = d.parts || []; S.joints = d.joints || []; S.nextId = d.nextId || 1; S.hinge = d.hinge || {};
+  S.parts.forEach(p => { p.pools = p.pools || []; if (p.kind === 'sheet') p.holes = p.holes || []; });
+  rebuild();
+}
+function pushUndo() { undoStack.push(snap()); if (undoStack.length > 60) undoStack.shift(); }
+function undo() { if (!undoStack.length) return toast('Nothing to undo.'); load(undoStack.pop()); torch.firing = false; }
+const SAVE_KEY = 'silverbench.bench.v1';
+function save() { if (lesson) return; try { localStorage.setItem(SAVE_KEY, snap()); } catch (e) {} }
+
+/* =====================================================================
+   Sound (Web Audio, synthesized)
+   ===================================================================== */
+const SFX = (() => {
+  let ac = null, on = true, noiseBuf = null, roar = null;
+  function ensure() {
+    if (ac || !on) return ac;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return ac;
+  }
+  function noise(dur, type, freq, q, gain, attack = 0.005) {
+    if (!ensure()) return;
+    const src = ac.createBufferSource(); src.buffer = noiseBuf;
+    const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = ac.createGain(), t = ac.currentTime;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + dur + 0.05);
+  }
+  function tone(freq, dur, gain, type = 'sine') {
+    if (!ensure()) return;
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.05);
+  }
+  return {
+    ensure,
+    get on() { return on; },
+    toggle() { on = !on; if (!on) this.torch(false); return on; },
+    torch(fire) {
+      if (!on || !ensure()) { if (roar) { roar.g.gain.setTargetAtTime(0, ac.currentTime, 0.05); } return; }
+      if (!roar) {
+        const src = ac.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+        const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 420; f.Q.value = 0.6;
+        const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
+        const g = ac.createGain(); g.gain.value = 0;
+        src.connect(f).connect(lp).connect(g).connect(ac.destination); src.start();
+        roar = { g };
+      }
+      roar.g.gain.setTargetAtTime(fire ? 0.16 : 0, ac.currentTime, fire ? 0.04 : 0.08);
+    },
+    ting() { tone(2093, 0.5, 0.06); tone(3136, 0.35, 0.03); },
+    hiss() { noise(1.1, 'highpass', 3000, 0.4, 0.22, 0.01); },
+    fizz() { noise(0.8, 'bandpass', 5200, 1.5, 0.08, 0.05); },
+    rasp() { for (let i = 0; i < 3; i++) setTimeout(() => noise(0.09, 'bandpass', 2600, 2, 0.12), i * 110); },
+    tink() { tone(1760, 0.18, 0.08, 'triangle'); tone(2637, 0.12, 0.04); },
+    click() { tone(1200, 0.06, 0.1, 'square'); noise(0.05, 'highpass', 4000, 1, 0.1); },
+    drill() { noise(0.45, 'bandpass', 1800, 4, 0.08, 0.02); },
+    bad() { tone(140, 0.4, 0.08, 'sawtooth'); },
+  };
+})();
+
+/* =====================================================================
+   Toasts
+   ===================================================================== */
+const toastSeen = new Map();
+function toast(msg, kind = 'info', ms = 4200) {
+  const box = $('#toasts');
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.innerHTML = msg;
+  box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, ms);
+}
+function toastKey(key, msg, kind, cooldown = 9000) {
+  const now = performance.now();
+  if (now - (toastSeen.get(key) || -1e9) < cooldown) return;
+  toastSeen.set(key, now); toast(msg, kind, 5200);
+}
+
+/* =====================================================================
+   Simulation: heat, flux, oxide, solder
+   ===================================================================== */
+const torch = { x: 0, y: 0, firing: false, on: false };
+
+function torchHeat(p) {
+  const tip = TIPS[opt.tip], s2 = 2 * tip.sigma * tip.sigma, norm = tip.P / (Math.PI * s2);
+  if (Math.hypot(p.x - torch.x, p.y - torch.y) - br(p) > tip.sigma * 3.2) return 0;
+  const c = Math.cos(p.rot), s = Math.sin(p.rot); let q = 0;
+  for (const [lx, ly, w] of samples(p)) {
+    const dx = p.x + lx * c - ly * s - torch.x, dy = p.y + lx * s + ly * c - torch.y;
+    q += w * Math.exp(-(dx * dx + dy * dy) / s2);
+  }
+  return q * norm;
+}
+
+function physics(dt) {
+  const P = S.parts; if (!P.length) return;
+  if (!torch.firing && !P.some(p => p.temp > AMBIENT + 0.3)) return;
+  const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, Tamb4 = 293.15 ** 4;
+  for (let k = 0; k < n; k++) {
+    for (const p of P) p._q = torch.firing ? torchHeat(p) : 0;
+    for (const c of derived.contacts) {
+      const dT = c.a.temp - c.b.temp, Ca = cap(c.a), Cb = cap(c.b);
+      let e = c.G * dT * h; const lim = 0.45 * Math.abs(dT) * Ca * Cb / (Ca + Cb);
+      if (Math.abs(e) > lim) e = Math.sign(e) * lim;
+      c.a._q -= e / h; c.b._q += e / h;
+    }
+    for (const p of P) {
+      const Tk = p.temp + 273.15;
+      p._q -= surf(p) * (1e-5 * (p.temp - AMBIENT) + 1.7e-14 * (Tk ** 4 - Tamb4));
+      p.temp = Math.max(AMBIENT, p.temp + p._q * h / cap(p));
+    }
+  }
+}
+
+function chemistry(dt) {
+  let melted = false;
+  for (const p of S.parts) {
+    if (p.flux > 0) {
+      if (p.temp > 100) p.fluxDry = true;
+      if (p.temp >= SILVER.fluxClear) p.glass = true;
+      if (p.temp > 620) p.flux = Math.max(0, p.flux - dt * (p.temp > 850 ? 0.06 : 0.012));
+      if (p.temp > 100 && p.temp < 300 && Math.random() < dt * 10) { const s = samples(p), pt = s[(Math.random() * s.length) | 0]; const [wx, wy] = toWorld(p, pt[0], pt[1]); spawn('bubble', wx, wy); }
+    }
+    if (p.kind === 'chip') continue;
+    if (p.temp > 350) { const protect = p.flux > 0.15 ? 0.12 : 1; p.oxide = Math.min(1, p.oxide + dt * protect * 0.1 * (p.temp - 350) / 400); }
+    if (p.temp > 450 && p.surface !== 'fired') p.surface = 'fired';
+    if (p.temp > SILVER.solidus) {
+      p.burn = Math.min(1, p.burn + dt * 0.6);
+      toastKey('sweat' + p.id, `The ${partName(p).toLowerCase()} is at ${Math.round(p.temp)}°C and its surface is starting to sweat. Sterling melts at 893°C, so <b>pull the flame away</b>.`, 'bad', 6000);
+      if (Math.random() < dt * 20) spawn('spark', p.x + (Math.random() - .5) * br(p), p.y + (Math.random() - .5) * br(p));
+    }
+    if (p.temp >= SILVER.liquidus && p.kind !== 'rivet') { meltPart(p); melted = true; }
+  }
+  if (melted) rebuild();
+}
+
+function meltPart(p) {
+  const vol = volume(p), t = clamp(Math.cbrt(vol) * 0.45, 0.8, 2.4), r = Math.sqrt(vol / t / Math.PI), ph = Math.random() * 6;
+  const n = 36, poly = [];
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = 1 + 0.12 * Math.sin(3 * a + ph) + 0.06 * Math.sin(7 * a + ph * 2); poly.push([Math.cos(a) * r * k, Math.sin(a) * r * k]); }
+  const name = partName(p).toLowerCase();
+  for (const k of ['len', 'd', 'od', 'id', 'r', 'w', 'h']) delete p[k];
+  Object.assign(p, { kind: 'sheet', shape: 'blob', melted: true, poly, t, holes: [], domed: false, pools: [], temp: SILVER.liquidus - 5 });
+  dirty(p); SFX.bad();
+  toast(`You melted the ${name}. Sterling becomes liquid at 893°C, and small parts get there fast. Heat the bigger piece and keep the flame moving.`, 'bad', 6500);
+}
+
+function addJoint(a, b, grade, wx, wy, q) {
+  if (derived.jointKeys.has(pairKey(a.id, b.id))) return false;
+  const [lx, ly] = toLocal(a, wx, wy);
+  S.joints.push({ id: S.nextId++, a: a.id, b: b.id, grade, lx, ly, q, molten: true, reflows: 0 });
+  derived.jointKeys.add(pairKey(a.id, b.id));
+  return true;
+}
+const jointWorld = j => { const a = byId(j.a); return a ? toWorld(a, j.lx, j.ly) : [0, 0]; };
+
+function solderStep() {
+  let changed = false;
+  for (const chip of S.parts.filter(p => p.kind === 'chip')) {
+    const flowT = SOLDERS[chip.grade].flow;
+    const metals = (derived.touch.get(chip.id) || []).map(byId).filter(m => isMetal(m) && m.kind !== 'rivet');
+    const usable = metals.filter(m => !m.stopoff);
+    if (metals.length && !usable.length && chip.temp >= flowT) {
+      toastKey('stopoff', 'That chip is sitting on stop-off, so the solder will bead up and won\'t wet the metal. That is exactly what stop-off is for.', 'info');
+    }
+    const v = solderVerdict(chip, usable);
+    if (v === 'ball' && chip.state !== 'ball') {
+      chip.state = 'ball'; dirty(chip); changed = true;
+      toastKey('ball', `The ${SOLDERS[chip.grade].name.toLowerCase()} solder balled up: the chip melted but the metal under it wasn't ready. Heat the <b>work</b>, not the chip, and solder flows toward the heat.`, 'warn');
+    } else if (v === 'flow') { flowChip(chip, usable); changed = true; }
+  }
+  // sweat soldering: solder already flowed onto one piece joins anything resting on it once both are hot
+  for (const p of S.parts) for (let i = p.pools.length - 1; i >= 0; i--) {
+    const pl = p.pools[i], f = SOLDERS[pl.grade].flow; if (p.temp < f) continue;
+    const [wx, wy] = toWorld(p, pl.x, pl.y);
+    const q = S.parts.find(o => o !== p && isMetal(o) && o.kind !== 'rivet' && !o.stopoff && o.temp >= f - 10 && partDist(o, wx, wy) <= TOUCH);
+    if (q) {
+      if (addJoint(p, q, pl.grade, wx, wy, 0.9)) { toast(`Sweat-soldered! The puddle of ${SOLDERS[pl.grade].name.toLowerCase()} solder flowed into the seam.`, 'good'); SFX.ting(); }
+      p.pools.splice(i, 1); changed = true; burst(wx, wy);
+    }
+  }
+  if (changed) rebuild();
+}
+
+function flowChip(chip, metals) {
+  const g = chip.grade, f = SOLDERS[g].flow, ids = new Set(metals.map(m => m.id));
+  let made = 0;
+  for (const c of derived.contacts) {
+    const { a, b } = c;
+    if (!isMetal(a) || !isMetal(b) || a.kind === 'rivet' || b.kind === 'rivet' || a.stopoff || b.stopoff) continue;
+    if (!ids.has(a.id) && !ids.has(b.id)) continue;
+    if (Math.hypot(c.x - chip.x, c.y - chip.y) > 4.5) continue;
+    if (a.temp < f - 25 || b.temp < f - 25) continue;
+    const q = clamp(1 - Math.max(a.oxide, b.oxide) * 0.6 - (chip.state === 'ball' ? 0.15 : 0), 0.2, 1);
+    if (addJoint(a, b, g, (c.x + chip.x) / 2, (c.y + chip.y) / 2, q)) made++;
+  }
+  if (made) {
+    toastKey('flow' + g, `${SOLDERS[g].name} solder flowed at ${f}°C and ran into the seam. <b>Joint made.</b>`, 'good', 3000);
+    SFX.ting();
+  } else if (metals.length) {
+    const host = metals.reduce((m, x) => x.temp > m.temp ? x : m);
+    const [lx, ly] = toLocal(host, chip.x, chip.y); host.pools.push({ x: lx, y: ly, grade: g });
+    toastKey('pool', `The solder flowed onto the ${partName(host).toLowerCase()}, but there was no seam next to it. It's sitting there as a puddle now. Rest another piece on that spot and heat again to <b>sweat-solder</b> it.`, 'info');
+  }
+  burst(chip.x, chip.y);
+  S.parts.splice(S.parts.indexOf(chip), 1);
+}
+
+function watchJoints() {
+  for (const j of S.joints) {
+    const a = byId(j.a), b = byId(j.b); if (!a || !b) continue;
+    const f = SOLDERS[j.grade].flow, lo = Math.min(a.temp, b.temp);
+    if (lo >= f && !j.molten) {
+      j.molten = true; j.reflows++;
+      toastKey('reflow' + j.id, `The earlier <b>${SOLDERS[j.grade].name.toLowerCase()}</b> joint just re-melted, so it can shift or open. That's why jewelers step down: hard first, then medium, then easy.`, 'warn', 15000);
+    } else if (j.molten && Math.max(a.temp, b.temp) < f - 30) j.molten = false;
+  }
+}
+
+/* =====================================================================
+   Particles
+   ===================================================================== */
+const parts2 = [];
+function spawn(type, x, y, n = 1) {
+  if (REDUCED && type !== 'steam') return;
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, sp = type === 'spark' ? 8 + Math.random() * 18 : type === 'sparkle' ? 3 + Math.random() * 6 : 1;
+    parts2.push({ type, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: type === 'steam' ? 1.6 + Math.random() : type === 'bubble' ? 0.6 : 0.7, r: type === 'steam' ? 2 + Math.random() * 3 : 0.25 + Math.random() * 0.3 });
+  }
+}
+const burst = (x, y) => spawn('sparkle', x, y, 14);
+function stepParticles(dt) {
+  for (let i = parts2.length - 1; i >= 0; i--) {
+    const q = parts2[i]; q.life += dt;
+    if (q.life > q.max) { parts2.splice(i, 1); continue; }
+    q.x += q.vx * dt; q.y += q.vy * dt;
+    if (q.type === 'steam') { q.vy -= dt * 6; q.r += dt * 4; }
+    if (q.type === 'spark') { q.vx *= 0.94; q.vy *= 0.94; }
+  }
+}
+
+/* =====================================================================
+   2D view
+   ===================================================================== */
+const cv = $('#bench'), ctx = cv.getContext('2d');
+let VW = 1, VH = 1;
+const cam = { cx: 0, cy: 0, sc: 6 };
+const BOARD = { w: 150, h: 100 };
+function resize() {
+  const r = cv.getBoundingClientRect(); VW = Math.max(1, r.width); VH = Math.max(1, r.height);
+  cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
+}
+function fit(cx = 0, cy = 0, w = BOARD.w + 10, h = BOARD.h + 10) {
+  const optsH = $('#opts').offsetHeight + 24;
+  cam.cx = cx; cam.sc = clamp(Math.min(VW / w, (VH - optsH) / h), 2, 60);
+  cam.cy = cy + optsH / 2 / cam.sc;
+}
+const s2w = (sx, sy) => [(sx - VW / 2) / cam.sc + cam.cx, (sy - VH / 2) / cam.sc + cam.cy];
+const w2s = (wx, wy) => [(wx - cam.cx) * cam.sc + VW / 2, (wy - cam.cy) * cam.sc + VH / 2];
+
+// texture patterns (1 tile ≈ a few mm)
+function makePattern(size, draw, mm) {
+  const c = document.createElement('canvas'); c.width = c.height = size; draw(c.getContext('2d'), size);
+  const pat = ctx.createPattern(c, 'repeat'); pat.setTransform(new DOMMatrix().scale(mm / size)); return pat;
+}
+const rnd = (() => { let s = 7; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
+const PAT = {
+  crust: makePattern(96, (g, n) => { for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(255,255,255,${0.35 + rnd() * 0.5})`; g.beginPath(); g.arc(rnd() * n, rnd() * n, 0.8 + rnd() * 2.4, 0, 7); g.fill(); } }, 4),
+  ochre: makePattern(96, (g, n) => { g.fillStyle = 'rgba(205,150,45,.78)'; g.fillRect(0, 0, n, n); for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(${150 + rnd() * 80},${100 + rnd() * 50},20,${0.4 + rnd() * 0.4})`; g.fillRect(rnd() * n, rnd() * n, 2, 2); } }, 4),
+  peel: makePattern(96, (g, n) => { for (let i = 0; i < 180; i++) { g.fillStyle = `rgba(${rnd() < .5 ? '255,255,255' : '0,0,0'},${0.15 + rnd() * 0.25})`; g.beginPath(); g.arc(rnd() * n, rnd() * n, 1 + rnd() * 3, 0, 7); g.fill(); } }, 3),
+  board: makePattern(120, (g, n) => {
+    g.fillStyle = '#cdb994'; g.fillRect(0, 0, n, n);
+    const r = n / 8, h = r * Math.sqrt(3);
+    for (let row = -1; row < 6; row++) for (let col = -1; col < 6; col++) {
+      const x = col * r * 3 + (row % 2 ? r * 1.5 : 0), y = row * h / 2;
+      g.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; g.lineTo(x + Math.cos(a) * r * 0.82, y + Math.sin(a) * r * 0.82); }
+      g.closePath(); g.fillStyle = '#b39f7b'; g.fill();
+      g.beginPath(); g.arc(x, y, r * 0.38, 0, 7); g.fillStyle = '#8f7c5c'; g.fill();
+    }
+    for (let i = 0; i < 400; i++) { g.fillStyle = `rgba(60,40,20,${rnd() * 0.12})`; g.fillRect(rnd() * n, rnd() * n, 1.5, 1.5); }
+  }, 14),
+};
+
+const SURF = {
+  mill:    ['#7f868f', '#c3c8ce', '#eef1f4'],
+  fired:   ['#5f5a56', '#97918b', '#c9c2b9'],
+  frosted: ['#b3b6ba', '#e3e5e8', '#fbfbfc'],
+  mirror:  ['#4b525b', '#d2d8df', '#ffffff'],
+};
+function glowRGBA(T) {
+  if (T < SILVER.glow) return null;
+  const st = [[430, 90, 10, 0, 0], [520, 140, 22, 6, .32], [620, 205, 42, 12, .55], [720, 242, 74, 20, .72], [800, 255, 122, 40, .84], [880, 255, 190, 92, .92], [1000, 255, 240, 190, 1]];
+  for (let i = 1; i < st.length; i++) if (T <= st[i][0] || i === st.length - 1) {
+    const a = st[i - 1], b = st[i], t = clamp((T - a[0]) / (b[0] - a[0]), 0, 1);
+    return `rgba(${lerp(a[1], b[1], t) | 0},${lerp(a[2], b[2], t) | 0},${lerp(a[3], b[3], t) | 0},${lerp(a[4], b[4], t).toFixed(3)})`;
+  }
+}
+
+// path of a part's footprint in its local frame
+function shapePath(g, p) {
+  g.beginPath();
+  switch (p.kind) {
+    case 'sheet': p.poly.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); p.holes.forEach(h => { g.moveTo(h.x + h.r, h.y); g.arc(h.x, h.y, h.r, 0, Math.PI * 2, true); }); break;
+    case 'wire': { const r = p.d / 2, L = p.len / 2; g.moveTo(-L, -r); g.lineTo(L, -r); g.arc(L, 0, r, -Math.PI / 2, Math.PI / 2); g.lineTo(-L, r); g.arc(-L, 0, r, Math.PI / 2, Math.PI * 1.5); break; }
+    case 'tube': g.rect(-p.len / 2, -p.od / 2, p.len, p.od); break;
+    case 'ring': g.arc(0, 0, p.r + p.d / 2, 0, Math.PI * 2); g.moveTo(p.r - p.d / 2, 0); g.arc(0, 0, Math.max(0.01, p.r - p.d / 2), 0, Math.PI * 2, true); break;
+    case 'chip': if (p.state === 'ball') g.arc(0, 0, 0.55, 0, Math.PI * 2); else g.rect(-0.6, -0.45, 1.2, 0.9); break;
+    case 'rivet': g.arc(0, 0, p.d * 0.8, 0, Math.PI * 2); break;
+  }
+}
+
+function drawMetal(g, p, now) {
+  const [lo, mid, hi] = SURF[p.surface] || SURF.mill;
+  const c = Math.cos(-p.rot), s = Math.sin(-p.rot), Lx = -0.6 * c + 0.8 * s, Ly = -0.6 * s - 0.8 * c; // world light (from top-left) in local frame
+  const R = br(p) || 1;
+  if (p.kind === 'sheet') {
+    // edge thickness
+    const ox = 0.35 * p.t, oy = 0.5 * p.t, ex = ox * c - oy * s, ey = ox * s + oy * c;
+    g.save(); g.translate(ex, ey); shapePath(g, p); g.fillStyle = '#2d2a27'; g.fill('evenodd'); g.restore();
+    shapePath(g, p);
+    let fill;
+    if (p.domed || p.melted) {
+      fill = g.createRadialGradient(Lx * R * 0.35, Ly * R * 0.35, R * 0.05, 0, 0, R * 1.05);
+      fill.addColorStop(0, hi); fill.addColorStop(0.45, mid); fill.addColorStop(1, lo);
+    } else if (p.surface === 'mirror') {
+      fill = g.createLinearGradient(Lx * R, Ly * R, -Lx * R, -Ly * R);
+      fill.addColorStop(0, '#fbfdff'); fill.addColorStop(0.28, '#9aa2ac'); fill.addColorStop(0.5, '#eef2f6'); fill.addColorStop(0.72, '#7d858f'); fill.addColorStop(1, '#dfe4ea');
+    } else {
+      fill = g.createLinearGradient(Lx * R, Ly * R, -Lx * R, -Ly * R);
+      fill.addColorStop(0, hi); fill.addColorStop(0.5, mid); fill.addColorStop(1, lo);
+    }
+    g.fillStyle = fill; g.fill('evenodd');
+    if (p.melted) { g.fillStyle = PAT.peel; g.fill('evenodd'); }
+    g.lineWidth = 0.12; g.strokeStyle = 'rgba(255,255,255,.35)'; g.stroke();
+  } else if (p.kind === 'wire' || p.kind === 'tube') {
+    const w = p.kind === 'wire' ? p.d : p.od, L = p.len / 2, off = Ly * w;
+    const grad = g.createLinearGradient(0, -w / 2, 0, w / 2);
+    grad.addColorStop(0, Ly < 0 ? hi : lo); grad.addColorStop(0.5 + off * 0.15, mid); grad.addColorStop(1, Ly < 0 ? lo : hi);
+    g.save(); g.translate(0.2 * w, 0.3 * w); shapePath(g, p); g.fillStyle = 'rgba(0,0,0,.35)'; g.fill(); g.restore();
+    shapePath(g, p); g.fillStyle = grad; g.fill();
+    g.beginPath(); g.moveTo(-L + (p.kind === 'wire' ? 0 : 0.2), off * 0.28); g.lineTo(L - (p.kind === 'wire' ? 0 : 0.2), off * 0.28);
+    g.lineWidth = w * 0.16; g.strokeStyle = p.surface === 'mirror' ? '#fff' : 'rgba(255,255,255,.55)'; g.lineCap = 'round'; g.stroke();
+    if (p.kind === 'tube') {
+      g.lineWidth = 0.14; g.strokeStyle = 'rgba(30,28,26,.8)';
+      for (const e of [-L, L]) { g.beginPath(); g.moveTo(e, -p.od / 2); g.lineTo(e, p.od / 2); g.stroke(); }
+    }
+  } else if (p.kind === 'ring') {
+    g.save(); g.translate(0.2 * p.d, 0.3 * p.d); shapePath(g, p); g.fillStyle = 'rgba(0,0,0,.35)'; g.fill('evenodd'); g.restore();
+    g.beginPath(); g.arc(0, 0, p.r, 0, Math.PI * 2); g.lineWidth = p.d; g.strokeStyle = lo; g.stroke();
+    g.beginPath(); g.arc(Lx * p.d * 0.12, Ly * p.d * 0.12, p.r, 0, Math.PI * 2); g.lineWidth = p.d * 0.62; g.strokeStyle = mid; g.stroke();
+    const a0 = Math.atan2(Ly, Lx);
+    g.beginPath(); g.arc(Lx * p.d * 0.2, Ly * p.d * 0.2, p.r, a0 - 1.1, a0 + 1.1); g.lineWidth = p.d * 0.2; g.strokeStyle = p.surface === 'mirror' ? '#fff' : hi; g.lineCap = 'round'; g.stroke();
+    g.beginPath(); g.arc(-Lx * p.d * 0.2, -Ly * p.d * 0.2, p.r, a0 + Math.PI - 0.9, a0 + Math.PI + 0.9); g.lineWidth = p.d * 0.14; g.strokeStyle = 'rgba(255,255,255,.25)'; g.stroke();
+  } else if (p.kind === 'rivet') {
+    const r = p.d * 0.8, grad = g.createRadialGradient(Lx * r * 0.4, Ly * r * 0.4, r * 0.05, 0, 0, r);
+    grad.addColorStop(0, '#fff'); grad.addColorStop(0.5, mid); grad.addColorStop(1, lo);
+    g.beginPath(); g.arc(0.15, 0.2, r, 0, 7); g.fillStyle = 'rgba(0,0,0,.4)'; g.fill();
+    shapePath(g, p); g.fillStyle = grad; g.fill();
+    g.lineWidth = 0.08; g.strokeStyle = 'rgba(0,0,0,.35)'; g.stroke();
+  } else if (p.kind === 'chip') {
+    const col = SOLDERS[p.grade].color;
+    if (p.state === 'ball') {
+      const grad = g.createRadialGradient(Lx * .2, Ly * .2, 0.05, 0, 0, 0.55);
+      grad.addColorStop(0, '#fff'); grad.addColorStop(0.5, col); grad.addColorStop(1, '#6d6a66');
+      shapePath(g, p); g.fillStyle = grad; g.fill();
+    } else {
+      g.save(); g.translate(0.1, 0.14); shapePath(g, p); g.fillStyle = 'rgba(0,0,0,.45)'; g.fill(); g.restore();
+      shapePath(g, p); g.fillStyle = col; g.fill(); g.lineWidth = 0.07; g.strokeStyle = 'rgba(40,36,32,.7)'; g.stroke();
+      if (cam.sc > 14) { g.save(); g.rotate(p.rot ? 0 : 0); g.fillStyle = 'rgba(40,36,32,.85)'; g.font = '600 0.62px IBM Plex Sans, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(SOLDERS[p.grade].letter, 0, 0.03); g.restore(); }
+    }
+  }
+}
+
+function drawOverlays(g, p, now) {
+  const rule = p.kind === 'sheet' || p.kind === 'ring' ? 'evenodd' : 'nonzero';
+  if (p.oxide > 0.02 && p.kind !== 'chip') { shapePath(g, p); g.fillStyle = `rgba(62,48,74,${(p.oxide * 0.55).toFixed(3)})`; g.fill(rule); }
+  if (p.burn > 0.05) { shapePath(g, p); g.globalAlpha = p.burn * 0.8; g.fillStyle = PAT.peel; g.fill(rule); g.globalAlpha = 1; }
+  if (p.stopoff) { shapePath(g, p); g.fillStyle = PAT.ochre; g.fill(rule); }
+  if (p.flux > 0 || p.glass) {
+    shapePath(g, p);
+    if (p.temp >= SILVER.fluxClear && p.flux > 0) {
+      g.fillStyle = 'rgba(255,236,190,.14)'; g.fill(rule);
+      const sh = 0.5 + 0.5 * Math.sin(now / 280 + p.id);
+      g.lineWidth = 0.15; g.strokeStyle = `rgba(255,255,255,${0.15 + sh * 0.25})`; g.stroke();
+    } else if (p.glass) {
+      g.fillStyle = 'rgba(140,110,60,.26)'; g.fill(rule); g.lineWidth = 0.12; g.strokeStyle = 'rgba(255,240,200,.3)'; g.stroke();
+    } else if (p.fluxDry) {
+      g.globalAlpha = 0.85 * p.flux; g.fillStyle = PAT.crust; g.fill(rule); g.globalAlpha = 1;
+    } else {
+      g.fillStyle = `rgba(235,242,255,${(0.28 * p.flux).toFixed(3)})`; g.fill(rule);
+      g.lineWidth = 0.1; g.strokeStyle = 'rgba(255,255,255,.4)'; g.stroke();
+    }
+  }
+  const glow = glowRGBA(p.temp);
+  if (glow) { g.globalCompositeOperation = 'screen'; shapePath(g, p); g.fillStyle = glow; g.fill(rule); g.globalCompositeOperation = 'source-over'; }
+  for (const pl of p.pools) {
+    const grad = g.createRadialGradient(pl.x - .2, pl.y - .25, 0.05, pl.x, pl.y, 0.9);
+    grad.addColorStop(0, '#fff'); grad.addColorStop(0.6, SOLDERS[pl.grade].color); grad.addColorStop(1, 'rgba(160,160,160,0)');
+    g.beginPath(); g.arc(pl.x, pl.y, 0.9, 0, 7); g.fillStyle = grad; g.fill();
+  }
+}
+
+function hingeTransform(p) {
+  for (const h of derived.hinges) {
+    const st = S.hinge[h.pin.id]; if (!st || st.angle < 0.002) continue;
+    const mover = derived.rigid.get(st.mover);
+    if (derived.rigid.get(p.id) !== mover) continue;
+    return { h, angle: st.angle };
+  }
+  return null;
+}
+
+let hover = null, selected = null, preview = null, ghosts = [];
+
+function drawBench(now) {
+  const g = ctx;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
+  g.setTransform(DPR * cam.sc, 0, 0, DPR * cam.sc, DPR * (VW / 2 - cam.cx * cam.sc), DPR * (VH / 2 - cam.cy * cam.sc));
+
+  // soldering board
+  const bw = BOARD.w, bh = BOARD.h;
+  g.fillStyle = 'rgba(0,0,0,.45)'; roundRect(g, -bw / 2 + 1.2, -bh / 2 + 2, bw, bh, 3); g.fill();
+  g.fillStyle = PAT.board; roundRect(g, -bw / 2, -bh / 2, bw, bh, 3); g.fill();
+  const vg = g.createRadialGradient(0, 0, 10, 0, 0, bw * 0.7); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(30,18,6,.35)');
+  g.fillStyle = vg; roundRect(g, -bw / 2, -bh / 2, bw, bh, 3); g.fill();
+  // torch scorch where it's been working
+  if (torch.firing) { const sg = g.createRadialGradient(torch.x, torch.y, 0, torch.x, torch.y, TIPS[opt.tip].sigma * 2.2); sg.addColorStop(0, 'rgba(255,120,40,.16)'); sg.addColorStop(1, 'rgba(255,120,40,0)'); g.fillStyle = sg; g.fillRect(torch.x - 30, torch.y - 30, 60, 60); }
+  // ruler ticks along the top edge
+  g.strokeStyle = 'rgba(70,52,30,.55)'; g.lineWidth = 0.12;
+  for (let x = -bw / 2 + 5; x < bw / 2; x += 5) { g.beginPath(); g.moveTo(x, -bh / 2); g.lineTo(x, -bh / 2 + (x % 10 === 0 ? 2.4 : 1.4)); g.stroke(); }
+  if (cam.sc > 4) { g.fillStyle = 'rgba(70,52,30,.7)'; g.font = '500 1.6px IBM Plex Mono, monospace'; g.textAlign = 'center'; for (let x = -bw / 2 + 10; x < bw / 2; x += 10) g.fillText(String(x + bw / 2), x, -bh / 2 + 4.3); g.textAlign = 'left'; g.fillText('mm', -bw / 2 + 1, -bh / 2 + 4.3); }
+
+  drawGhosts(g, now);
+
+  const LAYER = { sheet: 0, tube: 1, ring: 1, wire: 2, rivet: 3, chip: 4 };
+  const order = S.parts.map((p, i) => [p, i]).sort((A, B) => LAYER[A[0].kind] - LAYER[B[0].kind] || A[1] - B[1]).map(a => a[0]);
+  const selSet = selected ? new Set(asmMembers(selected).map(p => p.id)) : null;
+  for (const p of order) {
+    g.save();
+    const ht = hingeTransform(p);
+    if (ht) {
+      const { h, angle } = ht, phi = Math.atan2(h.dy, h.dx);
+      g.translate(h.ax, h.ay); g.rotate(phi); g.scale(1, Math.cos(angle)); g.rotate(-phi); g.translate(-h.ax, -h.ay);
+    }
+    g.translate(p.x, p.y); g.rotate(p.rot);
+    drawMetal(g, p, now);
+    drawOverlays(g, p, now);
+    if (ht && Math.cos(ht.angle) < 0) { shapePath(g, p); g.fillStyle = `rgba(0,0,0,${(-Math.cos(ht.angle) * 0.18).toFixed(3)})`; g.fill('evenodd'); }
+    if (selSet && selSet.has(p.id) && tool === 'move') { shapePath(g, p); g.lineWidth = 1.6 / cam.sc; g.setLineDash([4 / cam.sc, 3 / cam.sc]); g.strokeStyle = 'rgba(255,198,92,.85)'; g.stroke(); g.setLineDash([]); }
+    if (hover === p && !dragState) { shapePath(g, p); g.lineWidth = 1.2 / cam.sc; g.strokeStyle = 'rgba(255,255,255,.55)'; g.stroke(); }
+    g.restore();
+  }
+  // solder seams
+  for (const j of S.joints) {
+    const a = byId(j.a); if (!a || hingeTransform(a)) continue;
+    const [x, y] = jointWorld(j), col = SOLDERS[j.grade].color;
+    const grad = g.createRadialGradient(x - 0.25, y - 0.3, 0.05, x, y, 1.1);
+    grad.addColorStop(0, '#fff'); grad.addColorStop(0.5, col); grad.addColorStop(1, 'rgba(200,200,200,0)');
+    g.beginPath(); g.ellipse(x, y, 1.1, 0.8, a.rot, 0, 7); g.fillStyle = grad; g.fill();
+    if (j.molten) { g.globalCompositeOperation = 'screen'; g.beginPath(); g.arc(x, y, 1.2, 0, 7); g.fillStyle = 'rgba(255,220,150,.55)'; g.fill(); g.globalCompositeOperation = 'source-over'; }
+  }
+  // hinge axes
+  for (const h of derived.hinges) {
+    g.save(); g.setLineDash([1.2, 0.8]); g.strokeStyle = 'rgba(125,185,255,.55)'; g.lineWidth = 0.15;
+    const L = h.pin.len / 2 + 2; g.beginPath(); g.moveTo(h.pin.x - h.dx * L, h.pin.y - h.dy * L); g.lineTo(h.pin.x + h.dx * L, h.pin.y + h.dy * L); g.stroke(); g.restore();
+  }
+  drawParticles(g);
+  drawPreview(g, now);
+  if (tool === 'torch' && torch.on) drawTorch(g, now);
+}
+function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+
+function drawTorch(g, now) {
+  const tip = TIPS[opt.tip], x = torch.x, y = torch.y;
+  const nx = x + 14 + tip.sigma * 2.2, ny = y + 20 + tip.sigma * 3;   // nozzle sits off to the lower right
+  if (!torch.firing) {
+    g.save(); g.setLineDash([1, 1]); g.strokeStyle = 'rgba(125,185,255,.7)'; g.lineWidth = 0.18;
+    g.beginPath(); g.arc(x, y, tip.sigma * 1.6, 0, 7); g.stroke(); g.restore();
+    g.beginPath(); g.arc(x, y, 0.5, 0, 7); g.fillStyle = 'rgba(125,185,255,.9)'; g.fill();
+  } else {
+    const fl = REDUCED ? 1 : 0.9 + 0.1 * Math.sin(now / 37) * Math.sin(now / 53);
+    const ang = Math.atan2(y - ny, x - nx), len = Math.hypot(x - nx, y - ny), w0 = tip.sigma * 0.45, w1 = tip.sigma * 1.35 * fl;
+    g.save(); g.translate(nx, ny); g.rotate(ang); g.globalCompositeOperation = 'lighter';
+    const outer = g.createLinearGradient(0, 0, len, 0); outer.addColorStop(0, 'rgba(80,120,255,.15)'); outer.addColorStop(0.5, 'rgba(110,90,255,.28)'); outer.addColorStop(1, 'rgba(255,140,60,.35)');
+    g.beginPath(); g.moveTo(0, -w0); g.quadraticCurveTo(len * 0.6, -w1 * 1.2, len + tip.sigma * 0.6, 0); g.quadraticCurveTo(len * 0.6, w1 * 1.2, 0, w0); g.closePath(); g.fillStyle = outer; g.fill();
+    const inner = g.createLinearGradient(0, 0, len * 0.55, 0); inner.addColorStop(0, 'rgba(160,210,255,.9)'); inner.addColorStop(1, 'rgba(90,140,255,0)');
+    g.beginPath(); g.moveTo(0, -w0 * 0.6); g.quadraticCurveTo(len * 0.3, -w0 * 0.9, len * 0.55, 0); g.quadraticCurveTo(len * 0.3, w0 * 0.9, 0, w0 * 0.6); g.closePath(); g.fillStyle = inner; g.fill();
+    g.restore();
+    g.save(); g.globalCompositeOperation = 'lighter';
+    const hs = g.createRadialGradient(x, y, 0, x, y, tip.sigma * 1.6 * fl); hs.addColorStop(0, 'rgba(255,230,170,.55)'); hs.addColorStop(0.4, 'rgba(255,140,60,.25)'); hs.addColorStop(1, 'rgba(255,90,30,0)');
+    g.fillStyle = hs; g.beginPath(); g.arc(x, y, tip.sigma * 1.6, 0, 7); g.fill(); g.restore();
+  }
+  // nozzle
+  g.save(); g.translate(nx, ny); g.rotate(Math.atan2(y - ny, x - nx));
+  const ng = g.createLinearGradient(0, -2, 0, 2); ng.addColorStop(0, '#d9b36a'); ng.addColorStop(0.5, '#8a6a32'); ng.addColorStop(1, '#4a3a1c');
+  g.fillStyle = ng; g.beginPath(); g.moveTo(0, -1.1); g.lineTo(-12, -2.2); g.lineTo(-40, -2.6); g.lineTo(-40, 2.6); g.lineTo(-12, 2.2); g.lineTo(0, 1.1); g.closePath(); g.fill();
+  g.restore();
+}
+
+function drawParticles(g) {
+  for (const q of parts2) {
+    const t = q.life / q.max;
+    if (q.type === 'steam') { g.beginPath(); g.arc(q.x, q.y, q.r, 0, 7); g.fillStyle = `rgba(235,235,235,${(0.28 * (1 - t)).toFixed(3)})`; g.fill(); }
+    else if (q.type === 'bubble') { g.beginPath(); g.arc(q.x, q.y, q.r * (0.5 + t), 0, 7); g.lineWidth = 0.08; g.strokeStyle = `rgba(255,255,255,${(0.8 * (1 - t)).toFixed(3)})`; g.stroke(); }
+    else if (q.type === 'spark') { g.beginPath(); g.arc(q.x, q.y, 0.18, 0, 7); g.fillStyle = `rgba(255,${180 - t * 100 | 0},60,${1 - t})`; g.fill(); }
+    else { const r = 0.6 * (1 - t); g.fillStyle = `rgba(255,255,255,${1 - t})`; g.fillRect(q.x - r, q.y - 0.06, r * 2, 0.12); g.fillRect(q.x - 0.06, q.y - r, 0.12, r * 2); }
+  }
+}
+
+function drawGhosts(g, now) {
+  if (!ghosts.length) return;
+  const a = 0.45 + 0.3 * Math.sin(now / 300);
+  g.save(); g.setLineDash([0.8, 0.6]); g.lineWidth = 0.22; g.strokeStyle = `rgba(255,170,80,${a.toFixed(2)})`; g.fillStyle = `rgba(255,170,80,${(a * 0.18).toFixed(3)})`;
+  for (const gh of ghosts) {
+    if (gh.type === 'tube') { g.save(); g.translate(gh.x, gh.y); g.rotate(gh.rot || 0); g.fillRect(-gh.len / 2, -gh.od / 2, gh.len, gh.od); g.strokeRect(-gh.len / 2, -gh.od / 2, gh.len, gh.od); g.restore(); }
+    else if (gh.type === 'line') { g.beginPath(); g.moveTo(gh.x1, gh.y1); g.lineTo(gh.x2, gh.y2); g.stroke(); }
+    else if (gh.type === 'cross') { g.beginPath(); g.arc(gh.x, gh.y, gh.r || 1.6, 0, 7); g.moveTo(gh.x - 3, gh.y); g.lineTo(gh.x + 3, gh.y); g.moveTo(gh.x, gh.y - 3); g.lineTo(gh.x, gh.y + 3); g.stroke(); }
+  }
+  g.restore();
+}
+
+function drawPreview(g, now) {
+  if (!preview) return;
+  g.save(); g.lineWidth = 1.4 / cam.sc; g.strokeStyle = 'rgba(255,198,92,.95)'; g.fillStyle = 'rgba(214,218,223,.25)'; g.setLineDash([5 / cam.sc, 3 / cam.sc]);
+  const pv = preview;
+  const label = (txt, x, y) => { g.setLineDash([]); g.font = `500 ${12 / cam.sc}px IBM Plex Mono, monospace`; const w = g.measureText(txt).width; g.fillStyle = 'rgba(20,18,16,.85)'; g.fillRect(x - 3 / cam.sc, y - 13 / cam.sc, w + 6 / cam.sc, 17 / cam.sc); g.fillStyle = '#ffc65c'; g.fillText(txt, x, y); };
+  if (pv.type === 'rect') { const x = Math.min(pv.a[0], pv.b[0]), y = Math.min(pv.a[1], pv.b[1]), w = Math.abs(pv.b[0] - pv.a[0]), h = Math.abs(pv.b[1] - pv.a[1]); g.fillRect(x, y, w, h); g.strokeRect(x, y, w, h); label(`${fmt(w)} × ${fmt(h)} mm`, x, y - 1); }
+  else if (pv.type === 'disc') { const r = Math.hypot(pv.b[0] - pv.a[0], pv.b[1] - pv.a[1]); g.beginPath(); g.arc(pv.a[0], pv.a[1], r, 0, 7); g.fill(); g.stroke(); label(`Ø ${fmt(r * 2)} mm`, pv.a[0] + r + 1, pv.a[1]); }
+  else if (pv.type === 'line') { g.beginPath(); g.moveTo(...pv.a); g.lineTo(...pv.b); g.lineWidth = Math.max(pv.w || 0, 1.4 / cam.sc); if (pv.w) { g.setLineDash([]); g.strokeStyle = 'rgba(214,218,223,.5)'; g.lineCap = pv.cap || 'round'; } g.stroke(); label(`${fmt(Math.hypot(pv.b[0] - pv.a[0], pv.b[1] - pv.a[1]))} mm`, pv.b[0] + 1, pv.b[1]); }
+  else if (pv.type === 'saw') { g.setLineDash([]); g.strokeStyle = 'rgba(255,107,91,.95)'; g.beginPath(); g.moveTo(...pv.a); g.lineTo(...pv.b); g.stroke(); }
+  else if (pv.type === 'poly') {
+    g.beginPath(); pv.pts.forEach((p, i) => i ? g.lineTo(...p) : g.moveTo(...p)); if (pv.cur) g.lineTo(...pv.cur); g.stroke();
+    g.setLineDash([]); pv.pts.forEach((p, i) => { g.beginPath(); g.arc(p[0], p[1], (i ? 3 : 5) / cam.sc, 0, 7); g.fillStyle = i ? '#ffc65c' : '#ff8b3d'; g.fill(); });
+  }
+  g.restore();
+}
+
+/* =====================================================================
+   Tools
+   ===================================================================== */
+const ICON = {
+  move: '<path d="M7 3l4.2 13M17 3l-4.2 13M11.2 16h1.6v5h-1.6z"/>',
+  sheet: '<rect x="4" y="6" width="16" height="12" rx="1"/><path d="M4 18l2 2h16V8l-2-2"/>',
+  disc: '<circle cx="12" cy="12" r="8"/><path d="M8 9a5 5 0 014-2"/>',
+  shape: '<path d="M5 18l2.5-12 6 4 5-5-.8 13z"/><circle cx="5" cy="18" r="1.2"/>',
+  wire: '<path d="M3 17c5-10 13 0 18-10"/>',
+  tube: '<rect x="3" y="9" width="17" height="6" rx="1"/><ellipse cx="20" cy="12" rx="1.6" ry="3"/>',
+  ring: '<circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="3.8"/>',
+  saw: '<path d="M4 20V5h15v6"/><path d="M4 8h15"/><path d="M7 8v2M10 8v2M13 8v2M16 8v2"/>',
+  drill: '<path d="M10 2h4v5h-4zM12 7v12M10 10l4 2M10 14l4 2"/><path d="M12 19v3"/>',
+  dap: '<path d="M4 18a8 6 0 0116 0z"/><path d="M12 3v6"/><circle cx="12" cy="10" r="1.6"/>',
+  flux: '<path d="M14 3l6 6-7 7-6-6z"/><path d="M7 10l-3 9 9-3"/>',
+  stopoff: '<path d="M12 3c4 6 6 9 6 12a6 6 0 01-12 0c0-3 2-6 6-12z"/><path d="M9 15a3 3 0 003 3"/>',
+  solder: '<rect x="4" y="10" width="5" height="4" rx=".5"/><rect x="13" y="13" width="6" height="4" rx=".5"/><rect x="10" y="5" width="4" height="3" rx=".5"/>',
+  torch: '<path d="M12 22c-4-2-5.5-6-3-10 1 2 2 3 3 3-1-4 1-8 4-11 0 4 4 7 3 12-.8 4-3 5-7 6z"/>',
+  rivet: '<path d="M7 7a5 2.5 0 0110 0zM7 17a5 2.5 0 0010 0z"/><path d="M12 7v10"/>',
+  quench: '<path d="M3 15c3 2 6-2 9 0s6 2 9 0M3 19c3 2 6-2 9 0s6 2 9 0"/><path d="M8 4c0 3 3 3 3 6M14 3c0 3 3 3 3 6"/>',
+  pickle: '<path d="M4 9h16l-2 11H6z"/><path d="M8 5l1 4M16 5l-1 4"/><circle cx="10" cy="14" r="1"/><circle cx="14" cy="16" r="1"/>',
+  polish: '<path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/>',
+  flex: '<path d="M3 19l8-4"/><path d="M13 13l7-8"/><circle cx="12" cy="14" r="2"/>',
+};
+const TOOLS = [
+  { group: 'Hand' },
+  { id: 'move', label: 'Tweezers', key: 'V', hint: '<b>Drag</b> pieces around. <b>R</b> rotates, <b>Delete</b> removes. Drag empty board to pan.' },
+  { group: 'Stock' },
+  { id: 'sheet', label: 'Sheet', key: 'S', hint: '<b>Drag</b> to cut a rectangle of sterling sheet.' },
+  { id: 'disc', label: 'Disc', key: 'D', hint: '<b>Drag</b> out from the centre to punch a disc.' },
+  { id: 'shape', label: 'Pierce', key: 'P', hint: '<b>Click</b> points to saw out any outline. Click the first point (or double-click) to finish.' },
+  { id: 'wire', label: 'Wire', key: 'W', hint: '<b>Drag</b> to lay down a length of round wire.' },
+  { id: 'tube', label: 'Tube', key: 'T', hint: '<b>Drag</b> to lay down tubing. Saw it into knuckles for hinges.' },
+  { id: 'ring', label: 'Jump ring', key: 'J', hint: '<b>Click</b> to drop a jump ring.' },
+  { group: 'Shape' },
+  { id: 'saw', label: 'Saw', key: 'X', hint: '<b>Drag</b> a line across sheet, wire or tube to saw it in two.' },
+  { id: 'drill', label: 'Drill', key: 'H', hint: '<b>Click</b> to drill straight through every layer under the bit.' },
+  { id: 'dap', label: 'Dap', key: 'U', hint: '<b>Click</b> a sheet piece to dome it in the dapping block.' },
+  { group: 'Join' },
+  { id: 'flux', label: 'Flux', key: 'F', hint: '<b>Click</b> a piece to brush flux on it. Flux keeps oxygen off the metal so solder can flow.' },
+  { id: 'solder', label: 'Solder', key: 'L', hint: '<b>Click</b> to place a chip. Set it on the seam so it touches both pieces.' },
+  { id: 'torch', label: 'Torch', key: 'B', hint: '<b>Hold</b> to heat. Heat the bigger piece, because solder flows toward heat.' },
+  { id: 'stopoff', label: 'Stop-off', key: 'O', hint: '<b>Click</b> to paint yellow ochre on a piece. Solder won\'t flow onto it.' },
+  { id: 'rivet', label: 'Rivet', key: 'I', hint: '<b>Click</b> a hole drilled through two layers to rivet them together. No heat needed.' },
+  { group: 'Finish' },
+  { id: 'quench', label: 'Quench', key: 'Q', hint: '<b>Click</b> work to drop it in water.' },
+  { id: 'pickle', label: 'Pickle', key: 'K', hint: '<b>Click</b> cooled work to soak it in pickle, which dissolves flux glass and oxide.' },
+  { id: 'polish', label: 'Polish', key: 'N', hint: '<b>Click</b> clean work to polish it to a mirror.' },
+  { group: 'Test' },
+  { id: 'flex', label: 'Flex', key: 'G', hint: '<b>Drag</b> a hinge leaf to swing it, or turn a piece held by a single rivet.' },
+];
+let tool = 'move';
+function buildRail() {
+  const rail = $('#rail'); rail.innerHTML = '';
+  for (const t of TOOLS) {
+    if (t.group) { const h = document.createElement('h4'); h.textContent = t.group; rail.appendChild(h); continue; }
+    const b = document.createElement('button'); b.className = 'tool'; b.dataset.tool = t.id; b.title = `${t.label} (${t.key})`;
+    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[t.id]}</svg>${t.label}<kbd>${t.key}</kbd>`;
+    b.onclick = () => setTool(t.id); rail.appendChild(b);
+  }
+}
+function setTool(id) {
+  if (preview && preview.type === 'poly') preview = null;
+  tool = id; torch.on = id === 'torch'; if (id !== 'torch') { torch.firing = false; SFX.torch(false); }
+  document.querySelectorAll('.tool').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === id));
+  cv.className = id === 'move' ? 'grab' : id === 'torch' ? 'torch' : '';
+  renderOpts();
+}
+
+function seg(label, key, values, fmtv = v => v) {
+  return `<span><span class="seglabel">${label}</span><span class="seg">${values.map(v => `<button data-opt="${key}" data-val="${v}" aria-pressed="${String(opt[key]) === String(v)}">${fmtv(v)}</button>`).join('')}</span></span>`;
+}
+function renderOpts() {
+  const t = TOOLS.find(t => t.id === tool);
+  let html = `<span class="hint">${t.hint}</span>`;
+  if (['sheet', 'disc', 'shape'].includes(tool)) html += seg('Gauge', 'gauge', [0.5, 0.8, 1.0, 1.3], v => v + ' mm');
+  if (tool === 'wire') html += seg('Wire', 'wire', [0.8, 1.0, 1.3, 1.6, 2.0], v => 'Ø' + v);
+  if (tool === 'tube') html += seg('OD/ID', 'tube', ['2.5/1.3', '3.0/1.5', '4.0/2.5']);
+  if (tool === 'ring') html += seg('ID', 'ringID', [3, 4, 6, 8, 12], v => v + ' mm') + seg('Wire', 'ringWire', [0.8, 1.0, 1.3], v => 'Ø' + v);
+  if (tool === 'solder') html += seg('Grade', 'grade', Object.keys(SOLDERS), v => SOLDERS[v].name + ' ' + SOLDERS[v].flow + '°');
+  if (tool === 'torch') html += seg('Tip', 'tip', Object.keys(TIPS), v => TIPS[v].label);
+  if (tool === 'drill') html += seg('Bit', 'drill', [1.0, 1.3, 1.6], v => v + ' mm');
+  if (tool === 'move') html += `<span class="seg"><button data-act="rotl" title="Rotate left (Shift R)">⟲ 15°</button><button data-act="rotr" title="Rotate right (R)">⟳ 15°</button><button data-act="del" title="Delete">Delete</button></span>`;
+  const T = v => (v / 950 * 100).toFixed(2) + '%';
+  const ticks = [[SILVER.fluxClear, 'flux clear'], [SOLDERS.xeasy.flow, 'X'], [SOLDERS.easy.flow, 'E'], [SOLDERS.medium.flow, 'M'], [SOLDERS.hard.flow, 'H'], [SILVER.liquidus, 'melts']];
+  html += `<div class="heat" aria-hidden="true"><div class="bar"></div>${ticks.map(([v, l]) => `<i class="tick${tool === 'solder' && l === SOLDERS[opt.grade].letter ? ' hi' : ''}" style="left:${T(v)}"><span>${l}</span></i>`).join('')}<i class="marker" id="heatMarker" style="left:0"></i><span class="readout" id="heatReadout"></span></div>`;
+  $('#opts').innerHTML = html;
+}
+$('#opts').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.opt) { const k = b.dataset.opt, v = b.dataset.val; opt[k] = isNaN(+v) || k === 'tube' ? v : +v; renderOpts(); }
+  if (b.dataset.act === 'rotl') rotateSel(-Math.PI / 12);
+  if (b.dataset.act === 'rotr') rotateSel(Math.PI / 12);
+  if (b.dataset.act === 'del') deleteSel();
+});
+
+function rotateSel(a) {
+  if (!selected || !byId(selected.id)) return toast('Pick a piece with the tweezers first.');
+  pushUndo(); const ms = asmMembers(selected), cx = ms.reduce((s, p) => s + p.x, 0) / ms.length, cy = ms.reduce((s, p) => s + p.y, 0) / ms.length;
+  ms.forEach(p => rotateAbout(p, cx, cy, a)); resetHinges(ms); rebuild();
+}
+function rotateAbout(p, ox, oy, a) { const c = Math.cos(a), s = Math.sin(a), dx = p.x - ox, dy = p.y - oy; p.x = ox + dx * c - dy * s; p.y = oy + dx * s + dy * c; p.rot += a; }
+function deleteSel() {
+  if (!selected || !byId(selected.id)) return;
+  pushUndo(); const ids = new Set(asmMembers(selected).map(p => p.id));
+  S.parts = S.parts.filter(p => !ids.has(p.id)); selected = null; rebuild();
+}
+function resetHinges(members) { const ids = new Set(members.map(m => m.id)); for (const h of derived.hinges) if (ids.has(h.pin.id) && S.hinge[h.pin.id]) S.hinge[h.pin.id].angle = 0; }
+
+function pick(wx, wy, filter) {
+  const LAYER = { sheet: 0, tube: 1, ring: 1, wire: 2, rivet: 3, chip: 4 };
+  const order = S.parts.map((p, i) => [p, i]).sort((A, B) => LAYER[A[0].kind] - LAYER[B[0].kind] || A[1] - B[1]);
+  const pad = Math.max(0.25, 5 / cam.sc);
+  for (let i = order.length - 1; i >= 0; i--) {
+    const p = order[i][0]; if (filter && !filter(p)) continue;
+    const thin = p.kind === 'chip' || p.kind === 'rivet' || p.kind === 'wire' || p.kind === 'ring';
+    if (partDist(p, wx, wy) <= (thin ? pad : 0.15)) return p;
+  }
+  return null;
+}
+function addPart(p) { pushUndo(); S.parts.push(p); rebuild(); return p; }
+
+let dragState = null;
+const H = {};   // tool handlers: down, move, up(w)
+
+H.move = {
+  down(w) {
+    const p = pick(...w);
+    if (!p) { dragState = { pan: true, sx: w[0], sy: w[1] }; cv.className = 'grabbing'; return; }
+    selected = p;
+    let members = asmMembers(p);
+    const molten = S.joints.filter(j => j.molten && members.some(m => m.id === j.a));
+    pushUndo();
+    if (molten.length) {
+      S.joints = S.joints.filter(j => !molten.includes(j)); rebuild(); members = asmMembers(p);
+      toast('You pulled the joint apart while the solder was still liquid. Let it cool below the flow point before you move it.', 'warn');
+    }
+    resetHinges(members);
+    const ids = new Set(members.map(m => m.id));
+    S.parts = S.parts.filter(q => !ids.has(q.id)).concat(S.parts.filter(q => ids.has(q.id)));   // bring to front
+    dragState = { members, last: w, moved: false }; cv.className = 'grabbing';
+  },
+  move(w) {
+    if (!dragState) return;
+    if (dragState.pan) { const [sx, sy] = [dragState.sx, dragState.sy]; cam.cx -= w[0] - sx; cam.cy -= w[1] - sy; return; }
+    const dx = w[0] - dragState.last[0], dy = w[1] - dragState.last[1];
+    if (Math.abs(dx) + Math.abs(dy) > 0) dragState.moved = true;
+    dragState.members.forEach(p => { p.x += dx; p.y += dy; }); dragState.last = w;
+  },
+  up() {
+    cv.className = 'grab';
+    if (!dragState) return;
+    if (!dragState.pan) { if (!dragState.moved) undoStack.pop(); else { snapToGhost(dragState.members); rebuild(); } }
+    dragState = null;
+  },
+};
+function makeDragTool(make, type) {
+  return {
+    down(w) { dragState = { a: w }; preview = { type, a: w, b: w }; },
+    move(w) { if (dragState) { preview.b = w; if (preview.type === 'line') preview.w = previewWidth(); } },
+    up(w) { if (!dragState) return; const a = dragState.a; dragState = null; preview = null; make(a, w); },
+  };
+}
+const previewWidth = () => tool === 'wire' ? opt.wire : tool === 'tube' ? +opt.tube.split('/')[0] : 0;
+H.sheet = makeDragTool((a, b) => {
+  const w = Math.abs(b[0] - a[0]), h = Math.abs(b[1] - a[1]);
+  if (w < 1 || h < 1) return toast('Drag out a rectangle to cut sheet.');
+  addPart(mkRect((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, w, h, opt.gauge));
+}, 'rect');
+H.disc = makeDragTool((a, b) => {
+  const r = Math.hypot(b[0] - a[0], b[1] - a[1]); if (r < 0.8) return toast('Drag outward from the centre to size the disc.');
+  addPart(mkDisc(a[0], a[1], r, opt.gauge));
+}, 'disc');
+H.wire = makeDragTool((a, b) => {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) return toast('Drag to lay down wire.');
+  addPart(mkWire((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, L, opt.wire, Math.atan2(b[1] - a[1], b[0] - a[0])));
+}, 'line');
+H.tube = makeDragTool((a, b) => {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) return toast('Drag to lay down tube.');
+  const [od, bore] = opt.tube.split('/').map(Number);
+  addPart(mkTube((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, L, od, bore, Math.atan2(b[1] - a[1], b[0] - a[0])));
+}, 'line');
+H.saw = makeDragTool((a, b) => sawLine(a, b), 'saw');
+H.shape = {
+  down(w) {
+    if (!preview || preview.type !== 'poly') preview = { type: 'poly', pts: [] };
+    const pts = preview.pts;
+    if (pts.length >= 3 && Math.hypot(w[0] - pts[0][0], w[1] - pts[0][1]) * cam.sc < 10) return finishShape();
+    pts.push(w);
+  },
+  move(w) { if (preview && preview.type === 'poly') preview.cur = w; },
+  up() {},
+};
+function finishShape() {
+  const pts = preview && preview.pts; preview = null;
+  if (!pts || pts.length < 3 || Math.abs(polyArea(pts)) < 1) return toast('An outline needs at least three points.');
+  addPart(sheetFromWorld(pts, opt.gauge));
+}
+H.ring = { down(w) { const d = opt.ringWire; addPart(mkRing(w[0], w[1], opt.ringID / 2 + d / 2, d)); } };
+H.solder = {
+  down(w) {
+    const chip = newPart('chip', { x: w[0], y: w[1], rot: (Math.random() - 0.5) * 0.8, grade: opt.grade, state: 'chip' });
+    const under = S.parts.filter(p => isMetal(p) && partDist(p, w[0], w[1]) <= 0.4);
+    if (under.some(p => p.flux > 0)) chip.flux = 1;
+    addPart(chip);
+    if (!under.length) toastKey('chipair', 'That chip landed on the bare board. Put it on the seam, touching the pieces you want to join.', 'info');
+  },
+};
+H.flux = {
+  down(w) {
+    const p = pick(...w); if (!p) return toast('Click a piece to brush flux on it.');
+    pushUndo(); p.flux = 1; p.fluxDry = p.temp > 100;
+    (derived.touch.get(p.id) || []).map(byId).filter(c => c && c.kind === 'chip').forEach(c => c.flux = 1);
+    if (p.temp > 300) toastKey('hotflux', 'Flux spits on hot metal. It works better brushed on cold work.', 'info');
+  },
+};
+H.stopoff = {
+  down(w) {
+    const p = pick(...w, q => q.kind !== 'chip'); if (!p) return toast('Click a piece to paint it with yellow ochre.');
+    pushUndo(); p.stopoff = !p.stopoff;
+    if (p.stopoff) toastKey('ochre', 'Yellow ochre painted on. Solder can\'t wet this piece until it\'s pickled off, so it protects earlier joints and keeps hinge knuckles free.', 'info');
+  },
+};
+H.torch = {
+  down(w) { pushUndo(); torch.x = w[0]; torch.y = w[1]; torch.firing = true; SFX.torch(true); },
+  move(w) { torch.x = w[0]; torch.y = w[1]; },
+  up() { torch.firing = false; SFX.torch(false); },
+};
+H.drill = {
+  down(w) {
+    const r = opt.drill / 2;
+    const sheets = S.parts.filter(p => p.kind === 'sheet' && partDist(p, w[0], w[1]) <= -r * 0.5);
+    if (!sheets.length) return toast('The drill only goes through sheet. Click inside a sheet piece.');
+    pushUndo();
+    sheets.forEach(p => { const [lx, ly] = toLocal(p, w[0], w[1]); p.holes.push({ x: lx, y: ly, r }); dirty(p); });
+    SFX.drill(); spawn('sparkle', w[0], w[1], 4); rebuild();
+    if (sheets.length > 1) toastKey('drill2', `Drilled through ${sheets.length} layers at once, so the holes line up. Now you can rivet them.`, 'good');
+  },
+};
+H.dap = {
+  down(w) {
+    const p = pick(...w, q => q.kind === 'sheet'); if (!p) return toast('Dapping works on sheet pieces, and discs work best.');
+    pushUndo(); p.domed = !p.domed; SFX.tink();
+    if (p.domed && p.shape !== 'disc') toastKey('dap', 'Domed. Round discs dome evenly, while odd shapes pucker at the corners.', 'info');
+  },
+};
+H.rivet = {
+  down(w) {
+    const hits = [];
+    for (const p of S.parts) if (p.kind === 'sheet') for (const h of p.holes) { const [hx, hy] = toWorld(p, h.x, h.y); if (Math.hypot(hx - w[0], hy - w[1]) < Math.max(1.2, h.r * 1.6)) { hits.push({ p, hx, hy, r: h.r }); break; } }
+    if (hits.length < 2) return toast(hits.length ? 'Only one layer has a hole here. Stack two pieces and drill through both.' : 'Click a drilled hole that goes through two stacked pieces.', 'info');
+    const r = Math.min(...hits.map(h => h.r));
+    addPart(newPart('rivet', { x: hits[0].hx, y: hits[0].hy, d: r * 2 - 0.05, links: hits.map(h => h.p.id), born: performance.now() }));
+    SFX.tink(); setTimeout(SFX.tink, 140); setTimeout(SFX.tink, 260);
+    const pv = derived.pivots.find(pv => pv.rivet.links.length);
+    toastKey('rivet', pv ? 'Riveted. One rivet is a <b>pivot</b>, so pick <b>Flex</b> and swing it.' : 'Riveted. The joint is cold, with no heat, so it\'s safe next to stones and enamel.', 'good');
+  },
+};
+function workAt(w, verb) { const p = pick(...w); if (!p) { toast(`Click the piece you want to ${verb}.`); return null; } return asmMembers(p); }
+H.quench = {
+  down(w) {
+    const ms = workAt(w, 'quench'); if (!ms) return;
+    const hot = Math.max(...ms.map(p => p.temp));
+    if (hot < 60) return toast('It\'s already cool enough to handle.');
+    pushUndo(); ms.forEach(p => { p.temp = AMBIENT; }); S.joints.forEach(j => { if (ms.some(m => m.id === j.a)) j.molten = false; });
+    for (let i = 0; i < Math.min(14, 4 + hot / 60); i++) spawn('steam', ms[0].x + (Math.random() - 0.5) * 12, ms[0].y + (Math.random() - 0.5) * 8);
+    SFX.hiss();
+    if (hot > SOLDERS.easy.flow) toastKey('qhot', 'Quenched while still glowing. The solder had barely set. Wait a few seconds after it loses its red next time.', 'warn');
+  },
+};
+H.pickle = {
+  down(w) {
+    const ms = workAt(w, 'pickle'); if (!ms) return;
+    if (Math.max(...ms.map(p => p.temp)) > 350) return toast('Quench it first. Red-hot work dropped into warm pickle spits acid.', 'warn');
+    pushUndo();
+    ms.forEach(p => { p.oxide = 0; p.glass = false; p.flux = 0; p.fluxDry = false; p.stopoff = false; if (p.surface === 'fired') p.surface = 'frosted'; });
+    SFX.fizz(); toastKey('pickle', 'Pickled. The flux glass, oxide and ochre have dissolved, leaving a frosty white layer of fine silver on the surface.', 'good');
+  },
+};
+H.polish = {
+  down(w) {
+    const ms = workAt(w, 'polish'); if (!ms) return;
+    if (ms.some(p => p.glass || p.oxide > 0.1 || p.stopoff)) return toast('Pickle it first. Polishing over flux glass and oxide only drags the grit around.', 'warn');
+    if (Math.max(...ms.map(p => p.temp)) > 60) return toast('Let it cool before it goes on the polishing wheel.', 'warn');
+    pushUndo(); ms.forEach(p => { if (p.kind !== 'chip') p.surface = 'mirror'; });
+    ms.forEach(p => spawn('sparkle', p.x, p.y, 3)); SFX.ting();
+  },
+};
+H.flex = {
+  down(w) {
+    const p = pick(...w); if (!p) return;
+    const g = derived.rigid.get(p.id);
+    const h = derived.hinges.find(h => h.gA === g || h.gB === g);
+    if (h) {
+      const st = S.hinge[h.pin.id] || (S.hinge[h.pin.id] = { angle: 0, mover: p.id });
+      if (derived.rigid.get(st.mover) !== g) { st.mover = p.id; st.angle = 0; }
+      const nx = -h.dy, ny = h.dx, ms = rigidMembers(g);
+      const side = ms.reduce((s, m) => s + (m.x - h.ax) * nx + (m.y - h.ay) * ny, 0) >= 0 ? 1 : -1;
+      const R = side * Math.max(4, ...ms.map(m => Math.abs((m.x - h.ax) * nx + (m.y - h.ay) * ny) + br(m) * 0.5)) * 0.7;
+      const s0 = (w[0] - h.ax) * nx + (w[1] - h.ay) * ny;
+      dragState = { hinge: h, st, nx, ny, R, k: Math.cos(st.angle) - s0 / R };
+      return;
+    }
+    const pv = derived.pivots.find(pv => pv.gA === g || pv.gB === g);
+    if (pv) {
+      const r = pv.rivet, mover = pv.gA === g ? pv.gA : pv.gB;
+      const ms = rigidMembers(mover).filter(m => m.id !== r.id);
+      dragState = { pivot: pv, ms, cx: r.x, cy: r.y, a: Math.atan2(w[1] - r.y, w[0] - r.x) };
+      return;
+    }
+    toast('Flex works on a <b>hinge</b> (tube knuckles on two pieces with a wire pin through them all) or on a piece held by a <b>single rivet</b>.');
+  },
+  move(w) {
+    const d = dragState; if (!d) return;
+    if (d.hinge) {
+      const s = (w[0] - d.hinge.ax) * d.nx + (w[1] - d.hinge.ay) * d.ny;
+      d.st.angle = Math.acos(clamp(s / d.R + d.k, -1, 1));
+      lessonState.hingeMax = Math.max(lessonState.hingeMax || 0, d.st.angle);
+    } else if (d.pivot) {
+      const a = Math.atan2(w[1] - d.cy, w[0] - d.cx), da = a - d.a; d.a = a;
+      d.ms.forEach(p => rotateAbout(p, d.cx, d.cy, da));
+      lessonState.pivotTurn = (lessonState.pivotTurn || 0) + Math.abs(da);
+    }
+  },
+  up() { if (dragState && dragState.pivot) rebuild(); dragState = null; },
+};
+
+function sawLine(a, b) {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1.5) return toast('Drag the saw right across the piece.');
+  const hits = S.parts.filter(p => ['sheet', 'wire', 'tube'].includes(p.kind) && (() => { for (let t = 0; t <= 1; t += 0.4 / L) if (partDist(p, a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t) <= 0) return true; return false; })());
+  if (!hits.length) return toast('Nothing under the blade. Drag across a sheet, wire or tube.');
+  pushUndo(); let cut = 0;
+  for (const p of hits) cut += cutPart(p, a, b) ? 1 : 0;
+  if (cut) { SFX.rasp(); rebuild(); } else undoStack.pop();
+}
+function cutPart(p, a, b) {
+  const [ax, ay] = toLocal(p, ...a), [bx, by] = toLocal(p, ...b), KERF = 0.3;
+  let pieces = [];
+  if (p.kind === 'sheet') {
+    const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L, c = nx * ax + ny * ay;
+    const A = clipHalf(p.poly, nx, ny, c + KERF / 2), B = clipHalf(p.poly, -nx, -ny, -c + KERF / 2);
+    if (A.length < 3 || B.length < 3 || Math.abs(polyArea(A)) < 0.4 || Math.abs(polyArea(B)) < 0.4) return false;
+    for (const poly of [A, B]) {
+      const [cx, cy] = centroid(poly), [wx, wy] = toWorld(p, cx, cy);
+      const q = Object.assign({}, p, { id: S.nextId++, x: wx, y: wy, shape: p.shape === 'blob' ? 'blob' : 'cut', poly: poly.map(([x, y]) => [x - cx, y - cy]),
+        holes: p.holes.filter(h => pointInPoly(h.x, h.y, poly)).map(h => ({ x: h.x - cx, y: h.y - cy, r: h.r })),
+        pools: p.pools.filter(pl => pointInPoly(pl.x, pl.y, poly)).map(pl => ({ ...pl, x: pl.x - cx, y: pl.y - cy })) });
+      dirty(q); pieces.push(q);
+    }
+  } else {
+    if (Math.abs(by - ay) < 1e-6) return false;
+    const x = ax + (bx - ax) * (-ay) / (by - ay), L = p.len / 2;
+    if (Math.abs(x) > L - 0.4) return false;
+    for (const [x0, x1] of [[-L, x - KERF / 2], [x + KERF / 2, L]]) {
+      if (x1 - x0 < 0.4) continue;
+      const mid = (x0 + x1) / 2, [wx, wy] = toWorld(p, mid, 0);
+      const q = Object.assign({}, p, { id: S.nextId++, x: wx, y: wy, len: x1 - x0, pools: p.pools.filter(pl => pl.x > x0 && pl.x < x1).map(pl => ({ ...pl, x: pl.x - mid })) });
+      dirty(q); pieces.push(q);
+    }
+    if (pieces.length < 2) return false;
+  }
+  // hand joints and rivet links over to whichever new piece is under them
+  const nearest = (wx, wy) => pieces.reduce((m, q) => partDist(q, wx, wy) < partDist(m, wx, wy) ? q : m);
+  for (const j of S.joints) {
+    if (j.a !== p.id && j.b !== p.id) continue;
+    const [wx, wy] = jointWorld(j), q = nearest(wx, wy);
+    if (j.a === p.id) { j.a = q.id; [j.lx, j.ly] = toLocal(q, wx, wy); } else j.b = q.id;
+  }
+  for (const r of S.parts) if (r.kind === 'rivet') r.links = r.links.map(id => id === p.id ? nearest(r.x, r.y).id : id);
+  const i = S.parts.indexOf(p); S.parts.splice(i, 1, ...pieces);
+  byIdMap.delete(p.id); pieces.forEach(q => byIdMap.set(q.id, q));
+  return true;
+}
+
+/* =====================================================================
+   Pointer input
+   ===================================================================== */
+const pointers = new Map(); let pinch = null;
+const evW = e => { const r = cv.getBoundingClientRect(); return s2w(e.clientX - r.left, e.clientY - r.top); };
+cv.addEventListener('pointerdown', e => {
+  SFX.ensure(); cv.setPointerCapture(e.pointerId);
+  const r = cv.getBoundingClientRect(); pointers.set(e.pointerId, [e.clientX - r.left, e.clientY - r.top]);
+  if (pointers.size === 2) {
+    if (H[tool].up && dragState) { torch.firing = false; SFX.torch(false); dragState = null; preview = preview && preview.type === 'poly' ? preview : null; }
+    const [p1, p2] = [...pointers.values()];
+    pinch = { d: Math.hypot(p1[0] - p2[0], p1[1] - p2[1]), sc: cam.sc, mid: s2w((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2) };
+    return;
+  }
+  if (e.button !== 0 && e.pointerType === 'mouse') return;
+  H[tool].down && H[tool].down(evW(e), e);
+});
+cv.addEventListener('pointermove', e => {
+  const r = cv.getBoundingClientRect(); const sp = [e.clientX - r.left, e.clientY - r.top];
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, sp);
+  if (pinch && pointers.size === 2) {
+    const [p1, p2] = [...pointers.values()];
+    cam.sc = clamp(pinch.sc * Math.hypot(p1[0] - p2[0], p1[1] - p2[1]) / pinch.d, 2, 60);
+    const mx = (p1[0] + p2[0]) / 2, my = (p1[1] + p2[1]) / 2;
+    cam.cx = pinch.mid[0] - (mx - VW / 2) / cam.sc; cam.cy = pinch.mid[1] - (my - VH / 2) / cam.sc;
+    return;
+  }
+  const w = s2w(...sp); pointerW = w; pointerS = sp;
+  if (tool === 'torch') { torch.x = w[0]; torch.y = w[1]; }
+  H[tool].move && H[tool].move(w, e);
+});
+const endPointer = e => {
+  pointers.delete(e.pointerId);
+  if (pinch) { if (pointers.size < 2) pinch = null; return; }
+  H[tool].up && H[tool].up(evW(e), e);
+};
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('pointerleave', () => { pointerS = null; });
+cv.addEventListener('dblclick', () => { if (tool === 'shape' && preview && preview.pts.length >= 3) { preview.pts.pop(); finishShape(); } });
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.altKey && selected) return rotateSel(Math.sign(e.deltaY) * Math.PI / 36);
+  const r = cv.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top, before = s2w(sx, sy);
+  cam.sc = clamp(cam.sc * Math.exp(-e.deltaY * 0.0015), 2, 60);
+  const after = s2w(sx, sy); cam.cx += before[0] - after[0]; cam.cy += before[1] - after[1];
+}, { passive: false });
+let pointerW = null, pointerS = null;
+$('#zin').onclick = () => { cam.sc = clamp(cam.sc * 1.25, 2, 60); };
+$('#zout').onclick = () => { cam.sc = clamp(cam.sc / 1.25, 2, 60); };
+$('#zfit').onclick = () => lesson ? fit(...lesson.def.view) : fit();
+
+addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea') || mode !== 'bench') return;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); return undo(); }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'Escape') { preview = null; dragState = null; return; }
+  if (e.key === 'Enter' && tool === 'shape' && preview) return finishShape();
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return deleteSel(); }
+  if (e.key === 'r' || e.key === 'R') return rotateSel(e.shiftKey ? -Math.PI / 12 : Math.PI / 12);
+  const t = TOOLS.find(t => t.key && t.key.toLowerCase() === e.key.toLowerCase());
+  if (t) setTool(t.id);
+});
+
+/* =====================================================================
+   Tooltip + heat bar
+   ===================================================================== */
+const tipEl = $('#tip');
+function fluxState(p) {
+  if (p.flux > 0 && p.temp >= SILVER.fluxClear) return 'flux glassy (nearly there)';
+  if (p.flux > 0 && p.fluxDry) return p.temp > 100 && p.temp < 300 ? 'flux bubbling' : 'flux white and crusty';
+  if (p.flux > 0) return 'fluxed';
+  if (p.glass) return 'flux glass, so pickle it';
+  return p.kind === 'chip' ? '' : 'no flux';
+}
+function updateTip() {
+  hover = pointerS && !dragState ? pick(...pointerW) : null;
+  if (!hover) { tipEl.hidden = true; return; }
+  const p = hover, T = Math.round(p.temp), bits = [fluxState(p)];
+  if (p.stopoff) bits.push('stop-off painted');
+  if (p.oxide > 0.3) bits.push('oxidized');
+  if (p.kind !== 'chip' && p.kind !== 'rivet') bits.push({ mill: 'mill finish', fired: 'fired', frosted: 'pickled white', mirror: 'polished' }[p.surface]);
+  const nj = S.joints.filter(j => j.a === p.id || j.b === p.id);
+  if (nj.length) bits.push(`${nj.length} solder joint${nj.length > 1 ? 's' : ''} (${[...new Set(nj.map(j => SOLDERS[j.grade].letter))].join('/')})`);
+  if (p.kind === 'chip') bits.push(`flows at ${SOLDERS[p.grade].flow}°C`);
+  if (p.kind === 'wire' && derived.hinges.some(h => h.pin === p)) bits.push('hinge pin');
+  tipEl.innerHTML = `<b>${partName(p)}</b><span class="t">${T}°C</span>${bits.filter(Boolean).map(b => `<span class="state">${b}</span>`).join('')}`;
+  tipEl.hidden = false;
+  const x = pointerS[0] + 16, y = pointerS[1] + 16;
+  tipEl.style.left = Math.min(x, VW - tipEl.offsetWidth - 8) + 'px'; tipEl.style.top = Math.min(y, VH - tipEl.offsetHeight - 90) + 'px';
+}
+function updateHeat() {
+  const m = $('#heatMarker'), r = $('#heatReadout'); if (!m) return;
+  const target = hover || S.parts.reduce((a, p) => !a || p.temp > a.temp ? p : a, null);
+  const T = target ? target.temp : AMBIENT;
+  m.style.left = (clamp(T, 0, 950) / 950 * 100) + '%';
+  r.textContent = target ? `${hover ? '' : 'hottest '}${partName(target)} · ${Math.round(T)}°C` : '';
+}
+
+/* =====================================================================
+   Lessons
+   ===================================================================== */
+let lesson = null;            // { def, step, refs, backup }
+let lessonState = {};
+const done = new Set(JSON.parse((() => { try { return localStorage.getItem('silverbench.done') || '[]'; } catch (e) { return '[]'; } })()));
+const R = id => lesson && byId(lesson.refs[id]);
+const jointBetween = (a, b) => a && b && S.joints.some(j => (j.a === a.id && j.b === b.id) || (j.a === b.id && j.b === a.id));
+const touching = (a, b) => a && b && (derived.touch.get(a.id) || []).includes(b.id);
+const tubeAt = (x, y) => S.parts.find(p => p.kind === 'tube' && Math.hypot(p.x - x, p.y - y) < 0.9 && Math.abs(Math.sin(p.rot)) < 0.1);
+const clean = ps => ps.every(p => p && !p.glass && p.oxide < 0.05 && p.temp < 80 && !p.stopoff);
+const chipOnSeam = (a, b) => S.parts.some(c => c.kind === 'chip' && touching(c, a) && touching(c, b));
+
+const SLOTS = [-9.4, 0, 9.4];
+const LESSONS = [
+  {
+    id: 'bail', title: 'Solder a bail onto a disc', mins: '3 min', teaches: 'Flux, chip placement, and reading the heat',
+    view: [0, -4, 64, 50],
+    setup() { const disc = mkDisc(0, 0, 12, 1), ring = mkRing(0, -15.45, 3.5, 1); return { parts: [disc, ring], refs: { disc: disc.id, ring: ring.id } }; },
+    steps: [
+      { text: 'A <b>bail</b> is the loop a pendant hangs from. You have a 24 mm sterling disc and a jump ring that are already touching.', why: 'Solder can only fill a joint where the two pieces actually meet. It won\'t bridge a gap.' },
+      { text: 'Pick <b>Flux</b> and click the disc, then the ring.', tool: 'flux', why: 'Hot silver oxidizes in air, and solder won\'t stick to oxide. Flux melts into a glassy layer that keeps the oxygen off.', check: () => R('disc')?.flux > 0 && R('ring')?.flux > 0 },
+      { text: 'Pick <b>Solder</b> (Hard) and click right on the seam, so the chip touches both pieces.', tool: 'solder', why: 'Use hard solder for the first joint on a piece. It flows at the highest temperature, so later solders won\'t re-melt it.', check: () => chipOnSeam(R('disc'), R('ring')) || jointBetween(R('disc'), R('ring')) },
+      { text: 'Pick the <b>Torch</b> and hold it on the <b>disc</b>, not on the chip. Watch the flux bubble, turn white and crusty, and then go clear.', tool: 'torch', why: 'The disc has about 30× the mass of the ring, so it heats far more slowly. If you warm the ring first, it will melt before the disc is anywhere near hot enough.', check: () => (R('disc')?.temp >= SILVER.fluxClear) || jointBetween(R('disc'), R('ring')) },
+      { text: 'Keep the flame moving over the disc and nudge it toward the ring. Hard solder flows at <b>788°C</b>, with a bright flash.', tool: 'torch', why: 'Solder runs toward heat. When both pieces reach the flow point together, it gets pulled into the seam.', check: () => jointBetween(R('disc'), R('ring')) },
+      { text: '<b>Quench</b> it, then <b>Pickle</b> it.', tool: 'pickle', why: 'Pickle is a mild acid. It dissolves the flux glass and the oxide that heating left behind.', check: () => clean([R('disc'), R('ring')]) },
+      { text: '<b>Polish</b> it. That\'s a pendant.', tool: 'polish', why: 'Pickling leaves a white skin of pure fine silver. Polishing burnishes it to a bright shine.', check: () => R('disc')?.surface === 'mirror' },
+    ],
+  },
+  {
+    id: 'hinge', title: 'Build a three-knuckle hinge', mins: '6 min', teaches: 'Knuckles, stop-off, step-down solders, pins',
+    view: [0, 7, 62, 62],
+    setup() {
+      const A = sheetFromWorld([[-15, -15], [15, -15], [15, -1.55], [4.85, -1.55], [4.85, -3.4], [-4.85, -3.4], [-4.85, -1.55], [-15, -1.55]], 1);
+      const B = sheetFromWorld([[-15, 15], [-15, 3.4], [-4.45, 3.4], [-4.45, 1.55], [4.45, 1.55], [4.45, 3.4], [15, 3.4], [15, 15]], 1);
+      const tube = mkTube(0, 24, 27.6, 3.0, 1.5), pin = mkWire(0, 30, 32, 1.3);
+      return { parts: [A, B, tube, pin], refs: { A: A.id, B: B.id, pin: pin.id } };
+    },
+    ghosts(step) {
+      if (step === 1) return [{ type: 'line', x1: -4.7, y1: 20.5, x2: -4.7, y2: 27.5 }, { type: 'line', x1: 4.7, y1: 20.5, x2: 4.7, y2: 27.5 }];
+      if (step === 2) return SLOTS.map(x => ({ type: 'tube', x, y: 0, len: 9, od: 3 }));
+      if (step === 7) return [{ type: 'line', x1: -16, y1: 0, x2: 16, y2: 0 }];
+      return [];
+    },
+    snaps: SLOTS.map(x => ({ kind: 'tube', x, y: 0, rot: 0 })),
+    steps: [
+      { text: 'A hinge is a row of tube <b>knuckles</b> that alternate between two leaves, with a <b>pin</b> running through every one of them.', why: 'The odd knuckles are soldered to one leaf and the even ones to the other. The pin is the only thing connecting the two leaves, so they can only rotate around it. Notice the notches in each leaf, which leave room for the other leaf\'s knuckles.' },
+      { text: 'Pick the <b>Saw</b> and cut the tube into three knuckles. Drag across it at each orange mark.', tool: 'saw', why: 'An odd number of knuckles means both outer knuckles sit on the same leaf, so the hinge is symmetrical and the pin is held at both ends.', check: () => S.parts.filter(p => p.kind === 'tube' && p.len > 6 && p.len < 12).length >= 3 },
+      { text: 'Use the <b>Tweezers</b> to drag each knuckle into a dotted slot. The outer two go against the top leaf and the middle one goes against the bottom leaf.', tool: 'move', why: 'The slots leave a saw-blade gap between knuckles. If knuckles touch each other, solder can bridge them and the hinge will be frozen.', check: () => SLOTS.every(x => tubeAt(x, 0)) },
+      { text: 'Flux the <b>bottom leaf</b> and the <b>middle knuckle</b>. Put a <b>Hard</b> chip on their seam and heat the leaf until it flows.', tool: 'solder', why: 'This joint gets hard solder because it will be heated again when you solder the other leaf.', check: () => jointBetween(tubeAt(0, 0), R('B')) },
+      { text: 'Paint <b>Stop-off</b> on the middle knuckle.', tool: 'stopoff', why: 'Yellow ochre stops solder from wetting the knuckle, so the next joints can\'t creep into it or into the gap beside it.', check: () => tubeAt(0, 0)?.stopoff || (jointBetween(tubeAt(-9.4, 0), R('A')) && jointBetween(tubeAt(9.4, 0), R('A'))) },
+      { text: 'Flux the <b>top leaf</b> and the two outer knuckles. Switch to <b>Medium</b> solder, put a chip on each seam, and heat the top leaf.', tool: 'solder', why: 'Medium flows about 35°C below hard. You can finish this join without the first one re-melting, as long as you keep the flame on the top leaf.', check: () => jointBetween(tubeAt(-9.4, 0), R('A')) && jointBetween(tubeAt(9.4, 0), R('A')) },
+      { text: '<b>Quench</b> and <b>Pickle</b> both halves. The pickle also dissolves the ochre.', tool: 'pickle', why: 'The two leaves aren\'t connected yet, so each one goes in the pickle separately.', check: () => clean(S.parts.filter(p => p.kind !== 'chip' && p.id !== lesson.refs.pin)) },
+      { text: 'Slide in the <b>pin</b>. Drag the long wire onto the dotted line that runs through the knuckles.', tool: 'move', why: 'The pin is 1.3 mm and the tube\'s inside diameter is 1.5 mm, so it slides through with a little play. That clearance is what lets the hinge swing.', check: () => derived.hinges.length > 0 },
+      { text: 'Pick <b>Flex</b> and drag the bottom leaf up and over the top one. It swings.', tool: 'flex', why: 'For a real piece, you\'d now rivet the pin ends (flare them with a hammer) so the pin can\'t slide out.', check: () => (lessonState.hingeMax || 0) > 2.2 },
+    ],
+  },
+  {
+    id: 'rivet', title: 'Rivet a pivot', mins: '3 min', teaches: 'Cold connections, and why one rivet turns but two lock',
+    view: [0, 0, 64, 50],
+    setup() { const a = mkRect(0, 0, 44, 8, 1, Math.PI / 6), b = mkRect(0, 0, 44, 8, 1, -Math.PI / 6); return { parts: [a, b], refs: { a: a.id, b: b.id } }; },
+    ghosts(step) { return step === 1 ? [{ type: 'cross', x: 0, y: 0 }] : []; },
+    steps: [
+      { text: 'Not every join needs a torch. A <b>rivet</b> is a short wire with both ends hammered wider than the hole it passes through.', why: 'Riveting is a cold connection, so it\'s safe next to stones, enamel, wood, and anything else that can\'t take heat.' },
+      { text: 'Pick the <b>Drill</b> and click where the two strips cross.', tool: 'drill', why: 'Drill through both layers in one go, so the holes are sure to line up.', check: () => { const a = R('a'), b = R('b'); return a && b && a.holes.length && b.holes.length; } },
+      { text: 'Pick <b>Rivet</b> and click the hole.', tool: 'rivet', check: () => S.parts.some(p => p.kind === 'rivet' && p.links.includes(lesson.refs.a) && p.links.includes(lesson.refs.b)) },
+      { text: 'Pick <b>Flex</b> and drag one strip around. A single rivet is a <b>pivot</b>.', tool: 'flex', why: 'This is how scissors, kinetic pendants and swivel bails work.', check: () => (lessonState.pivotTurn || 0) > 0.5 },
+      { text: 'Drill a second hole inside the overlap, a few mm from the first, and rivet it too.', tool: 'drill', why: 'One point lets the strip turn. Two points fix a line, so now it\'s locked.', check: () => S.parts.filter(p => p.kind === 'rivet' && p.links.includes(lesson.refs.a) && p.links.includes(lesson.refs.b)).length >= 2 },
+    ],
+  },
+];
+
+function snapToGhost(members) {
+  if (!lesson || !lesson.def.snaps || members.length !== 1) return;
+  const p = members[0];
+  for (const s of lesson.def.snaps) {
+    if (p.kind !== s.kind) continue;
+    const da = Math.abs(Math.atan2(Math.sin(2 * (p.rot - s.rot)), Math.cos(2 * (p.rot - s.rot)))) / 2;
+    if (Math.hypot(p.x - s.x, p.y - s.y) < 3 && da < 0.35 && !S.parts.some(q => q !== p && q.kind === s.kind && Math.hypot(q.x - s.x, q.y - s.y) < 0.9)) {
+      p.x = s.x; p.y = s.y; p.rot = s.rot; dirty(p); SFX.click(); return;
+    }
+  }
+}
+
+function startLesson(id) {
+  const def = LESSONS.find(l => l.id === id);
+  const backup = lesson ? lesson.backup : snap();
+  const { parts, refs } = def.setup();
+  S.parts = parts; S.joints = []; S.hinge = {};
+  undoStack.length = 0; lessonState = {}; selected = null; preview = null;
+  lesson = { def, step: 0, refs, backup };
+  rebuild(); fit(...def.view); setTool(def.steps[0].tool || 'move'); renderSide(); setMode('bench');
+}
+function endLesson(keep) {
+  if (!lesson) return;
+  if (!keep) load(lesson.backup);
+  lesson = null; ghosts = []; undoStack.length = 0; fit(); renderSide(); save();
+}
+function lessonTick() {
+  if (!lesson) return;
+  const def = lesson.def, st = def.steps[lesson.step];
+  ghosts = def.ghosts ? def.ghosts(lesson.step) : [];
+  if (st && st.check) {
+    let ok = false; try { ok = !!st.check(); } catch (e) {}
+    if (ok) advance();
+  }
+}
+function advance() {
+  lesson.step++;
+  const st = lesson.def.steps[lesson.step];
+  if (!st) { done.add(lesson.def.id); try { localStorage.setItem('silverbench.done', JSON.stringify([...done])); } catch (e) {} SFX.ting(); }
+  else SFX.click();
+  renderSide();
+}
+
+function renderSide() {
+  const side = $('#side');
+  document.querySelectorAll('.tool').forEach(b => b.classList.remove('want'));
+  if (lesson) {
+    const def = lesson.def, n = def.steps.length, cur = lesson.step;
+    const st = def.steps[cur];
+    if (st && st.tool) document.querySelector(`.tool[data-tool="${st.tool}"]`)?.classList.add('want');
+    side.innerHTML = `
+      <p class="note">Lesson · ${def.mins}</p>
+      <h2>${def.title}</h2>
+      <div class="progress">${def.steps.map((_, i) => `<i class="${i < cur ? 'on' : ''}"></i>`).join('')}</div>
+      ${cur >= n ? `
+        <h3>Done</h3>
+        <p>You finished <b>${def.title.toLowerCase()}</b>. Keep working on it, or try another lesson.</p>
+        <div class="row"><button class="btn primary" data-act="keep">Keep it on my bench</button><button class="btn" data-act="exit">Back to lessons</button></div>` : ''}
+      <ol class="steps">${def.steps.map((s, i) => `<li class="${i < cur ? 'done' : i === cur ? 'now' : 'later'}">${s.text}${s.why ? `<span class="why">${s.why}</span>` : ''}</li>`).join('')}</ol>
+      <div class="row">
+        ${st && !st.check ? '<button class="btn primary" data-act="next">Got it</button>' : ''}
+        ${st && st.check ? '<button class="btn quiet" data-act="skip">Skip step</button>' : ''}
+        <button class="btn quiet" data-act="restart">Restart</button>
+        <button class="btn quiet" data-act="exit">Exit lesson</button>
+      </div>
+      <p class="note" style="margin-top:14px">Undo with <kbd class="k">⌘Z</kbd> or <kbd class="k">Ctrl Z</kbd>. Hover a piece to read its temperature.</p>`;
+    return;
+  }
+  side.innerHTML = `
+    <h2>The bench</h2>
+    <p class="lede">A sterling-silver workbench with a soldering board, a torch and the usual hand tools. Make anything you like. Pieces heat, glow and cool realistically, and solder flows only when the work is ready for it.</p>
+    <h3>Guided lessons</h3>
+    ${LESSONS.map(l => `<button class="lesson-card${done.has(l.id) ? ' done' : ''}" data-lesson="${l.id}"><strong>${l.title}</strong><span>${l.teaches}</span><span class="meta">${l.mins}</span></button>`).join('')}
+    <h3>Solder chart</h3>
+    <table class="chart">
+      ${Object.values(SOLDERS).map(s => `<tr><td><i class="sw" style="background:${s.color}"></i>${s.name}</td><td>${s.flow}°C</td></tr>`).join('')}
+      <tr><td>Flux goes glassy</td><td>${SILVER.fluxClear}°C</td></tr>
+      <tr><td>Sterling melts</td><td>${SILVER.liquidus}°C</td></tr>
+    </table>
+    <p class="note" style="margin-top:8px">Step down as you go: use hard solder for the first joint, then medium, then easy, so each new joint flows below the ones already made.</p>
+    <h3>Reading the work</h3>
+    <div class="legend">
+      <i style="background:rgba(235,242,255,.5)"></i><span>Wet flux</span>
+      <i style="background:#f4f4f4"></i><span>Dry, crusty flux (100–595°C)</span>
+      <i style="background:linear-gradient(90deg,#5e1a10,#e2531a,#ffd38a)"></i><span>Glow: dull red → orange → straw</span>
+      <i style="background:#8c6e3c"></i><span>Flux glass, which needs pickling</span>
+      <i style="background:#cd962d"></i><span>Yellow ochre stop-off</span>
+      <i style="background:#4e4256"></i><span>Oxide from heating without flux</span>
+    </div>
+    <h3>Try making</h3>
+    <p>Jump-ring chain: solder rings closed one by one, linking each new ring through the last one before you close it. A locket: two domed discs on a hinge. A spinner: a riveted disc that turns.</p>
+    <p class="note">Your free bench saves in this browser.</p>`;
+}
+$('#side').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.lesson) return startLesson(b.dataset.lesson);
+  const a = b.dataset.act;
+  if (a === 'next' || a === 'skip') advance();
+  if (a === 'restart') startLesson(lesson.def.id);
+  if (a === 'exit') endLesson(false);
+  if (a === 'keep') endLesson(true);
+});
+
+/* =====================================================================
+   Header, modes
+   ===================================================================== */
+let mode = 'bench';
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.view === m));
+  $('#benchView').hidden = m !== 'bench'; $('#mechView').hidden = m !== 'mech';
+  if (m === 'mech') Mech.show(); else { torch.firing = false; SFX.torch(false); requestAnimationFrame(() => { resize(); }); }
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setMode(b.dataset.view));
+$('#undoBtn').onclick = undo;
+$('#clearBtn').onclick = () => {
+  if (lesson) return toast('Exit the lesson first, or press Restart to reset it.');
+  if (!S.parts.length) return;
+  pushUndo(); S.parts = []; S.joints = []; S.hinge = {}; selected = null; rebuild(); toast('Bench cleared. You can undo this.');
+};
+$('#soundBtn').onclick = () => { const on = SFX.toggle(); $('#soundBtn').textContent = on ? 'Sound on' : 'Sound off'; $('#soundBtn').setAttribute('aria-pressed', on); };
+
+/* =====================================================================
+   Mechanisms (3D)
+   ===================================================================== */
+const MECHS = [
+  {
+    id: 'hinge', name: 'Tube hinge', lesson: 'hinge', slider: ['Open', 'Closed'], label: 'Fold',
+    blurb: 'The hinge you find on lockets, box lids and folding pendants.',
+    why: 'Knuckles alternate between the two leaves. The outer pair is soldered to one leaf and the middle one to the other. The pin is the only part shared between them, so the leaves can do nothing but rotate around it.',
+    make: ['Saw the tube into an odd number of knuckles and file the ends square.', 'File a shallow groove (the "seat") along each leaf edge so the tube sits snugly.', 'Solder the middle knuckle to one leaf with hard solder, then paint its ends with ochre.', 'Solder the outer knuckles to the other leaf with medium solder.', 'Pickle, slide in the pin, and lightly rivet both pin ends so it can\'t walk out.'],
+  },
+  {
+    id: 'box', name: 'Box clasp', slider: ['Apart', 'Locked'], label: 'Insert',
+    blurb: 'A clasp hidden inside a little box, often used on bracelets and multi-strand necklaces.',
+    why: 'The tongue is a folded strip that acts as a spring. It gets squeezed as it passes under the lip of the box, then springs open once it\'s inside, and its end catches behind the lip with a click. Pressing the thumb piece squeezes it shut again so it slides out.',
+    make: ['Build the box from sheet: a strip bent around a mandrel with front and back walls soldered on. Cut a slot in the top for the thumb piece.', 'Fold a strip of half-hard sheet into a V for the tongue. <b>Don\'t anneal it afterward</b>, because heat kills the spring.', 'Burnish the fold to work-harden it, so it springs back every time.', 'Solder only the tongue\'s base to the end cap, using easy solder and keeping the flame away from the fold.', 'Solder a thumb piece to the free end of the tongue.'],
+  },
+  {
+    id: 'toggle', name: 'Toggle clasp', slider: ['Free', 'Locked'], label: 'Thread',
+    blurb: 'A bar through a ring. It\'s easy to do up with one hand.',
+    why: 'The bar is longer than the ring is wide. It only fits through end-first. Once it turns sideways, tension on the chain keeps it lying across the ring.',
+    make: ['Make the bar at least 30% longer than the ring\'s inside diameter.', 'Ball or cap the bar ends so they won\'t snag.', 'Solder a small jump ring to the middle of the bar.', 'Leave enough chain near the bar (about half the bar\'s length) for it to tip end-first through the ring.'],
+  },
+  {
+    id: 'rivet', name: 'Rivet', lesson: 'rivet', slider: ['Straight wire', 'Riveted'], label: 'Hammer',
+    blurb: 'A cold connection that joins layers without any heat.',
+    why: 'Hammering the wire\'s ends spreads them into heads wider than the hole, so the layers are trapped between the heads. One rivet lets the layers turn, and two lock them in place.',
+    make: ['Stack the layers and drill through all of them at once.', 'Choose wire that fits the hole snugly.', 'Cut the wire so about half its diameter sticks out on each side.', 'Tap with the flat face of a riveting hammer, flipping the piece often, until both ends mushroom evenly.', 'For a pivot, stop before the layers are clamped tight.'],
+  },
+  {
+    id: 'spinner', name: 'Spinner ring', slider: ['Still', 'Spinning'], label: 'Spin',
+    blurb: 'An outer band that spins freely on an inner core.',
+    why: 'Nothing joins the outer band to the core. It\'s held on only by the core\'s edges, which are flared outward after the band is slid on. The band is slightly larger than the core, so it turns freely.',
+    make: ['Make the core band about 2 mm wider than the spinner band.', 'Polish both bands now, because you won\'t be able to reach the inside later.', 'Slide the spinner band onto the core.', 'Flare both edges of the core outward with a dapping punch or a chasing tool, working around the ring a little at a time.', 'Check that it spins. If it binds, work the flare a little more evenly.'],
+  },
+];
+
+const Mech = (() => {
+  let ready = false, renderer, scene, camera, holder, shadow, cur = null, upd = null;
+  const orbit = { theta: 0.7, phi: 1.05, dist: 60, ty: 0 };
+  let tVal = 0, exp = 0, expT = 0, playing = false, pdir = 1;
+  const cvs = $('#mech3d');
+  let M = {};
+  function init() {
+    renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: true, alpha: true });
+    renderer.setPixelRatio(DPR); renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(32, 1, 0.1, 600);
+    scene.environment = makeEnv();
+    const key = new THREE.DirectionalLight(0xfff1e0, 0.9); key.position.set(20, 40, 25); scene.add(key);
+    scene.add(new THREE.HemisphereLight(0xdfe6ff, 0x2a2420, 0.3));
+    holder = new THREE.Group(); scene.add(holder);
+    const sc = document.createElement('canvas'); sc.width = sc.height = 128; const sg = sc.getContext('2d');
+    const rg = sg.createRadialGradient(64, 64, 4, 64, 64, 64); rg.addColorStop(0, 'rgba(0,0,0,.55)'); rg.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = rg; sg.fillRect(0, 0, 128, 128);
+    shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
+    shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
+    M = {
+      silver: new THREE.MeshStandardMaterial({ color: 0xe4e7ea, metalness: 1, roughness: 0.2 }),
+      satin: new THREE.MeshStandardMaterial({ color: 0xd9dce0, metalness: 1, roughness: 0.3 }),
+      solder: new THREE.MeshStandardMaterial({ color: 0xf2e9d2, metalness: 1, roughness: 0.12 }),
+      dark: new THREE.MeshStandardMaterial({ color: 0x8b8f94, metalness: 1, roughness: 0.5 }),
+      steel: new THREE.MeshStandardMaterial({ color: 0x5c6168, metalness: 0.9, roughness: 0.35 }),
+      wood: new THREE.MeshStandardMaterial({ color: 0x7a5434, metalness: 0, roughness: 0.7 }),
+    };
+    // orbit controls
+    const ptrs = new Map(); let pd = null;
+    cvs.addEventListener('pointerdown', e => { cvs.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pd = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), dist: orbit.dist }; } });
+    cvs.addEventListener('pointermove', e => {
+      if (!ptrs.has(e.pointerId)) return;
+      const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+      if (ptrs.size === 2 && pd) { const [a, b] = [...ptrs.values()]; orbit.dist = clamp(pd.dist * pd.d / Math.hypot(a[0] - b[0], a[1] - b[1]), 15, 160); return; }
+      orbit.theta -= (e.clientX - prev[0]) * 0.008; orbit.phi = clamp(orbit.phi - (e.clientY - prev[1]) * 0.008, 0.15, 1.55);
+    });
+    const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pd = null; };
+    cvs.addEventListener('pointerup', up); cvs.addEventListener('pointercancel', up);
+    cvs.addEventListener('wheel', e => { e.preventDefault(); orbit.dist = clamp(orbit.dist * Math.exp(e.deltaY * 0.001), 15, 160); }, { passive: false });
+    ready = true;
+  }
+  function makeEnv() {
+    const es = new THREE.Scene();
+    const g = new THREE.SphereGeometry(60, 48, 24), pos = g.attributes.position, cols = [];
+    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 60; if (y > 0) cols.push(0.5 + 0.45 * y, 0.47 + 0.42 * y, 0.45 + 0.38 * y); else cols.push(0.16 + 0.08 * (1 + y), 0.14 + 0.07 * (1 + y), 0.13 + 0.06 * (1 + y)); }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    es.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+    const panel = (w, h, x, y, z, k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k * 0.97, k * 0.92), side: THREE.DoubleSide })); m.position.set(x, y, z); m.lookAt(0, 0, 0); es.add(m); };
+    panel(40, 18, 0, 45, 22, 8); panel(14, 40, -46, 10, 4, 4); panel(14, 40, 44, 6, -12, 3); panel(36, 5, 0, 6, -52, 1.4); panel(20, 6, 10, -10, 50, 0.9);
+    const pm = new THREE.PMREMGenerator(renderer); const tex = pm.fromScene(es, 0.03).texture; pm.dispose(); return tex;
+  }
+  const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return m; };
+  const box = (w, h, d, mat, x, y, z) => mesh(new THREE.BoxGeometry(w, h, d), mat, x, y, z);
+  function tubeGeoX(ri, ro, len) { const h = len / 2; return new THREE.LatheGeometry([new THREE.Vector2(ri, -h), new THREE.Vector2(ro, -h), new THREE.Vector2(ro, h), new THREE.Vector2(ri, h), new THREE.Vector2(ri, -h)], 48).rotateZ(Math.PI / 2); }
+  const rodX = (r, len, mat) => new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 28).rotateZ(Math.PI / 2), mat);
+
+  const BUILD = {
+    hinge(g) {
+      const A = new THREE.Group(), B = new THREE.Group(), pin = new THREE.Group(); g.add(A, B, pin);
+      A.add(box(28, 0.8, 13, M.satin, 0, -1.1, -8.05));
+      const kg = tubeGeoX(0.75, 1.5, 8.6);
+      const k1 = mesh(kg, M.silver, -9.2, 0, 0), k3 = mesh(kg, M.silver, 9.2, 0, 0), k2 = mesh(kg, M.silver, 0, 0, 0);
+      A.add(k1, k3); B.add(k2);
+      [-9.2, 9.2].forEach(x => { const f = rodX(0.35, 8.2, M.solder); f.position.set(x, -0.95, -1.45); A.add(f); });
+      const f2 = rodX(0.35, 8.2, M.solder); f2.position.set(0, -0.95, 1.45); B.add(f2);
+      B.add(box(28, 0.8, 13, M.satin, 0, -1.1, 8.05));
+      pin.add(rodX(0.7, 28.6, M.dark));
+      [-14.3, 14.3].forEach(x => { const h = mesh(new THREE.SphereGeometry(0.95, 20, 12), M.silver, x, 0, 0); h.scale.set(0.45, 1, 1); pin.add(h); });
+      return { cam: { dist: 62, ty: 0 }, floor: -2.2, update(t, e) {
+        B.rotation.x = -t * Math.PI * 0.985;
+        A.position.z = -5 * e; B.position.z = 5 * e * Math.cos(B.rotation.x); B.position.y = 5 * e * Math.sin(-B.rotation.x) * -1;
+        k1.position.x = -9.2 - 3 * e; k3.position.x = 9.2 + 3 * e;
+        pin.position.x = 34 * e;
+        return t > 0.97 ? 'Closed' : t < 0.03 ? 'Open flat' : Math.round(180 - t * 177) + '°';
+      } };
+    },
+    box(g) {
+      const boxG = new THREE.Group(), top = new THREE.Group(), tongue = new THREE.Group(), upper = new THREE.Group(); g.add(boxG, tongue); boxG.add(top);
+      boxG.add(box(12.5, 0.5, 9, M.satin, 6, -0.25, 0));
+      [-4.25, 4.25].forEach(z => boxG.add(box(12.5, 4.7, 0.5, M.satin, 6, 2.1, z)));
+      boxG.add(box(0.5, 4.7, 9, M.satin, 12.25, 2.1, 0));
+      // front lip with a centre slot for the thumb piece
+      [-2.85, 2.85].forEach(z => boxG.add(box(0.5, 1.6, 3.3, M.silver, -0.25, 3.4, z)));
+      top.add(box(9.5, 0.5, 9, M.satin, 7.5, 4.45, 0));
+      [-2.85, 2.85].forEach(z => top.add(box(3, 0.5, 3.3, M.satin, 1.25, 4.45, z)));
+      const loop = mesh(new THREE.TorusGeometry(1.4, 0.4, 12, 32), M.silver, 14, 2.1, 0); loop.rotation.y = Math.PI / 2; boxG.add(loop);
+      // tongue: end cap + lower leaf + springy upper leaf hinged at the tip
+      tongue.add(box(1.5, 5.4, 9.6, M.satin, -0.75, 2.1, 0));
+      const loop2 = mesh(new THREE.TorusGeometry(1.4, 0.4, 12, 32), M.silver, -2.6, 2.1, 0); loop2.rotation.y = Math.PI / 2; tongue.add(loop2);
+      tongue.add(box(11, 0.4, 6.5, M.silver, 5.5, 0.3, 0));
+      upper.position.set(11, 0.5, 0); tongue.add(upper);
+      upper.add(box(9, 0.4, 6.5, M.silver, -4.5, 0.2, 0));
+      upper.add(box(0.9, 2.4, 2, M.silver, -8.6, 1.4, 0));
+      upper.add(mesh(new THREE.SphereGeometry(1.05, 20, 12), M.silver, -8.6, 2.7, 0));
+      const fold = mesh(new THREE.CylinderGeometry(0.4, 0.4, 6.5, 16).rotateX(Math.PI / 2), M.silver, 11, 0.5, 0); tongue.add(fold);
+      const a0 = Math.atan(2.9 / 9); let locked = false;
+      return { cam: { dist: 56, ty: 2, theta: 0.95, phi: 1.0 }, floor: -0.6, update(t, e) {
+        const off = -14 + 13.5 * t - 8 * e; tongue.position.x = off;
+        const tip = off + 11, dLip = tip + 0.25;
+        let a = a0, isLocked = false;
+        if (dLip > 0 && dLip < 9) a = Math.min(a0, Math.atan(1.7 / dLip));
+        else if (dLip >= 9) isLocked = true;
+        upper.rotation.z = -a;
+        top.position.y = 6 * e;
+        if (isLocked && !locked && e < 0.1) SFX.click();
+        locked = isLocked;
+        return isLocked ? 'Locked' : dLip > 0 ? 'Squeezing' : 'Apart';
+      } };
+    },
+    toggle(g) {
+      const ring = mesh(new THREE.TorusGeometry(6, 0.85, 20, 64), M.silver); g.add(ring);
+      const lk = mesh(new THREE.TorusGeometry(1.2, 0.35, 12, 32), M.silver, -7.5, 0, 0); lk.rotation.y = Math.PI / 2; g.add(lk);
+      const bar = new THREE.Group(); g.add(bar);
+      bar.add(rodX(0.8, 15, M.silver));
+      [-7.5, 7.5].forEach(x => bar.add(mesh(new THREE.SphereGeometry(1.25, 24, 16), M.silver, x, 0, 0)));
+      const eye = mesh(new THREE.TorusGeometry(0.9, 0.3, 12, 28), M.silver, 0, 0, 1.6); eye.rotation.y = Math.PI / 2; bar.add(eye);
+      const chain = new THREE.Group(); g.add(chain);
+      for (let i = 0; i < 4; i++) { const c = mesh(new THREE.TorusGeometry(1.1, 0.3, 10, 24), M.silver); c.rotation.set(0, i % 2 ? 0 : Math.PI / 2, 0); chain.add(c); }
+      return { cam: { dist: 40, ty: 0, theta: 0.5, phi: 1.2 }, floor: -7.5, update(t, e) {
+        const a = smooth(t / 0.3), b = smooth((t - 0.3) / 0.45), c = smooth((t - 0.75) / 0.25);
+        bar.position.set(lerp(14, 0, a), 0, lerp(11, -1.4, b) + 14 * e);
+        bar.rotation.y = (a - c) * Math.PI / 2;
+        chain.children.forEach((l, i) => { const k = (i + 1) / 5, x = bar.position.x; l.position.set(lerp(x, x + 6, k * k * (1 - c)), 0, bar.position.z + 2.6 + i * 2); });
+        return t > 0.97 ? 'Locked across' : t > 0.3 ? 'End-first' : 'Free';
+      } };
+    },
+    rivet(g) {
+      const p1 = box(18, 1, 6, M.satin, 0, 0.5, 0), p2 = box(18, 1, 6, M.satin, 0, 1.5, 0); p1.rotation.y = 0.4; p2.rotation.y = -0.4; g.add(p1, p2);
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1, 24), M.silver); g.add(rod);
+      const hTop = mesh(new THREE.SphereGeometry(0.55, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.silver), hBot = mesh(new THREE.SphereGeometry(0.55, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.silver);
+      hBot.rotation.x = Math.PI; g.add(hTop, hBot);
+      const anvil = box(10, 2, 8, M.steel, 0, -2.2, 0); g.add(anvil);
+      const hammer = new THREE.Group(); hammer.add(mesh(new THREE.CylinderGeometry(1.4, 1.4, 6, 24).rotateZ(Math.PI / 2), M.steel, 0, 0, 0)); hammer.add(box(1.2, 1.2, 18, M.wood, 1.5, 0, 9.5));
+      hammer.children[0].position.x = 0; g.add(hammer);
+      let taps = 0;
+      return { cam: { dist: 44, ty: 1.5, theta: 0.6, phi: 1.15 }, floor: -3.3, update(t, e) {
+        const k = smooth(t), proud = 0.6 * (1 - k);
+        const yTop = 2 + proud, yBot = -proud;
+        rod.scale.y = yTop - yBot; rod.position.y = (yTop + yBot) / 2;
+        const spread = 1 + 1.15 * k, flat = 1 - 0.35 * k;
+        hTop.position.y = yTop; hTop.scale.set(spread, flat, spread);
+        hBot.position.y = yBot; hBot.scale.set(spread, flat, spread);
+        p2.position.y = 1.5 + 5 * e; hTop.position.y += 5 * e; rod.visible = true;
+        anvil.position.y = -2.2 - 0.6 * k - 4 * e;
+        const n = t < 0.98 ? Math.abs(Math.sin(t * Math.PI * 6)) : 1;
+        hammer.position.set(0, yTop + 1.4 + n * 6, 0); hammer.rotation.x = -0.25 * n; hammer.visible = e < 0.5;
+        const tp = Math.floor(t * 6 + 0.5); if (tp !== taps) { if (tp > taps && n < 0.3) SFX.tink(); taps = tp; }
+        return t > 0.97 ? 'Riveted' : t < 0.03 ? 'Wire in hole' : 'Mushrooming';
+      } };
+    },
+    spinner(g) {
+      const core = new THREE.Group(), band = new THREE.Group(); g.add(core, band);
+      core.add(mesh(new THREE.LatheGeometry([new THREE.Vector2(9, -4), new THREE.Vector2(9.8, -4), new THREE.Vector2(9.8, 4), new THREE.Vector2(9, 4), new THREE.Vector2(9, -4)], 96), M.silver));
+      const lipGeo = y => new THREE.LatheGeometry([new THREE.Vector2(9.7, y - 0.4), new THREE.Vector2(10.9, y - 0.15 * Math.sign(y)), new THREE.Vector2(10.9, y + 0.05 * Math.sign(y)), new THREE.Vector2(9.7, y + 0.4)], 96);
+      const lipT = mesh(lipGeo(3.75), M.silver), lipB = mesh(lipGeo(-3.75), M.silver); core.add(lipT, lipB);
+      band.add(mesh(new THREE.LatheGeometry([new THREE.Vector2(9.85, -3.2), new THREE.Vector2(10.5, -3.2), new THREE.Vector2(10.5, 3.2), new THREE.Vector2(9.85, 3.2), new THREE.Vector2(9.85, -3.2)], 96), M.satin));
+      for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, d = mesh(new THREE.SphereGeometry(0.5, 12, 8), M.silver, Math.cos(a) * 10.5, 0, Math.sin(a) * 10.5); band.add(d); }
+      [-1.8, 1.8].forEach(y => band.add(mesh(new THREE.TorusGeometry(10.5, 0.18, 8, 96).rotateX(Math.PI / 2), M.silver, 0, y, 0)));
+      let spin = 0;
+      return { cam: { dist: 70, ty: 0, theta: 0.3, phi: 1.1 }, floor: -5, spin: true, update(t, e, dt) {
+        spin += dt * t * 6; band.rotation.y = spin;
+        const f = lerp(1, 9.75 / 10.9, e); lipT.scale.set(f, 1, f); lipB.scale.set(f, 1, f);
+        band.position.y = 11 * e;
+        return t < 0.02 ? 'Still' : Math.round(t * 60) + ' rpm';
+      } };
+    },
+  };
+
+  function select(id) {
+    if (!ready) init();
+    const def = MECHS.find(m => m.id === id); cur = def;
+    holder.clear && holder.clear(); while (holder.children.length) holder.remove(holder.children[0]);
+    const g = new THREE.Group(); holder.add(g);
+    upd = BUILD[id](g);
+    orbit.dist = upd.cam.dist * 1.35; orbit.ty = upd.cam.ty; orbit.theta = upd.cam.theta ?? 0.7; orbit.phi = upd.cam.phi ?? 1.05;
+    shadow.position.y = upd.floor; shadow.scale.setScalar(upd.cam.dist * 0.8);
+    tVal = 0; exp = expT = 0; playing = false; $('#mPlay').textContent = 'Play'; $('#mExplode').setAttribute('aria-pressed', 'false');
+    $('#mSlider').value = 0;
+    document.querySelectorAll('#mechList button').forEach(b => b.setAttribute('aria-selected', b.dataset.id === id));
+    $('#mName').textContent = def.name; $('#mBlurb').textContent = def.blurb; $('#mWhy').innerHTML = def.why;
+    $('#mSlLabel').textContent = def.label;
+    $('#mSteps').innerHTML = def.make.map(s => `<li>${s}</li>`).join('');
+    $('#mLessonRow').hidden = !def.lesson;
+  }
+  function size() { if (!ready) return; const r = cvs.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
+  function frame(dt) {
+    if (!ready || !cur) return;
+    if (playing) { tVal += pdir * dt * 0.28; if (tVal >= 1) { tVal = 1; pdir = -1; } if (tVal <= 0) { tVal = 0; pdir = 1; } $('#mSlider').value = tVal * 1000; }
+    exp += (expT - exp) * Math.min(1, dt * 6);
+    const label = upd.update(tVal, smooth(exp), dt);
+    $('#mSlState').textContent = label;
+    if (!REDUCED && !playing && !upd.spin) orbit.theta += dt * 0.04;
+    const sp = Math.sin(orbit.phi);
+    camera.position.set(orbit.dist * sp * Math.sin(orbit.theta), orbit.ty + orbit.dist * Math.cos(orbit.phi), orbit.dist * sp * Math.cos(orbit.theta));
+    camera.lookAt(0, orbit.ty, 0);
+    renderer.render(scene, camera);
+  }
+  $('#mechList').innerHTML = MECHS.map(m => `<button role="tab" data-id="${m.id}">${m.name}</button>`).join('');
+  $('#mechList').addEventListener('click', e => { const b = e.target.closest('button'); if (b) select(b.dataset.id); });
+  $('#mSlider').addEventListener('input', e => { tVal = e.target.value / 1000; playing = false; $('#mPlay').textContent = 'Play'; SFX.ensure(); });
+  $('#mPlay').onclick = () => { SFX.ensure(); playing = !playing; $('#mPlay').textContent = playing ? 'Pause' : 'Play'; };
+  $('#mExplode').onclick = () => { expT = expT ? 0 : 1; $('#mExplode').setAttribute('aria-pressed', String(!!expT)); };
+  $('#mLesson').onclick = () => cur && cur.lesson && startLesson(cur.lesson);
+  return {
+    show() { if (!ready) { init(); select('hinge'); } requestAnimationFrame(size); },
+    size, frame,
+  };
+})();
+
+/* =====================================================================
+   Main loop
+   ===================================================================== */
+let last = performance.now(), saveTimer = 0;
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (mode === 'bench') {
+    physics(dt); chemistry(dt); solderStep(); watchJoints(); stepParticles(dt); lessonTick();
+    if (torch.firing && Math.random() < dt * 30) spawn('spark', torch.x + (Math.random() - .5) * 2, torch.y + (Math.random() - .5) * 2);
+    drawBench(now); updateTip(); updateHeat();
+    if ((saveTimer += dt) > 2) { saveTimer = 0; save(); }
+  } else Mech.frame(dt);
+  requestAnimationFrame(loop);
+}
+
+function demoBench() {
+  const disc = mkDisc(-30, 8, 14, 1); disc.domed = true;
+  const strip = mkRect(22, -14, 46, 10, 0.8, -0.12);
+  const ring = mkRing(-30, -9.5, 3.5, 1);
+  const wire = mkWire(24, 14, 36, 1.3, 0.05);
+  const tube = mkTube(24, 26, 22, 3.0, 1.5, 0.05);
+  return [disc, strip, ring, wire, tube];
+}
+
+addEventListener('resize', () => { const fresh = !VW || VW < 2; resize(); if (mode === 'mech') Mech.size(); if (fresh) fit(); });
+buildRail(); resize(); setTool('move');
+try { const saved = localStorage.getItem(SAVE_KEY); if (saved) load(saved); } catch (e) {}
+if (!S.parts.length) { S.parts = demoBench(); rebuild(); }
+fit(); renderSide();
+toast('Welcome to the bench. Start a lesson on the right, or grab any tool and make something.', 'info', 6000);
+requestAnimationFrame(loop);
+</script>
+</html>
