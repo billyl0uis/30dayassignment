@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Foldline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a dark workbench. Flat/forge canvas left, live 3D form centre, process notes right. */
+:root {
+  --bench: #171513;
+  --panel: #211e1b;
+  --panel-2: #2a2622;
+  --line: #3a3430;
+  --ink: #efe9df;
+  --muted: #a99f91;
+  --dim: #7a7166;
+  --copper: #d9824b;
+  --copper-2: #f0a873;
+  --cool: #7db9ff;
+  --ok: #8fd19e;
+  --warn: #ffb347;
+  --bad: #ff6b5b;
+  --display: "Fraunces", Georgia, serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bench); color: var(--ink);
+  font: 15px/1.5 var(--body);
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--copper-2); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- header ---------- */
+.top {
+  display: flex; align-items: center; gap: 18px;
+  padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line); background: #1b1917;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.brand b { font: 700 22px/1 var(--display); letter-spacing: -0.01em; }
+.brand b i { font-style: normal; color: var(--copper); }
+.brand em { font-style: normal; color: var(--dim); font-size: 13px; white-space: nowrap; }
+.top-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.chipbtn {
+  border: 1px solid var(--line); background: var(--panel); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--muted);
+}
+.chipbtn:hover { color: var(--ink); border-color: #554c44; }
+
+/* ---------- panes ---------- */
+main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 330px; }
+.pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--line); }
+.panehead { display: flex; align-items: baseline; gap: 4px 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; min-height: 44px; }
+.panehead .step { font: 600 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--copper-2); white-space: nowrap; }
+.panehead .sub { color: var(--muted); font-size: 13px; }
+.panehead label { margin-left: auto; font-size: 12.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.panehead input { accent-color: var(--copper); }
+.cv { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+#work .cv { background: radial-gradient(120% 90% at 50% 40%, #2a241f 0%, #171513 70%); }
+#view3d .cv { background: radial-gradient(90% 80% at 50% 45%, #3a332c 0%, #1d1a17 65%, #141210 100%); }
+.cv canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#flat { cursor: crosshair; }
+#flat.grab { cursor: grab; } #flat.grabbing { cursor: grabbing; } #flat.hammer { cursor: none; }
+#gl { cursor: grab; } #gl:active { cursor: grabbing; }
+.nogl { position: absolute; inset: 0; display: grid; place-items: center; color: var(--dim); font-size: 13px; padding: 20px; text-align: center; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); background: #1b1917; }
+.bar .grow { flex: 1 1 160px; min-width: 0; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 4px 9px; font-size: 12px; cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--copper-2); }
+.seg.mono button { font-family: var(--mono); }
+.seglabel { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; margin-right: 6px; }
+.field { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.field input[type=range] { width: 110px; accent-color: var(--copper); }
+.field output { font: 500 12px var(--mono); color: var(--ink); min-width: 46px; }
+.open-field input[type=range] { width: 100%; }
+.open-field { flex: 1 1 220px; }
+.btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 9px; padding: 7px 14px; cursor: pointer; font-weight: 500; font-size: 14px; white-space: nowrap; }
+.btn:hover { border-color: #5c4f42; }
+.btn.primary { background: var(--copper); color: #1d120a; border-color: var(--copper); font-weight: 600; }
+.btn.primary:hover { background: var(--copper-2); }
+.btn.quiet { background: none; color: var(--muted); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.note { font-size: 12px; color: var(--dim); }
+.note.warn { color: var(--warn); }
+
+#toasts { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; z-index: 4; width: min(520px, calc(100% - 32px)); pointer-events: none; }
+.toast {
+  background: rgba(26,24,22,.96); border: 1px solid var(--line); border-left: 3px solid var(--cool); border-radius: 9px; padding: 8px 12px; font-size: 13.5px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35); animation: tin .25s ease-out; max-width: 100%;
+}
+.toast.good { border-left-color: var(--ok); } .toast.warn { border-left-color: var(--warn); } .toast.bad { border-left-color: var(--bad); }
+.toast.out { opacity: 0; transform: translateY(-6px); transition: .35s; }
+@keyframes tin { from { opacity: 0; transform: translateY(-8px); } }
+.hint3d { position: absolute; left: 14px; bottom: 12px; font-size: 12px; color: var(--dim); pointer-events: none; }
+
+/* ---------- side panel ---------- */
+aside { background: var(--panel); overflow-y: auto; padding: 18px 18px 28px; min-height: 0; scrollbar-width: thin; }
+aside h2 { font: 700 22px/1.15 var(--display); margin: 0 0 6px; letter-spacing: -0.01em; }
+aside h3 { font: 600 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin: 22px 0 10px; }
+aside p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+aside p b { color: var(--ink); font-weight: 600; }
+.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+.steps li { position: relative; padding: 0 0 10px 34px; color: var(--dim); font-size: 13.5px; counter-increment: s; }
+.steps li::before {
+  content: counter(s); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line);
+  display: grid; place-items: center; font: 500 11px var(--mono); color: var(--dim);
+}
+.steps li.done { color: var(--muted); }
+.steps li.done::before { content: "✓"; background: #2f3b31; border-color: #3f5a44; color: var(--ok); }
+.steps li.now { color: var(--ink); font-size: 14.5px; }
+.steps li.now::before { border-color: var(--copper); color: var(--copper-2); background: #3a2a1d; }
+.steps li .why { display: block; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+.steps li:not(.now) .why { display: none; }
+.read { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; font-size: 13px; }
+.read dt { color: var(--muted); }
+.read dd { margin: 0; text-align: right; font: 500 12.5px var(--mono); color: var(--ink); }
+.meter { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #3d6fd8, #e2b23a 55%, #e0442d); position: relative; margin: -2px 0 6px; }
+.meter i { position: absolute; top: -3px; width: 3px; height: 12px; margin-left: -1px; border-radius: 2px; background: var(--ink); box-shadow: 0 0 6px rgba(255,255,255,.6); transition: left .12s; }
+#chart { width: 100%; height: 96px; display: block; border: 1px solid var(--line); border-radius: 8px; background: #1b1917; }
+.preset {
+  display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 10px 13px; margin-bottom: 7px; cursor: pointer;
+}
+.preset:hover { border-color: #5c4f42; }
+.preset strong { display: block; font: 600 15px var(--display); }
+.preset span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+kbd.k { font: 500 11px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--muted); }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 980px) {
+  html, body { height: auto; }
+  body { overflow: auto; min-height: 100%; }
+  .brand em { display: none; }
+  .top { flex-wrap: wrap; gap: 10px; }
+  main { grid-template-columns: 1fr; }
+  .pane { border-right: 0; border-bottom: 1px solid var(--line); }
+  #work .cv { flex: none; height: 50vh; min-height: 280px; }
+  #view3d .cv { flex: none; height: 42vh; min-height: 260px; }
+  .field input[type=range] { width: 90px; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+</style>
+
+<header class="top">
+  <div class="brand"><b>Fold<i>line</i></b><em>a fold-forming simulator &amp; design bench</em></div>
+  <div class="top-actions">
+    <button class="chipbtn" id="undoBtn" title="Undo (Ctrl/⌘ Z)">Undo</button>
+    <button class="chipbtn" id="exportBtn" title="Download the blank, fold line and forging map as a 1:1 SVG">Pattern SVG</button>
+    <button class="chipbtn" id="newBtn">New blank</button>
+    <button class="chipbtn" id="soundBtn" aria-pressed="true">Sound on</button>
+  </div>
+</header>
+
+<main>
+  <section id="work" class="pane">
+    <div class="panehead"><span class="step" id="modeLabel"></span><span class="sub" id="modeSub"></span></div>
+    <div class="cv">
+      <canvas id="flat" aria-label="Sheet metal work area"></canvas>
+      <div id="toasts" aria-live="polite"></div>
+    </div>
+    <div class="bar" id="designBar">
+      <div><span class="seglabel">Blank</span><span class="seg" id="shapeSeg"></span></div>
+      <label class="field">W <input type="range" id="wRange" min="10" max="90" step="1"><output id="wOut"></output></label>
+      <label class="field">L <input type="range" id="lRange" min="30" max="130" step="1"><output id="lOut"></output></label>
+      <span class="grow note" id="designNote"></span>
+      <button class="btn" id="annealBtnD" title="Anneal (A)">Anneal</button>
+      <button class="btn primary" id="foldBtn">Fold it →</button>
+    </div>
+    <div class="bar" id="forgeBar" hidden>
+      <div><span class="seglabel">Hammer</span><span class="seg" id="hammerSeg"></span></div>
+      <button class="btn" id="annealBtn" title="Anneal (A)">Anneal</button>
+      <button class="btn quiet" id="pickleBtn">Pickle</button>
+      <label class="field open-field">Open <input type="range" id="openRange" min="0" max="175" step="1"><output id="openOut"></output></label>
+      <span class="note" id="openNote"></span>
+      <button class="btn quiet" id="recutBtn" title="Throw this one back and start the same blank again">Re-cut blank</button>
+    </div>
+  </section>
+
+  <section id="view3d" class="pane">
+    <div class="panehead"><span class="step">The form</span><span class="sub">Live 3D</span>
+      <label><input type="checkbox" id="hardToggle"> Hardness map</label></div>
+    <div class="cv" id="glwrap">
+      <canvas id="gl" aria-label="3D view of the piece"></canvas>
+      <div class="hint3d">Drag to orbit · scroll or pinch to zoom</div>
+    </div>
+  </section>
+
+  <aside>
+    <h2>The line fold</h2>
+    <p>Fold a sheet, hammer the folded edge, anneal it, then open it up. Hammering stretches the edge, so it ends up <b>longer than the metal behind it</b>. The folded packet curls, and when you open it that curl becomes a raised, arching spine. Put more blows where you want more curve.</p>
+
+    <h3>Sequence</h3>
+    <ol class="steps" id="steps"></ol>
+
+    <h3>Metal</h3>
+    <div class="seg" id="metalSeg"></div>
+    <div style="margin-top:8px"><span class="seglabel">Gauge</span><span class="seg mono" id="gaugeSeg"></span></div>
+    <p class="note" id="metalNote" style="margin-top:8px"></p>
+
+    <h3>Readings</h3>
+    <dl class="read">
+      <dt>Fold edge</dt><dd id="rHard"></dd>
+      <div class="meter"><i id="rHardMark"></i></div>
+      <dt>Blows</dt><dd id="rBlows"></dd>
+      <dt>Anneals</dt><dd id="rAnneals"></dd>
+      <dt>Edge stretch</dt><dd id="rStretch"></dd>
+      <dt>Spine curl</dt><dd id="rCurl"></dd>
+      <dt>Opened</dt><dd id="rOpen"></dd>
+    </dl>
+
+    <h3>Stretch along the fold</h3>
+    <canvas id="chart" aria-label="Chart of stretch and hardness along the fold edge"></canvas>
+
+    <h3>Start from a classic</h3>
+    <div id="presets"></div>
+
+    <h3>About</h3>
+    <p class="note">Inspired by the fold-formed metalwork of Greg Greenwood. Fold forming as a technique was developed by Charles Lewton-Brain. The physics here is a simplified model meant to build intuition, not to predict a real piece exactly. Keys: <kbd class="k">A</kbd> anneal, <kbd class="k">Z</kbd> with Ctrl/⌘ undo.</p>
+  </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmt = (v, d = 0) => v.toFixed(d);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =====================================================================
+   Model. Sizes in mm. Hardness runs 0 (dead soft) to 1 (as hard as it gets).
+   The fold edge is split into NB bins along its length; each bin holds the
+   stretch (strain) hammered into the edge there and how work-hardened it is.
+   ===================================================================== */
+const NB = 240;           // bins along the fold
+const NC = 150, NR = 34;  // 3D mesh: columns along the fold, rows out into each wing
+const ZONE = 7;           // depth of the hammered band next to the fold edge
+const CRACK_AT = 0.92;    // hit metal this hard and the edge cracks
+const MAX_STRAIN = 0.6;
+const SPACING = 1.6;      // mm between blows when you drag the hammer along the edge
+const AS_SUPPLIED = 0.5;  // sheet arrives half-hard
+
+// color: linear reflectance for the 3D renderer; css: the same metal on the flat canvas
+const METALS = {
+  copper:   { name: 'Copper',      color: [0.955, 0.60, 0.50], oxide: [0.22, 0.07, 0.05], css: ['#e39a72', '#a8583a'], stretch: 1.0,  harden: 1.0, pitch: 1.0,  note: 'Forgiving and cheap. Anneal at a dull red, about 650°C. Firescale turns it dark, pickle cleans it.' },
+  brass:    { name: 'Brass',       color: [0.91, 0.76, 0.40],  oxide: [0.28, 0.18, 0.08], css: ['#e4c27a', '#9c7a3a'], stretch: 0.75, harden: 1.5, pitch: 1.15, note: 'Work-hardens fast and cracks if you push it. Anneal often.' },
+  sterling: { name: 'Sterling',    color: [0.93, 0.92, 0.89],  oxide: [0.34, 0.30, 0.29], css: ['#e8e8e6', '#9a9a98'], stretch: 0.9,  harden: 1.2, pitch: 1.3,  note: 'Moves well but hardens quicker than copper. Anneal to a faint pink glow.' },
+  fine:     { name: 'Fine silver', color: [0.97, 0.96, 0.92],  oxide: null,               css: ['#f4f3ef', '#a9a8a2'], stretch: 1.15, harden: 0.7, pitch: 1.2,  note: 'Very soft, stays soft, and does not firescale. Folds and opens easily.' },
+};
+const GAUGES = [0.3, 0.5, 0.8];
+const HAMMERS = {
+  peen:    { name: 'Cross-peen', stretch: 0.004,  width: 3.2 },
+  planish: { name: 'Planishing', stretch: 0.0015, width: 4.5 },
+};
+const SHAPES = { leaf: 'Leaf', rect: 'Rect', oval: 'Oval', kite: 'Kite', tri: 'Triangle' };
+
+// What one hammer blow does to the fold edge where it lands.
+// metal: a METALS entry (metal.stretch and metal.harden are relative rates, 1 = copper)
+// hardness: 0..1 at the spot that gets hit   hammer: a HAMMERS entry (hammer.stretch is the stretch on soft copper)
+// gauge: sheet thickness in mm
+// Return { stretch, harden }: strain added to the edge (0.004 = 0.4% longer) and how much hardness rises there.
+function strikeEffect(metal, hardness, hammer, gauge) {
+  const give = (1 - hardness) ** 1.5;            // hard metal resists, and stops moving well before it cracks
+  const thin = (0.5 / gauge) ** 0.7;             // thin sheet moves more per blow
+  const force = (hammer.stretch / HAMMERS.peen.stretch) ** 0.6; // a planishing hammer hardens less, too
+  return {
+    stretch: hammer.stretch * metal.stretch * thin * give,
+    harden: 0.07 * metal.harden * force * (1 - hardness), // saturates toward spring-hard instead of jumping there
+  };
+}
+
+function defaultState() {
+  return {
+    shape: 'leaf', W: 40, L: 80, fold: { ax: 0, ay: -46, bx: 0, by: 46 },
+    metal: 'copper', gauge: 0.5, hammer: 'peen',
+    stage: 'design', open: 0, sheetH: AS_SUPPLIED,
+    strain: new Array(NB).fill(0), hard: new Array(NB).fill(AS_SUPPLIED),
+    blows: [], cracks: [], oxide: 0, anneals: 0,
+    seq: 0, lastAnneal: -1, lastBlow: -1, annealedBlank: false,
+  };
+}
+const SAVE_KEY = 'foldline.v1';
+let S = (() => { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.strain && s.strain.length === NB) return s; } catch (e) {} return defaultState(); })();
+let showHard = false;
+
+/* =====================================================================
+   Blank geometry. The sheet sits in (x, y) mm, centred on the origin.
+   The fold frame measures t along the fold line and d across it.
+   ===================================================================== */
+function polygon(s) {
+  const w = s.W / 2, l = s.L / 2, pts = [];
+  switch (s.shape) {
+    case 'rect': return [{ x: -w, y: -l }, { x: w, y: -l }, { x: w, y: l }, { x: -w, y: l }];
+    case 'kite': return [{ x: 0, y: -l }, { x: w, y: l * 0.3 }, { x: 0, y: l }, { x: -w, y: l * 0.3 }];
+    case 'tri': return [{ x: -w, y: -l }, { x: w, y: -l }, { x: 0, y: l }];
+    case 'oval': for (let i = 0; i < 72; i++) { const a = i / 72 * Math.PI * 2; pts.push({ x: w * Math.cos(a), y: l * Math.sin(a) }); } return pts;
+    default: { // leaf: pointed at both ends
+      const n = 40;
+      for (let i = 0; i <= n; i++) { const f = i / n; pts.push({ x: w * Math.pow(Math.sin(Math.PI * f), 0.85), y: -l + 2 * l * f }); }
+      for (let i = n - 1; i > 0; i--) { const f = i / n; pts.push({ x: -w * Math.pow(Math.sin(Math.PI * f), 0.85), y: -l + 2 * l * f }); }
+      return pts;
+    }
+  }
+}
+
+let F; // the current fold frame
+function computeFrame() {
+  const poly = polygon(S), { ax, ay, bx, by } = S.fold;
+  let ux = bx - ax, uy = by - ay; const len = Math.hypot(ux, uy) || 1; ux /= len; uy /= len;
+  const nx = -uy, ny = ux;
+  const td = poly.map(p => ({ t: (p.x - ax) * ux + (p.y - ay) * uy, d: (p.x - ax) * nx + (p.y - ay) * ny }));
+  let tmin = Infinity, tmax = -Infinity;
+  for (const q of td) { tmin = Math.min(tmin, q.t); tmax = Math.max(tmax, q.t); }
+  const span = tmax - tmin; tmin += span * 1e-4; tmax -= span * 1e-4;
+  // the stretch of the (convex) blank that a line across the fold at t passes through, as [dlo, dhi]
+  const interval = t => {
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < td.length; i++) {
+      const p = td[i], q = td[(i + 1) % td.length];
+      if ((p.t - t) * (q.t - t) > 0) continue;
+      if (Math.abs(q.t - p.t) < 1e-9) { lo = Math.min(lo, p.d, q.d); hi = Math.max(hi, p.d, q.d); continue; }
+      const d = p.d + (q.d - p.d) * (t - p.t) / (q.t - p.t);
+      lo = Math.min(lo, d); hi = Math.max(hi, d);
+    }
+    return lo > hi ? [0, 0] : [lo, hi];
+  };
+  const cols = [];
+  for (let i = 0; i <= NC; i++) { const t = tmin + (tmax - tmin) * i / NC; const [lo, hi] = interval(t); cols.push({ t, lo, hi }); }
+  const dt = (tmax - tmin) / NB, depth = new Float32Array(NB);
+  let ta = null, tb = null;
+  for (let b = 0; b < NB; b++) {
+    const [lo, hi] = interval(tmin + (b + 0.5) * dt);
+    depth[b] = Math.max(hi, -lo, 1);
+    if (lo < 0 && hi > 0) { if (ta === null) ta = tmin + b * dt; tb = tmin + (b + 1) * dt; }
+  }
+  F = { poly, ax, ay, ux, uy, nx, ny, tmin, tmax, dt, cols, depth, ta, tb, crosses: ta !== null && tb - ta > 4 };
+}
+const binOf = t => clamp(Math.floor((t - F.tmin) / F.dt), 0, NB - 1);
+const inFold = t => F.crosses && t >= F.ta && t <= F.tb;
+const foldBins = () => { const out = []; if (!F.crosses) return out; for (let b = binOf(F.ta); b <= binOf(F.tb - 1e-6); b++) out.push(b); return out; };
+const edgeHard = () => S.stage === 'design' ? S.sheetH : Math.max(S.sheetH, ...foldBins().map(b => S.hard[b]));
+
+/* The spine: the folded edge as a curve in the plane of the packet.
+   A stretched edge is longer than the metal ZONE mm behind it, so the packet curves
+   with curvature ≈ strain / ZONE, convex side out. Wide wings resist, hence the cap. */
+const SP = { a: new Float32Array(NB + 1), y: new Float32Array(NB + 1), z: new Float32Array(NB + 1), curl: 0, stretch: 0 };
+function computeSpine() {
+  let a = 0, y = 0, z = 0, arc = 0, a0 = null, a1 = 0;
+  SP.a[0] = SP.y[0] = SP.z[0] = 0;
+  for (let b = 0; b < NB; b++) {
+    const t = F.tmin + (b + 0.5) * F.dt, on = S.stage !== 'design' && inFold(t);
+    const e = on ? S.strain[b] : 0;
+    const k = Math.min(e / ZONE, 0.9 / F.depth[b]);
+    const ds = F.dt * (1 + e), am = a - k * ds / 2;
+    y += Math.sin(am) * ds; z += Math.cos(am) * ds; a -= k * ds;
+    SP.a[b + 1] = a; SP.y[b + 1] = y; SP.z[b + 1] = z;
+    if (on || inFold(t)) { arc += ds; if (a0 === null) a0 = SP.a[b]; a1 = a; }
+  }
+  SP.curl = a0 === null ? 0 : Math.abs(a1 - a0) * 180 / Math.PI;
+  SP.stretch = F.crosses ? arc / (F.tb - F.ta) - 1 : 0;
+}
+function spineAt(t) {
+  const x = (t - F.tmin) / F.dt, i = clamp(Math.floor(x), 0, NB - 1), f = clamp(x - i, 0, 1);
+  return [lerp(SP.a[i], SP.a[i + 1], f), lerp(SP.y[i], SP.y[i + 1], f), lerp(SP.z[i], SP.z[i + 1], f)];
+}
+// where a point of the closed packet, dist mm into a wing at t, sits in the packet plane (z across, y up)
+function packetPoint(t, dist) { const [a, y, z] = spineAt(t); return [z + dist * Math.sin(a), y - dist * Math.cos(a)]; }
+
+/* =====================================================================
+   Process actions
+   ===================================================================== */
+const undoStack = [];
+function snapshot() { undoStack.push(JSON.stringify(S)); if (undoStack.length > 60) undoStack.shift(); }
+function undo() { const s = undoStack.pop(); if (!s) return toast('Nothing to undo.'); S = JSON.parse(s); computeFrame(); changed(); }
+
+function strike(t, quiet) {
+  if (!inFold(t)) return false;
+  const b = binOf(t), h = S.hard[b];
+  if (h >= CRACK_AT) {
+    if (!S.cracks.some(c => Math.abs(c - t) < 3)) {
+      S.cracks.push(t);
+      if (!quiet) { SFX.crack(); toastKey('crack', 'The edge cracked. It was spring-hard. Anneal before the metal gets that stiff.', 'bad'); }
+    }
+    return true;
+  }
+  const hammer = HAMMERS[S.hammer], eff = strikeEffect(METALS[S.metal], h, hammer, S.gauge);
+  const sig2 = 2 * hammer.width * hammer.width;
+  const reach = Math.ceil(hammer.width * 3 / F.dt);
+  for (let i = Math.max(0, b - reach); i <= Math.min(NB - 1, b + reach); i++) {
+    const tc = F.tmin + (i + 0.5) * F.dt; if (!inFold(tc)) continue;
+    const w = Math.exp(-((tc - t) ** 2) / sig2);
+    S.strain[i] = Math.min(MAX_STRAIN, S.strain[i] + Math.max(0, eff.stretch) * w);
+    S.hard[i] = clamp(S.hard[i] + Math.max(0, eff.harden) * w, 0, 1);
+  }
+  S.blows.push({ t: +t.toFixed(2), h: S.hammer, r: +(ZONE * (0.55 + 0.4 * Math.random())).toFixed(2), d: +(Math.random() * ZONE * 0.75).toFixed(2) });
+  if (S.blows.length > 2000) S.blows.splice(0, S.blows.length - 2000);
+  S.lastBlow = ++S.seq;
+  if (!quiet) {
+    SFX.ting(h);
+    if (h > 0.78) toastKey('stiff', 'The edge is getting stiff and ringing higher. Anneal soon or it will crack.', 'warn');
+  }
+  return true;
+}
+
+let glow = 0;
+function anneal(quiet) {
+  S.sheetH = 0; S.hard.fill(0); S.anneals++;
+  S.oxide = METALS[S.metal].oxide ? 1 : 0;
+  S.lastAnneal = ++S.seq;
+  if (S.stage === 'design') S.annealedBlank = true;
+  if (!quiet) {
+    glow = 1; SFX.torch();
+    toastKey('anneal', S.stage === 'design' ? 'Annealed. The blank is soft and ready to fold.' : 'Annealed. Soft again: you can forge more, or open it further.', 'good', 3000);
+  }
+}
+
+function fold(quiet) {
+  if (!F.crosses) return toast('The fold line has to run across the blank.', 'warn');
+  S.stage = 'folded'; S.open = 0;
+  S.strain.fill(0); S.hard.fill(S.sheetH); S.blows = []; S.cracks = [];
+  for (const b of foldBins()) S.hard[b] = Math.min(1, S.sheetH + 0.1); // the bend itself work-hardens the crease a little
+  if (!quiet) {
+    SFX.thunk();
+    if (S.sheetH > 0.4) toast('Folded, but the sheet was half-hard as supplied, so it fought the bend. Anneal the blank before folding next time.', 'warn', 6000);
+    else toast('Folded. Now drag along the top edge to hammer it.', 'good');
+  }
+}
+
+function recut() {
+  Object.assign(S, { stage: 'design', open: 0, sheetH: AS_SUPPLIED, strain: new Array(NB).fill(0), hard: new Array(NB).fill(AS_SUPPLIED), blows: [], cracks: [], oxide: 0, anneals: 0, seq: 0, lastAnneal: -1, lastBlow: -1, annealedBlank: false });
+}
+
+const maxOpen = () => S.stage === 'design' ? 175 : clamp(Math.round(175 - 150 * edgeHard()), 15, 175);
+
+/* =====================================================================
+   Presets: classic line-fold forms, worked through the same process
+   ===================================================================== */
+const PRESETS = [
+  { name: 'Curling leaf', desc: 'Leaf blank forged harder toward the tip, so the spine sweeps into a curve.', shape: 'leaf', W: 38, L: 84, metal: 'copper', passes: 13, profile: x => 0.2 + 0.8 * x ** 1.6, open: 125 },
+  { name: 'Arched shell', desc: 'Rectangle forged evenly along its length: the spine rises in a steady arc.', shape: 'rect', W: 44, L: 70, metal: 'copper', passes: 10, profile: () => 1, open: 140 },
+  { name: 'Fiddlehead', desc: 'Narrow strip forged heavily at one end so it rolls toward a spiral.', shape: 'rect', W: 14, L: 110, metal: 'copper', passes: 42, profile: x => x ** 2.2, open: 95 },
+  { name: 'Off-axis kite', desc: 'Kite folded off-centre. The wings come out unequal and the form twists.', shape: 'kite', W: 56, L: 76, metal: 'sterling', fold: { ax: -11, ay: -44, bx: 9, by: 44 }, passes: 13, profile: x => Math.sin(Math.PI * x) ** 0.8, open: 130 },
+];
+function applyPreset(p) {
+  snapshot();
+  Object.assign(S, { shape: p.shape, W: p.W, L: p.L, metal: p.metal, hammer: 'peen', fold: p.fold ? { ...p.fold } : { ax: 0, ay: -p.L / 2 - 6, bx: 0, by: p.L / 2 + 6 } });
+  recut(); computeFrame();
+  anneal(true); fold(true);
+  for (let pass = 0; pass < p.passes; pass++) {
+    let acc = 0;
+    for (let t = F.ta + 1; t <= F.tb - 1; t += SPACING) {
+      acc += p.profile((t - F.ta) / (F.tb - F.ta));
+      if (acc >= 1) { acc -= 1; strike(t, true); }
+    }
+    if (edgeHard() > 0.55) anneal(true); // anneal early: hard metal barely moves
+  }
+  anneal(true);
+  S.open = Math.min(p.open, maxOpen());
+  disp.open = 0;
+  toast(`${p.name}: annealed, folded, forged in ${p.passes} passes, annealed, opened.`, 'good');
+  changed();
+}
+
+/* =====================================================================
+   Sound: synthesized hammer ring, crack, torch
+   ===================================================================== */
+let ac = null, soundOn = true;
+function audio() {
+  if (!soundOn) return null;
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+function noiseBuf(a, secs) {
+  const b = a.createBuffer(1, Math.floor(a.sampleRate * secs), a.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+const SFX = {
+  // harder metal rings higher and longer: smiths hear work-hardening before they feel it
+  ting(h) {
+    const a = audio(); if (!a) return; const t = a.currentTime, m = METALS[S.metal];
+    const out = a.createGain(); out.gain.value = 0.22; out.connect(a.destination);
+    const n = a.createBufferSource(); n.buffer = noiseBuf(a, 0.04);
+    const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1600;
+    const ng = a.createGain(); ng.gain.setValueAtTime(0.9, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    n.connect(lp).connect(ng).connect(out); n.start(t);
+    const f = (560 + 1100 * h) * m.pitch * (0.97 + Math.random() * 0.06), decay = 0.08 + 0.45 * h;
+    for (const [mul, amp] of [[1, 0.35], [2.76, 0.18], [5.4, 0.07]]) {
+      const o = a.createOscillator(), g = a.createGain();
+      o.frequency.value = f * mul; g.gain.setValueAtTime(amp, t); g.gain.exponentialRampToValueAtTime(0.0005, t + decay);
+      o.connect(g).connect(out); o.start(t); o.stop(t + decay + 0.05);
+    }
+  },
+  crack() {
+    const a = audio(); if (!a) return; const t = a.currentTime;
+    const n = a.createBufferSource(); n.buffer = noiseBuf(a, 0.18);
+    const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3200; bp.Q.value = 2;
+    const g = a.createGain(); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    n.connect(bp).connect(g).connect(a.destination); n.start(t);
+  },
+  thunk() {
+    const a = audio(); if (!a) return; const t = a.currentTime;
+    const o = a.createOscillator(), g = a.createGain();
+    o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.15);
+    g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.22);
+  },
+  torch() {
+    const a = audio(); if (!a) return; const t = a.currentTime;
+    const n = a.createBufferSource(); n.buffer = noiseBuf(a, 1.3);
+    const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.7;
+    const g = a.createGain(); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.4, t + 0.2); g.gain.exponentialRampToValueAtTime(0.001, t + 1.25);
+    n.connect(bp).connect(g).connect(a.destination); n.start(t);
+  },
+};
+
+/* =====================================================================
+   UI
+   ===================================================================== */
+function toast(msg, kind = 'info', ms = 4200) {
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.textContent = msg;
+  $('#toasts').appendChild(el);
+  while ($('#toasts').children.length > 3) $('#toasts').firstChild.remove();
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, ms);
+}
+const toastSeen = {};
+function toastKey(key, msg, kind, cooldown = 9000) {
+  const now = performance.now(); if (toastSeen[key] && now - toastSeen[key] < cooldown) return;
+  toastSeen[key] = now; toast(msg, kind);
+}
+
+function segButtons(el, items, current, onPick) {
+  el.innerHTML = '';
+  for (const [key, label] of items) {
+    const b = document.createElement('button'); b.textContent = label; b.dataset.key = key;
+    b.setAttribute('aria-pressed', String(String(key) === String(current)));
+    b.onclick = () => onPick(key); el.appendChild(b);
+  }
+}
+function hardLabel(h) { return h < 0.2 ? 'Dead soft' : h < 0.45 ? 'Soft' : h < 0.65 ? 'Half-hard' : h < 0.85 ? 'Hard' : 'Spring-hard'; }
+
+const STEPS = [
+  ['Anneal the blank', 'Sheet comes half-hard. Soften it first so the fold goes in cleanly.'],
+  ['Fold it', 'Set the fold line on the blank, then fold it closed.'],
+  ['Forge the folded edge', 'Drag along the top edge. More blows mean more stretch there, and more curve.'],
+  ['Anneal again', 'The edge is work-hardened now. Soften it so it will open without cracking.'],
+  ['Open it up', 'Slide Open to pry the wings apart. The stretched edge rises into a spine.'],
+];
+function stepDone() {
+  return [S.annealedBlank, S.stage !== 'design', S.stage !== 'design' && S.blows.length > 0, S.blows.length > 0 && S.lastAnneal > S.lastBlow, S.stage !== 'design' && S.open >= 60];
+}
+
+let saveTimer = 0, dirty3 = true;
+function changed() {
+  dirty3 = true; syncUI();
+  clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }, 400);
+}
+
+function syncUI() {
+  const design = S.stage === 'design', opened = !design && S.open > 3;
+  $('#designBar').hidden = !design; $('#forgeBar').hidden = design;
+  $('#modeLabel').textContent = design ? '1 · Design the blank' : opened ? '3 · Open the form' : '2 · Forge the fold';
+  $('#modeSub').textContent = design ? 'Drag the dots to set the fold line.' : opened ? 'The wings are open. Close them to forge more.' : 'Side view of the folded packet. Drag along the top edge to hammer.';
+  segButtons($('#shapeSeg'), Object.entries(SHAPES), S.shape, k => { snapshot(); S.shape = k; computeFrame(); changed(); });
+  segButtons($('#hammerSeg'), Object.entries(HAMMERS).map(([k, h]) => [k, h.name]), S.hammer, k => { S.hammer = k; changed(); });
+  segButtons($('#metalSeg'), Object.entries(METALS).map(([k, m]) => [k, m.name]), S.metal, k => {
+    if (!design && k !== S.metal) return toast('Change metal on a fresh blank: Re-cut blank first.', 'warn');
+    S.metal = k; changed();
+  });
+  segButtons($('#gaugeSeg'), GAUGES.map(g => [g, g + ' mm']), S.gauge, k => {
+    if (!design && +k !== S.gauge) return toast('Change gauge on a fresh blank: Re-cut blank first.', 'warn');
+    S.gauge = +k; changed();
+  });
+  $('#metalNote').textContent = METALS[S.metal].note;
+  $('#wRange').value = S.W; $('#wOut').textContent = S.W + ' mm';
+  $('#lRange').value = S.L; $('#lOut').textContent = S.L + ' mm';
+  $('#foldBtn').disabled = !F.crosses;
+  $('#designNote').textContent = F.crosses ? `Fold ${fmt(F.tb - F.ta)} mm long` : 'The fold line has to cross the blank.';
+  $('#openRange').value = S.open; $('#openOut').textContent = S.open + '°';
+  const mo = maxOpen();
+  $('#openNote').textContent = mo < 150 ? `Stiff: opens to ${mo}° until annealed` : '';
+  $('#openNote').className = 'note' + (mo < 150 ? ' warn' : '');
+
+  const h = edgeHard();
+  $('#rHard').textContent = `${hardLabel(h)} · ${fmt(h * 100)}%`;
+  $('#rHardMark').style.left = (h * 100) + '%';
+  $('#rBlows').textContent = S.blows.length + (S.cracks.length ? ` · ${S.cracks.length} crack${S.cracks.length > 1 ? 's' : ''}` : '');
+  $('#rAnneals').textContent = S.anneals;
+  computeSpine();
+  $('#rStretch').textContent = design ? '–' : `+${fmt(SP.stretch * 100, 1)}%`;
+  $('#rCurl').textContent = design ? '–' : `${fmt(SP.curl)}°`;
+  $('#rOpen').textContent = design ? 'flat blank' : S.open < 3 ? 'closed' : S.open + '°';
+
+  const done = stepDone(), now = done.indexOf(false);
+  $('#steps').innerHTML = STEPS.map(([name, why], i) =>
+    `<li class="${done[i] ? 'done' : ''} ${i === now ? 'now' : ''}">${name}<span class="why">${why}</span></li>`).join('');
+  $('#soundBtn').textContent = soundOn ? 'Sound on' : 'Sound off';
+  $('#soundBtn').setAttribute('aria-pressed', String(soundOn));
+  drawChart();
+}
+
+$('#presets').innerHTML = PRESETS.map((p, i) => `<button class="preset" data-i="${i}"><strong>${p.name}</strong><span>${p.desc}</span></button>`).join('');
+$('#presets').onclick = e => { const b = e.target.closest('.preset'); if (b) applyPreset(PRESETS[+b.dataset.i]); };
+function resizeBlank(key, v) {
+  const r = v / S[key]; S[key] = v;
+  if (key === 'W') { S.fold.ax *= r; S.fold.bx *= r; } else { S.fold.ay *= r; S.fold.by *= r; }
+  computeFrame(); changed();
+}
+$('#wRange').onpointerdown = $('#lRange').onpointerdown = () => snapshot();
+$('#wRange').oninput = e => resizeBlank('W', +e.target.value);
+$('#lRange').oninput = e => resizeBlank('L', +e.target.value);
+$('#annealBtn').onclick = $('#annealBtnD').onclick = () => { snapshot(); anneal(); changed(); };
+$('#pickleBtn').onclick = () => {
+  if (!S.oxide) return toast('Nothing to pickle: the surface is clean.');
+  snapshot(); S.oxide = 0; changed(); toast('Pickled. The firescale is off.', 'good', 2500);
+};
+$('#foldBtn').onclick = () => { snapshot(); fold(); disp.open = 180; changed(); };
+$('#recutBtn').onclick = () => { snapshot(); recut(); changed(); toast('Fresh blank cut. Undo brings the old one back.'); };
+$('#newBtn').onclick = () => { snapshot(); const keep = { metal: S.metal, gauge: S.gauge }; S = { ...defaultState(), ...keep }; computeFrame(); changed(); };
+$('#undoBtn').onclick = undo;
+$('#soundBtn').onclick = () => { soundOn = !soundOn; syncUI(); };
+$('#hardToggle').onchange = e => { showHard = e.target.checked; dirty3 = true; };
+$('#openRange').onpointerdown = () => snapshot();
+$('#openRange').oninput = e => {
+  const mo = maxOpen(), want = +e.target.value;
+  S.open = Math.min(want, mo);
+  if (want > mo) toastKey('stiff-open', 'The work-hardened edge won\'t open any further. Anneal it, then try again.', 'warn');
+  changed();
+};
+$('#exportBtn').onclick = exportSVG;
+addEventListener('keydown', e => {
+  if (e.target.matches('input')) return;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  else if (e.key === 'a' && !e.metaKey && !e.ctrlKey) { snapshot(); anneal(); changed(); }
+});
+
+/* =====================================================================
+   Flat canvas: blank design, then the folded packet seen side-on
+   ===================================================================== */
+const fl = $('#flat'), fx = fl.getContext('2d');
+let FW = 0, FH = 0;
+const view = { s: 4, cx: 0, cy: 0 };
+const w2s = (x, y) => [FW / 2 + (x - view.cx) * view.s, FH / 2 - (y - view.cy) * view.s];
+const s2w = (px, py) => [(px - FW / 2) / view.s + view.cx, -(py - FH / 2) / view.s + view.cy];
+function fitView(minx, maxx, miny, maxy, pad, ease) {
+  const s = Math.min((FW - 2 * pad) / Math.max(1, maxx - minx), (FH - 2 * pad) / Math.max(1, maxy - miny));
+  const cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
+  view.s = lerp(view.s, s, ease); view.cx = lerp(view.cx, cx, ease); view.cy = lerp(view.cy, cy, ease);
+}
+function metalGradient(x0, y0, x1, y1) {
+  const m = METALS[S.metal], g = fx.createLinearGradient(x0, y0, x1, y1);
+  const ox = S.oxide && m.oxide;
+  g.addColorStop(0, ox ? '#6a3a2c' : m.css[0]); g.addColorStop(1, ox ? '#2e1a14' : m.css[1]);
+  return g;
+}
+function hardCss(h, a = 1) {
+  const c = h < 0.55 ? [lerp(61, 226, h / 0.55), lerp(111, 178, h / 0.55), lerp(216, 58, h / 0.55)] : [lerp(226, 224, (h - 0.55) / 0.45), lerp(178, 68, (h - 0.55) / 0.45), lerp(58, 45, (h - 0.55) / 0.45)];
+  return `rgba(${c.map(Math.round).join(',')},${a})`;
+}
+
+let hover = null;      // pointer position on the flat canvas, in css px
+let drag = null;       // design: 'a' | 'b' | 'mid'; forge: { lastT }
+let hoverT = null;     // nearest point on the folded edge
+const foldPts = () => [{ x: F.ax + F.ux * F.ta, y: F.ay + F.uy * F.ta }, { x: F.ax + F.ux * F.tb, y: F.ay + F.uy * F.tb }];
+function designBox() {
+  let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+  for (const p of F.poly) { minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x); miny = Math.min(miny, p.y); maxy = Math.max(maxy, p.y); }
+  return [minx - 16, maxx + 16, miny - 16, maxy + 16];
+}
+
+function drawDesign() {
+  const [x0, x1, y0, y1] = designBox();
+  fitView(x0, x1, y0, y1, 24, 0.25);
+  // 10 mm grid, like a cutting mat
+  fx.lineWidth = 1;
+  for (let gx = Math.ceil(x0 / 10) * 10; gx <= x1; gx += 10) { const [sx] = w2s(gx, 0); fx.strokeStyle = gx === 0 ? 'rgba(255,255,255,.09)' : 'rgba(255,255,255,.04)'; fx.beginPath(); fx.moveTo(sx, 0); fx.lineTo(sx, FH); fx.stroke(); }
+  for (let gy = Math.ceil(y0 / 10) * 10; gy <= y1; gy += 10) { const [, sy] = w2s(0, gy); fx.strokeStyle = gy === 0 ? 'rgba(255,255,255,.09)' : 'rgba(255,255,255,.04)'; fx.beginPath(); fx.moveTo(0, sy); fx.lineTo(FW, sy); fx.stroke(); }
+
+  fx.beginPath();
+  F.poly.forEach((p, i) => { const [sx, sy] = w2s(p.x, p.y); i ? fx.lineTo(sx, sy) : fx.moveTo(sx, sy); });
+  fx.closePath();
+  const [gx0, gy0] = w2s(-S.W / 2, S.L / 2), [gx1, gy1] = w2s(S.W / 2, -S.L / 2);
+  fx.fillStyle = metalGradient(gx0, gy0, gx1, gy1); fx.fill();
+  fx.strokeStyle = 'rgba(0,0,0,.5)'; fx.lineWidth = 1.5; fx.stroke();
+
+  // fold line: dashed where it runs off the blank, scribed where it crosses it
+  const [ax, ay] = w2s(S.fold.ax, S.fold.ay), [bx, by] = w2s(S.fold.bx, S.fold.by);
+  fx.setLineDash([5, 5]); fx.strokeStyle = 'rgba(240,168,115,.55)'; fx.lineWidth = 1.5;
+  fx.beginPath(); fx.moveTo(ax, ay); fx.lineTo(bx, by); fx.stroke(); fx.setLineDash([]);
+  if (F.crosses) {
+    const [p, q] = foldPts(), [px, py] = w2s(p.x, p.y), [qx, qy] = w2s(q.x, q.y);
+    fx.strokeStyle = '#3a1d10'; fx.lineWidth = 2.5; fx.beginPath(); fx.moveTo(px, py); fx.lineTo(qx, qy); fx.stroke();
+    fx.font = '500 11px "IBM Plex Mono", monospace'; fx.fillStyle = 'rgba(239,233,223,.85)';
+    const mx = (px + qx) / 2, my = (py + qy) / 2;
+    fx.fillText(`fold ${fmt(F.tb - F.ta)} mm`, mx + 10, my - 8);
+  }
+  for (const [k, sx, sy] of [['a', ax, ay], ['b', bx, by], ['mid', (ax + bx) / 2, (ay + by) / 2]]) {
+    const hot = drag === k || (hover && Math.hypot(hover.x - sx, hover.y - sy) < 14);
+    fx.beginPath();
+    if (k === 'mid') { fx.moveTo(sx, sy - 7); fx.lineTo(sx + 7, sy); fx.lineTo(sx, sy + 7); fx.lineTo(sx - 7, sy); fx.closePath(); }
+    else fx.arc(sx, sy, hot ? 9 : 7, 0, Math.PI * 2);
+    fx.fillStyle = hot ? '#f0a873' : '#d9824b'; fx.fill();
+    fx.strokeStyle = '#1b1410'; fx.lineWidth = 2; fx.stroke();
+  }
+  fx.font = '500 11px "IBM Plex Mono", monospace'; fx.fillStyle = 'rgba(169,159,145,.9)';
+  fx.fillText(`${S.W} × ${S.L} mm  ·  ${S.gauge} mm ${METALS[S.metal].name.toLowerCase()}`, 14, FH - 14);
+}
+
+function packetOutline(side) {
+  const top = [], bot = [];
+  for (const c of F.cols) {
+    const d0 = side > 0 ? Math.max(0, c.lo) : Math.max(0, -c.hi), d1 = side > 0 ? Math.max(0, c.hi) : Math.max(0, -c.lo);
+    top.push(packetPoint(c.t, d0)); bot.push(packetPoint(c.t, d1));
+  }
+  return top.concat(bot.reverse());
+}
+function drawForge() {
+  computeSpine();
+  const outer = packetOutline(1), inner = packetOutline(-1);
+  let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+  for (const [x, y] of outer.concat(inner)) { minx = Math.min(minx, x); maxx = Math.max(maxx, x); miny = Math.min(miny, y); maxy = Math.max(maxy, y); }
+  fitView(minx - 8, maxx + 8, miny - 8, maxy + 14, 28, drag ? 0.04 : 0.15);
+
+  const path = pts => { fx.beginPath(); pts.forEach(([x, y], i) => { const [sx, sy] = w2s(x, y); i ? fx.lineTo(sx, sy) : fx.moveTo(sx, sy); }); fx.closePath(); };
+  // back layer
+  path(inner); fx.fillStyle = 'rgba(0,0,0,.25)'; fx.fill();
+  fx.setLineDash([4, 4]); fx.strokeStyle = 'rgba(169,159,145,.45)'; fx.lineWidth = 1; fx.stroke(); fx.setLineDash([]);
+  // front layer
+  path(outer);
+  const [gx0, gy0] = w2s(minx, maxy), [gx1, gy1] = w2s(maxx, miny);
+  fx.fillStyle = metalGradient(gx0, gy0, gx1, gy1); fx.fill();
+  fx.strokeStyle = 'rgba(0,0,0,.5)'; fx.lineWidth = 1.5; fx.stroke();
+
+  if (!F.crosses) return;
+  const b0 = binOf(F.ta), b1 = binOf(F.tb - 1e-6);
+  // the band the hammer works, drawn just inside the edge
+  fx.lineCap = 'butt';
+  fx.lineWidth = ZONE * view.s; fx.strokeStyle = 'rgba(255,255,255,.06)';
+  fx.beginPath();
+  for (let b = b0; b <= b1 + 1; b++) { const t = F.tmin + b * F.dt; const [x, y] = packetPoint(t, ZONE / 2), [sx, sy] = w2s(x, y); b === b0 ? fx.moveTo(sx, sy) : fx.lineTo(sx, sy); }
+  fx.stroke();
+  // the edge, colored by how hard it is
+  fx.lineWidth = 4; fx.lineCap = 'round';
+  for (let b = b0; b <= b1; b++) {
+    const [sx, sy] = w2s(SP.z[b], SP.y[b]), [ex, ey] = w2s(SP.z[b + 1], SP.y[b + 1]);
+    fx.strokeStyle = hardCss(S.hard[b], 0.95); fx.beginPath(); fx.moveTo(sx, sy); fx.lineTo(ex, ey); fx.stroke();
+  }
+  // hammer marks
+  fx.lineWidth = 1; fx.strokeStyle = 'rgba(30,14,8,.35)'; fx.lineCap = 'butt';
+  for (const bl of S.blows.slice(-500)) {
+    const [x0, y0] = packetPoint(bl.t, 0.6), [x1, y1] = packetPoint(bl.t, bl.h === 'peen' ? bl.r * 0.6 : 1.4);
+    const [s0x, s0y] = w2s(x0, y0), [s1x, s1y] = w2s(x1, y1);
+    fx.beginPath(); fx.moveTo(s0x, s0y); fx.lineTo(s1x, s1y); fx.stroke();
+  }
+  // cracks
+  fx.strokeStyle = '#ff6b5b'; fx.lineWidth = 2;
+  for (const c of S.cracks) {
+    fx.beginPath();
+    for (let k = 0; k <= 5; k++) { const [x, y] = packetPoint(c + (k % 2 ? 0.7 : -0.7), k * 0.6), [sx, sy] = w2s(x, y); k ? fx.lineTo(sx, sy) : fx.moveTo(sx, sy); }
+    fx.stroke();
+  }
+  // the hammer face, hovering over the nearest spot on the edge
+  if (hoverT !== null && S.open <= 3) {
+    const [a] = spineAt(hoverT), [ex, ey] = packetPoint(hoverT, 0), [sx, sy] = w2s(ex, ey);
+    fx.save(); fx.translate(sx, sy); fx.rotate(-a);
+    fx.fillStyle = 'rgba(214,218,223,.85)'; fx.strokeStyle = '#1b1410'; fx.lineWidth = 1.5;
+    if (S.hammer === 'peen') { fx.beginPath(); fx.roundRect ? fx.roundRect(-2.5, -26, 5, 22, 2) : fx.rect(-2.5, -26, 5, 22); fx.fill(); fx.stroke(); }
+    else { fx.beginPath(); fx.ellipse(0, -10, 13, 6, 0, 0, Math.PI * 2); fx.fill(); fx.stroke(); }
+    fx.restore();
+  }
+  if (S.open > 3) {
+    fx.fillStyle = 'rgba(23,21,19,.6)'; fx.fillRect(0, 0, FW, FH);
+    fx.fillStyle = '#efe9df'; fx.font = '600 15px "IBM Plex Sans", sans-serif'; fx.textAlign = 'center';
+    fx.fillText(`Open ${S.open}°`, FW / 2, FH / 2 - 6);
+    fx.fillStyle = '#a99f91'; fx.font = '13px "IBM Plex Sans", sans-serif';
+    fx.fillText('Slide Open back to 0° to forge again.', FW / 2, FH / 2 + 16);
+    fx.textAlign = 'left';
+  }
+}
+
+function drawFlat() {
+  fx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  fx.clearRect(0, 0, FW, FH);
+  if (S.stage === 'design') drawDesign(); else drawForge();
+  if (glow > 0.01) { fx.fillStyle = `rgba(255,120,40,${glow * 0.18})`; fx.fillRect(0, 0, FW, FH); }
+}
+
+function nearestEdgeT(px, py) {
+  if (!F.crosses) return null;
+  let best = Infinity, bt = null;
+  for (let b = binOf(F.ta); b <= binOf(F.tb - 1e-6) + 1; b++) {
+    const [sx, sy] = w2s(SP.z[b], SP.y[b]), d = Math.hypot(sx - px, sy - py);
+    if (d < best) { best = d; bt = F.tmin + b * F.dt; }
+  }
+  return best < Math.max(22, ZONE * view.s) ? clamp(bt, F.ta, F.tb) : null;
+}
+function localPt(e) { const r = fl.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function designHit(p) {
+  const [ax, ay] = w2s(S.fold.ax, S.fold.ay), [bx, by] = w2s(S.fold.bx, S.fold.by);
+  if (Math.hypot(p.x - ax, p.y - ay) < 16) return 'a';
+  if (Math.hypot(p.x - bx, p.y - by) < 16) return 'b';
+  if (Math.hypot(p.x - (ax + bx) / 2, p.y - (ay + by) / 2) < 16) return 'mid';
+  return null;
+}
+let dragFrom = null;
+fl.addEventListener('pointerdown', e => {
+  audio();
+  const p = localPt(e); hover = p;
+  if (S.stage === 'design') {
+    const h = designHit(p); if (!h) return;
+    snapshot(); drag = h; dragFrom = { p: s2w(p.x, p.y), fold: { ...S.fold } };
+    fl.setPointerCapture(e.pointerId); fl.className = 'grabbing';
+    return;
+  }
+  if (S.open > 3) return toastKey('closed', 'Close the fold first: you forge the packet shut, then open it.', 'warn');
+  const t = nearestEdgeT(p.x, p.y); if (t === null) return;
+  snapshot(); strike(t); drag = { lastT: t };
+  fl.setPointerCapture(e.pointerId); changed();
+});
+fl.addEventListener('pointermove', e => {
+  const p = localPt(e); hover = p;
+  if (S.stage === 'design') {
+    if (!drag) { fl.className = designHit(p) ? 'grab' : ''; return; }
+    const [x0, x1, y0, y1] = designBox(), [wx, wy] = s2w(p.x, p.y), snap = v => Math.round(v * 2) / 2;
+    const f = S.fold;
+    if (drag === 'mid') {
+      const dx = wx - dragFrom.p[0], dy = wy - dragFrom.p[1];
+      f.ax = snap(dragFrom.fold.ax + dx); f.bx = snap(dragFrom.fold.bx + dx); f.ay = snap(dragFrom.fold.ay + dy); f.by = snap(dragFrom.fold.by + dy);
+    } else {
+      let nx = clamp(wx, x0, x1), ny = clamp(wy, y0, y1);
+      const ox = drag === 'a' ? f.bx : f.ax, oy = drag === 'a' ? f.by : f.ay;
+      if (e.shiftKey) { // snap the angle to 15°
+        const len = Math.hypot(nx - ox, ny - oy), ang = Math.round(Math.atan2(ny - oy, nx - ox) / (Math.PI / 12)) * Math.PI / 12;
+        nx = ox + Math.cos(ang) * len; ny = oy + Math.sin(ang) * len;
+      }
+      if (Math.hypot(nx - ox, ny - oy) < 6) return;
+      if (drag === 'a') { f.ax = snap(nx); f.ay = snap(ny); } else { f.bx = snap(nx); f.by = snap(ny); }
+    }
+    computeFrame(); changed();
+    return;
+  }
+  hoverT = S.open > 3 ? null : nearestEdgeT(p.x, p.y);
+  fl.className = hoverT !== null ? 'hammer' : '';
+  if (drag && hoverT !== null) {
+    let n = 0;
+    while (Math.abs(hoverT - drag.lastT) >= SPACING && n++ < 6) { drag.lastT += Math.sign(hoverT - drag.lastT) * SPACING; strike(drag.lastT); }
+    if (n) changed();
+  }
+});
+const endDrag = () => { drag = null; if (S.stage === 'design') fl.className = ''; };
+fl.addEventListener('pointerup', endDrag);
+fl.addEventListener('pointercancel', endDrag);
+fl.addEventListener('pointerleave', () => { hover = null; hoverT = null; });
+
+/* =====================================================================
+   Chart: stretch (copper area) and hardness (line) along the fold
+   ===================================================================== */
+function drawChart() {
+  const c = $('#chart'), r = c.getBoundingClientRect(); if (!r.width) return;
+  c.width = r.width * DPR; c.height = r.height * DPR;
+  const g = c.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const W = r.width, H = r.height, pad = 8;
+  g.font = '11px "IBM Plex Sans", sans-serif'; g.fillStyle = '#7a7166';
+  if (S.stage === 'design' || !F.crosses) { g.fillText('Fold the blank to start forging.', pad, H / 2 + 4); return; }
+  const bins = foldBins(), maxE = Math.max(0.04, ...bins.map(b => S.strain[b]));
+  const X = i => pad + (W - 2 * pad) * i / Math.max(1, bins.length - 1);
+  g.beginPath(); g.moveTo(X(0), H - pad);
+  bins.forEach((b, i) => g.lineTo(X(i), H - pad - (H - 2 * pad - 12) * S.strain[b] / maxE));
+  g.lineTo(X(bins.length - 1), H - pad); g.closePath();
+  g.fillStyle = 'rgba(217,130,75,.55)'; g.fill();
+  g.lineWidth = 1.5;
+  for (let i = 1; i < bins.length; i++) {
+    g.strokeStyle = hardCss(S.hard[bins[i]]); g.beginPath();
+    g.moveTo(X(i - 1), H - pad - (H - 2 * pad - 12) * S.hard[bins[i - 1]]); g.lineTo(X(i), H - pad - (H - 2 * pad - 12) * S.hard[bins[i]]); g.stroke();
+  }
+  g.fillStyle = '#a99f91';
+  g.fillText(`stretch up to ${fmt(maxE * 100, 1)}%`, pad, 12);
+  g.textAlign = 'right'; g.fillText('— hardness', W - pad, 12); g.textAlign = 'left';
+}
+
+/* =====================================================================
+   3D form. The spine runs along z and arches in y; the wings open about it toward ±x.
+   ===================================================================== */
+const disp = { open: S.stage === 'design' ? 180 : S.open };
+let renderer, scene, camera, mesh, geo, mat;
+const VPS = (NC + 1) * (NR + 1);
+const pos = new Float32Array(VPS * 2 * 3), col = new Float32Array(VPS * 2 * 3);
+const orbit = { yaw: 0.85, pitch: 0.55, zoom: 1, dist: 160, ptrs: new Map(), pinch: 0 };
+
+function mix3(a, b, t) { return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)]; }
+function hardRGB(h) { return h < 0.55 ? mix3([0.05, 0.16, 0.7], [0.75, 0.45, 0.05], h / 0.55) : mix3([0.75, 0.45, 0.05], [0.75, 0.05, 0.03], (h - 0.55) / 0.45); }
+
+function rebuild() {
+  computeSpine();
+  const m = METALS[S.metal], thk = S.gauge, design = S.stage === 'design';
+  const phi = disp.open / 2 * Math.PI / 180, cp = Math.cos(phi), sp = Math.sin(phi);
+  const base = S.oxide && m.oxide ? mix3(m.color, m.oxide, 0.8) : m.color;
+  // gather each blow into the mesh columns it dents
+  const R = 2.4, colStep = (F.tmax - F.tmin) / NC, buckets = Array.from({ length: NC + 1 }, () => []);
+  if (!design) for (const bl of S.blows.slice(-700)) {
+    for (let i = Math.max(0, Math.ceil((bl.t - R - F.tmin) / colStep)); i <= Math.min(NC, Math.floor((bl.t + R - F.tmin) / colStep)); i++) buckets[i].push(bl);
+  }
+  for (let s = 0; s < 2; s++) {
+    const sg = s === 0 ? 1 : -1, mark = sg > 0 ? 1 : 0.4; // the anvil marks the underside less
+    for (let i = 0; i <= NC; i++) {
+      const c = F.cols[i], [a, cy, cz] = spineAt(c.t), Ny = -Math.cos(a), Nz = Math.sin(a);
+      const d0 = sg > 0 ? Math.max(0, c.lo) : Math.max(0, -c.hi), d1 = sg > 0 ? Math.max(0, c.hi) : Math.max(0, -c.lo);
+      // the wing swings about the spine tangent: closed it hangs along N, open it lies along ±x
+      const dx = sg * sp, dy = cp * Ny, dz = cp * Nz, nx = sg * cp, ny = -sp * Ny, nz = -sp * Nz;
+      const hb = S.hard[binOf(c.t)], crack = !design && S.cracks.some(ct => Math.abs(ct - c.t) < 0.9);
+      const onFold = c.lo < 0 && c.hi > 0;
+      for (let j = 0; j <= NR; j++) {
+        const dist = d0 + (d1 - d0) * Math.pow(j / NR, 1.45); // rows bunch up toward the fold
+        let dent = 0;
+        for (const bl of buckets[i]) {
+          const dt = c.t - bl.t;
+          if (bl.h === 'peen') { if (dist < bl.r) dent += 0.07 * Math.exp(-dt * dt / 0.9) * Math.sqrt(1 - dist / bl.r); }
+          else { const dd = dist - bl.d, r2 = dt * dt + dd * dd; if (r2 < 5.8) dent += 0.06 * (1 - r2 / 5.8) ** 2; }
+        }
+        const off = thk / 2 - dent * mark, v = (s * VPS + i * (NR + 1) + j) * 3;
+        pos[v] = dist * dx + nx * off; pos[v + 1] = cy + dist * dy + ny * off; pos[v + 2] = cz + dist * dz + nz * off;
+        let rgb = base;
+        if (showHard) rgb = mix3(base, hardRGB(design ? S.sheetH : S.sheetH + (hb - S.sheetH) * Math.exp(-((dist / ZONE) ** 2))), 0.85);
+        if (design && onFold && dist < 0.4) rgb = mix3(rgb, [0.1, 0.05, 0.03], 0.6);
+        if (crack && dist < 2.6) rgb = [0.03, 0.02, 0.02];
+        col[v] = rgb[0]; col[v + 1] = rgb[1]; col[v + 2] = rgb[2];
+      }
+    }
+  }
+  geo.attributes.position.needsUpdate = true; geo.attributes.color.needsUpdate = true;
+  geo.computeVertexNormals(); geo.computeBoundingBox(); geo.computeBoundingSphere();
+  const ctr = geo.boundingBox.getCenter(new THREE.Vector3());
+  mesh.position.copy(ctr).multiplyScalar(-1);
+}
+
+function makeEnv() {
+  // a dim studio with two softboxes, so polished metal has something to reflect
+  const sc = new THREE.Scene(), g = new THREE.SphereGeometry(10, 64, 32), p = g.attributes.position, cols = [];
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i) / 10, y = p.getY(i) / 10, z = p.getZ(i) / 10;
+    const c = y > 0 ? 0.18 + 0.4 * Math.pow(y, 0.7) : 0.05 + 0.06 * (1 + y);
+    const k1 = Math.exp(-((x - 0.5) ** 2 + (y - 0.75) ** 2 + (z - 0.3) ** 2) * 14), k2 = Math.exp(-((x + 0.8) ** 2 + (y - 0.2) ** 2 + (z + 0.2) ** 2) * 10);
+    cols.push(c + 2.2 * k1 + 0.8 * k2, c + 2.0 * k1 + 0.85 * k2, c + 1.8 * k1 + 1.0 * k2);
+  }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  sc.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  const pm = new THREE.PMREMGenerator(renderer), rt = pm.fromScene(sc, 0.02); pm.dispose();
+  return rt.texture;
+}
+
+function init3D() {
+  const cv = $('#gl');
+  if (!window.THREE) { $('#glwrap').insertAdjacentHTML('beforeend', '<div class="nogl">The 3D view needs three.js, which could not load. The flat view still works.</div>'); return; }
+  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); }
+  catch (e) { $('#glwrap').insertAdjacentHTML('beforeend', '<div class="nogl">WebGL is not available here, so there is no 3D view. The flat view still works.</div>'); return; }
+  renderer.setPixelRatio(DPR);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+  scene = new THREE.Scene(); scene.environment = makeEnv();
+  camera = new THREE.PerspectiveCamera(35, 1, 1, 4000);
+  const key = new THREE.DirectionalLight(0xfff1e0, 0.9); key.position.set(60, 120, 80); scene.add(key);
+  geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const idx = [];
+  for (let s = 0; s < 2; s++) for (let i = 0; i < NC; i++) for (let j = 0; j < NR; j++) {
+    const a = s * VPS + i * (NR + 1) + j, b = a + NR + 1, c = b + 1, d = a + 1;
+    if (s === 0) idx.push(a, b, d, b, c, d); else idx.push(a, d, b, b, d, c);
+  }
+  geo.setIndex(idx);
+  mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: 1, roughness: 0.3, side: THREE.DoubleSide, emissive: 0xff5a14, emissiveIntensity: 0 });
+  mesh = new THREE.Mesh(geo, mat); scene.add(mesh);
+
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); orbit.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); orbit.pinch = 0; });
+  cv.addEventListener('pointermove', e => {
+    const p = orbit.ptrs.get(e.pointerId); if (!p) return;
+    if (orbit.ptrs.size === 1) {
+      orbit.yaw -= (e.clientX - p.x) * 0.008;
+      orbit.pitch = clamp(orbit.pitch + (e.clientY - p.y) * 0.008, -1.45, 1.45);
+    }
+    p.x = e.clientX; p.y = e.clientY;
+    if (orbit.ptrs.size === 2) {
+      const [a, b] = [...orbit.ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (orbit.pinch) orbit.zoom = clamp(orbit.zoom * orbit.pinch / d, 0.35, 3);
+      orbit.pinch = d;
+    }
+  });
+  const up = e => { orbit.ptrs.delete(e.pointerId); orbit.pinch = 0; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('wheel', e => { e.preventDefault(); orbit.zoom = clamp(orbit.zoom * Math.exp(e.deltaY * 0.001), 0.35, 3); }, { passive: false });
+}
+
+/* =====================================================================
+   Export: the blank at 1:1 with the fold and a forging map, for cutting real metal
+   ===================================================================== */
+function exportSVG() {
+  let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+  for (const p of F.poly) { minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x); miny = Math.min(miny, p.y); maxy = Math.max(maxy, p.y); }
+  const m = 12, w = maxx - minx + 2 * m, h = maxy - miny + 2 * m + 22;
+  const X = x => (x - minx + m).toFixed(2), Y = y => (maxy - y + m).toFixed(2);
+  const forged = S.stage !== 'design' && F.crosses;
+  let ticks = '';
+  if (forged) for (const b of foldBins()) {
+    const e = S.strain[b]; if (e < 0.004 || b % 2) continue;
+    const t = F.tmin + (b + 0.5) * F.dt, len = Math.min(12, 1 + e * 90);
+    const x0 = F.ax + F.ux * t, y0 = F.ay + F.uy * t;
+    ticks += `<line x1="${X(x0)}" y1="${Y(y0)}" x2="${X(x0 + F.nx * len)}" y2="${Y(y0 + F.ny * len)}"/>`;
+  }
+  const [p, q] = F.crosses ? foldPts() : [{ x: 0, y: 0 }, { x: 0, y: 0 }];
+  const notes = [
+    `Foldline · ${METALS[S.metal].name} ${S.gauge} mm · blank ${S.W} × ${S.L} mm · fold ${F.crosses ? fmt(F.tb - F.ta) : 0} mm`,
+    forged ? `${S.blows.length} blows · ${S.anneals} anneals · edge stretch +${fmt(SP.stretch * 100, 1)}% · spine curl ${fmt(SP.curl)}° · ticks show where to forge (longer = more)` : 'Anneal, fold on the line, forge the folded edge, anneal, open.',
+  ];
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${w.toFixed(1)}mm" height="${h.toFixed(1)}mm" viewBox="0 0 ${w.toFixed(2)} ${h.toFixed(2)}">
+  <polygon points="${F.poly.map(p => X(p.x) + ',' + Y(p.y)).join(' ')}" fill="none" stroke="#000" stroke-width="0.25"/>
+  <line x1="${X(p.x)}" y1="${Y(p.y)}" x2="${X(q.x)}" y2="${Y(q.y)}" stroke="#c4501b" stroke-width="0.3" stroke-dasharray="2 1"/>
+  <g stroke="#c4501b" stroke-width="0.35">${ticks}</g>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="2.6" fill="#333">${notes.map((n, i) => `<text x="${m}" y="${(h - 14 + i * 4.5).toFixed(2)}">${n}</text>`).join('')}</g>
+  <line x1="${m}" y1="${(h - 4).toFixed(2)}" x2="${m + 10}" y2="${(h - 4).toFixed(2)}" stroke="#000" stroke-width="0.3"/>
+  <text x="${m + 12}" y="${(h - 3.2).toFixed(2)}" font-family="Helvetica, Arial, sans-serif" font-size="2.4" fill="#333">10 mm: check your print scale</text>
+</svg>`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  a.download = 'foldline-pattern.svg'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* =====================================================================
+   Sizing and the frame loop
+   ===================================================================== */
+function resize() {
+  const r = fl.getBoundingClientRect(); FW = r.width; FH = r.height;
+  fl.width = Math.round(FW * DPR); fl.height = Math.round(FH * DPR);
+  if (renderer) { const g = $('#gl').getBoundingClientRect(); renderer.setSize(g.width, g.height, false); camera.aspect = g.width / Math.max(1, g.height); camera.updateProjectionMatrix(); }
+  drawChart();
+}
+new ResizeObserver(resize).observe($('#work .cv'));
+new ResizeObserver(resize).observe($('#glwrap'));
+
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const target = S.stage === 'design' ? 180 : S.open, d = target - disp.open;
+  if (d !== 0) { disp.open = Math.abs(d) < 0.05 || REDUCED ? target : disp.open + d * Math.min(1, dt * 7); dirty3 = true; }
+  glow = Math.max(0, glow - dt * 0.8);
+  if (renderer) {
+    if (dirty3) { rebuild(); dirty3 = false; }
+    mat.emissiveIntensity = glow * 1.6;
+    const halfV = camera.fov * Math.PI / 360, halfH = Math.atan(Math.tan(halfV) * camera.aspect);
+    const want = geo.boundingSphere.radius / Math.sin(Math.min(halfV, halfH)) * 1.15 * orbit.zoom;
+    orbit.dist = lerp(orbit.dist, want, Math.min(1, dt * 4));
+    const cp = Math.cos(orbit.pitch);
+    camera.position.set(Math.sin(orbit.yaw) * cp * orbit.dist, Math.sin(orbit.pitch) * orbit.dist, Math.cos(orbit.yaw) * cp * orbit.dist);
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+  }
+  drawFlat();
+  requestAnimationFrame(loop);
+}
+
+computeFrame();
+init3D();
+resize();
+syncUI();
+requestAnimationFrame(loop);
+</script>
+</html>
