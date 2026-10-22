@@ -100,7 +100,7 @@ main { min-height: 0; position: relative; }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--flame-2); }
 .seglabel { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; margin-right: 6px; }
-.heat { flex: 1 1 100%; position: relative; height: 30px; }
+.heat { flex: 1 1 100%; position: relative; height: 30px; margin-top: 14px; }
 .heat .bar {
   position: absolute; left: 0; right: 0; top: 4px; height: 6px; border-radius: 3px;
   background: linear-gradient(90deg, #39424d 0%, #3d3a3a 44%, #5e1a10 52%, #a8260d 64%, #e2531a 77%, #ff8f3a 88%, #ffd38a 100%);
@@ -109,7 +109,7 @@ main { min-height: 0; position: relative; }
 .heat .tick span { position: absolute; top: 15px; transform: translateX(-50%); font: 500 9.5px var(--mono); color: var(--dim); white-space: nowrap; }
 .heat .tick.hi span { color: var(--ink); }
 .heat .marker { position: absolute; top: -2px; width: 3px; height: 18px; margin-left: -1px; background: var(--ink); border-radius: 2px; box-shadow: 0 0 6px rgba(255,255,255,.6); transition: left .08s linear; }
-.heat .readout { position: absolute; right: 0; top: -18px; font: 500 11px var(--mono); color: var(--muted); }
+.heat .readout { position: absolute; left: 0; top: -17px; font: 500 11px var(--mono); color: var(--muted); }
 
 #tip {
   position: absolute; pointer-events: none; z-index: 3; min-width: 150px; max-width: 240px;
@@ -199,12 +199,14 @@ ol.make li { margin-bottom: 8px; color: var(--muted); font-size: 14px; }
   .top { flex-wrap: wrap; gap: 10px; }
   .top-actions { margin-left: 0; }
   #benchView { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) auto auto; }
-  #stage { grid-row: 1; }
+  #stage { grid-row: 1; display: flex; flex-direction: column; }
+  #bench { position: relative; flex: 1; min-height: 0; }
+  #opts { position: static; margin: 0 8px 8px; }
   #rail { grid-row: 2; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: 0; border-top: 1px solid var(--line); padding: 4px 8px; }
   #rail h4 { display: none; }
   .tool { min-width: 58px; }
-  #benchView > aside { grid-row: 3; max-height: 34vh; border-left: 0; border-top: 1px solid var(--line); padding: 14px 16px 20px; }
-  #opts { left: 8px; right: 8px; bottom: 8px; padding: 7px 9px; gap: 6px 10px; }
+  #benchView > aside { grid-row: 3; max-height: 30vh; border-left: 0; border-top: 1px solid var(--line); padding: 14px 16px 20px; }
+  #opts { padding: 7px 9px; gap: 6px 10px; }
   #opts .hint { font-size: 12px; }
   #mechView { grid-template-columns: 1fr; grid-template-rows: minmax(260px, 48vh) 1fr; }
   #mechView > aside { border-left: 0; border-top: 1px solid var(--line); }
@@ -827,7 +829,7 @@ function resize() {
   cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
 }
 function fit(cx = 0, cy = 0, w = BOARD.w + 10, h = BOARD.h + 10) {
-  const optsH = $('#opts').offsetHeight + 24;
+  const optsH = getComputedStyle($('#opts')).position === 'absolute' ? $('#opts').offsetHeight + 24 : 0;
   cam.cx = cx; cam.sc = clamp(Math.min(VW / w, (VH - optsH) / h), 2, 60);
   cam.cy = cy + optsH / 2 / cam.sc;
 }
@@ -1195,7 +1197,7 @@ function renderOpts() {
   if (tool === 'drill') html += seg('Bit', 'drill', [1.0, 1.3, 1.6], v => v + ' mm');
   if (tool === 'move') html += `<span class="seg"><button data-act="rotl" title="Rotate left (Shift R)">⟲ 15°</button><button data-act="rotr" title="Rotate right (R)">⟳ 15°</button><button data-act="del" title="Delete">Delete</button></span>`;
   const T = v => (v / 950 * 100).toFixed(2) + '%';
-  const ticks = [[SILVER.fluxClear, 'flux clear'], [SOLDERS.xeasy.flow, 'X'], [SOLDERS.easy.flow, 'E'], [SOLDERS.medium.flow, 'M'], [SOLDERS.hard.flow, 'H'], [SILVER.liquidus, 'melts']];
+  const ticks = [[SILVER.fluxClear, 'flux'], [SOLDERS.xeasy.flow, 'X'], [SOLDERS.easy.flow, 'E'], [SOLDERS.medium.flow, 'M'], [SOLDERS.hard.flow, 'H'], [SILVER.liquidus, 'melts']];
   html += `<div class="heat" aria-hidden="true"><div class="bar"></div>${ticks.map(([v, l]) => `<i class="tick${tool === 'solder' && l === SOLDERS[opt.grade].letter ? ' hi' : ''}" style="left:${T(v)}"><span>${l}</span></i>`).join('')}<i class="marker" id="heatMarker" style="left:0"></i><span class="readout" id="heatReadout"></span></div>`;
   $('#opts').innerHTML = html;
 }
@@ -2047,11 +2049,13 @@ function demoBench() {
   return [disc, strip, ring, wire, tube];
 }
 
-addEventListener('resize', () => { const fresh = !VW || VW < 2; resize(); if (mode === 'mech') Mech.size(); if (fresh) fit(); });
+addEventListener('resize', () => { resize(); if (mode === 'mech') Mech.size(); else lesson ? fit(...lesson.def.view) : fit(); });
 buildRail(); resize(); setTool('move');
 try { const saved = localStorage.getItem(SAVE_KEY); if (saved) load(saved); } catch (e) {}
 if (!S.parts.length) { S.parts = demoBench(); rebuild(); }
 fit(); renderSide();
+requestAnimationFrame(() => { resize(); fit(); });
+document.fonts && document.fonts.ready.then(() => { resize(); fit(); });
 toast('Welcome to the bench. Start a lesson on the right, or grab any tool and make something.', 'info', 6000);
 requestAnimationFrame(loop);
 </script>
