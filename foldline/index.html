@@ -1033,9 +1033,22 @@ function exportSVG() {
   <line x1="${m}" y1="${(h - 4).toFixed(2)}" x2="${m + 10}" y2="${(h - 4).toFixed(2)}" stroke="#000" stroke-width="0.3"/>
   <text x="${m + 12}" y="${(h - 3.2).toFixed(2)}" font-family="Helvetica, Arial, sans-serif" font-size="2.4" fill="#333">10 mm: check your print scale</text>
 </svg>`;
+  saveFile('foldline-pattern.svg', svg);
+}
+
+// Inside the claude.ai viewer, files go out through the downloads capability; opened locally, a plain link works.
+const downloadsReady = window.claude ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+async function saveFile(filename, data) {
+  const downloads = await downloadsReady;
+  if (downloads) {
+    try { await downloads.save({ filename, data }); }
+    catch (e) { if (e && e.code !== 'declined') toast('The pattern could not be saved here.', 'warn'); }
+    return;
+  }
+  if (window.claude) return toast('Saving files is not available in this view.', 'warn');
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-  a.download = 'foldline-pattern.svg'; a.click();
+  a.href = URL.createObjectURL(new Blob([data], { type: 'image/svg+xml' }));
+  a.download = filename; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
