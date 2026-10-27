@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Goblet Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a hot shop at night. The 3D bench fills the left, the gaffer's notes sit on the right. */
+:root {
+  --bench: #12100f;
+  --panel: #1d1a18;
+  --panel-2: #27231f;
+  --line: #37302b;
+  --ink: #f1ebe2;
+  --muted: #aa9f92;
+  --dim: #7a7067;
+  --molten: #ff8a3d;
+  --molten-2: #ffb370;
+  --glass: #8fd3e8;
+  --ok: #8fd19e;
+  --warn: #ffb347;
+  --bad: #ff6b5b;
+  --display: "Fraunces", Georgia, serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bench); color: var(--ink);
+  font: 15px/1.5 var(--body);
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible { outline: 2px solid var(--molten-2); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- header ---------- */
+.top {
+  display: flex; align-items: center; gap: 18px;
+  padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line); background: #171412;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.brand b { font: 700 22px/1 var(--display); letter-spacing: -0.01em; }
+.brand b i { font-style: normal; color: var(--molten); }
+.brand em { font-style: normal; color: var(--dim); font-size: 13px; white-space: nowrap; }
+.top-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.chipbtn { border: 1px solid var(--line); background: var(--panel); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--muted); }
+.chipbtn:hover { color: var(--ink); border-color: #554a42; }
+.chipbtn[aria-pressed="true"] { color: var(--molten-2); border-color: #6a4426; }
+
+/* ---------- stage ---------- */
+main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
+.stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--line); }
+.cv { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #0f0d0c; }
+.cv canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#gl { cursor: crosshair; }
+#gl.orbiting { cursor: grabbing; }
+.nogl { position: absolute; inset: 0; display: grid; place-items: center; color: var(--dim); font-size: 14px; padding: 24px; text-align: center; }
+.hint3d { position: absolute; left: 14px; bottom: 12px; font-size: 12px; color: var(--dim); pointer-events: none; text-shadow: 0 1px 2px #000; }
+.status3d { position: absolute; right: 14px; top: 12px; display: flex; gap: 6px; pointer-events: none; }
+.pill { font: 500 12px var(--mono); padding: 3px 8px; border-radius: 99px; background: rgba(20,17,15,.82); border: 1px solid var(--line); color: var(--muted); }
+.pill.hot { color: var(--molten-2); border-color: #6a4426; }
+.pill.warn { color: var(--warn); border-color: #6b5222; }
+.pill.bad { color: var(--bad); border-color: #6b2a24; }
+
+#toasts { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; z-index: 4; width: min(520px, calc(100% - 32px)); pointer-events: none; }
+.toast {
+  background: rgba(24,21,19,.96); border: 1px solid var(--line); border-left: 3px solid var(--glass); border-radius: 9px; padding: 8px 12px; font-size: 13.5px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35); animation: tin .25s ease-out; max-width: 100%;
+}
+.toast.good { border-left-color: var(--ok); } .toast.warn { border-left-color: var(--warn); } .toast.bad { border-left-color: var(--bad); } .toast.hot { border-left-color: var(--molten); }
+.toast.out { opacity: 0; transform: translateY(-6px); transition: .35s; }
+@keyframes tin { from { opacity: 0; transform: translateY(-8px); } }
+
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); background: #171412; }
+.act {
+  border: 1px solid var(--line); background: var(--panel-2); border-radius: 10px; padding: 8px 13px; cursor: pointer; font-weight: 500; font-size: 14px;
+  white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.act:hover { border-color: #5c4e43; }
+.act kbd { font: 500 11px var(--mono); color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.act.hot { background: #3b2516; border-color: #8a4f26; color: var(--molten-2); }
+.act.primary { background: var(--molten); color: #1e1008; border-color: var(--molten); font-weight: 600; }
+.act.primary kbd { color: #5a2d10; border-color: #c46a2c; }
+.act.primary:hover { background: var(--molten-2); }
+.act[disabled] { opacity: .4; cursor: not-allowed; }
+.act.on { color: var(--ok); border-color: #3f5a44; }
+.bar .gap { flex: 1; }
+
+/* ---------- side panel ---------- */
+aside { background: var(--panel); overflow-y: auto; padding: 18px 18px 28px; min-height: 0; scrollbar-width: thin; }
+aside h2 { font: 700 22px/1.15 var(--display); margin: 0 0 6px; letter-spacing: -0.01em; }
+aside h3 { font: 600 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin: 22px 0 10px; }
+aside p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+aside p b { color: var(--ink); font-weight: 600; }
+.tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tool { border: 1px solid var(--line); background: var(--panel-2); border-radius: 10px; padding: 8px 6px 7px; cursor: pointer; text-align: center; font-size: 13px; }
+.tool:hover { border-color: #5c4e43; }
+.tool kbd { display: block; font: 500 10.5px var(--mono); color: var(--dim); margin-top: 1px; }
+.tool[aria-pressed="true"] { border-color: var(--molten); background: #33210f; color: var(--molten-2); }
+.tooltip { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; min-height: 38px; }
+.swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+.sw { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.sw[aria-pressed="true"] { border-color: var(--molten-2); }
+#heat { width: 100%; height: 110px; display: block; border: 1px solid var(--line); border-radius: 8px; background: #151210; }
+.legend { display: flex; justify-content: space-between; font: 500 10.5px var(--mono); color: var(--dim); margin-top: 5px; }
+.legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; background: var(--c); }
+.read { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; margin: 10px 0 0; font-size: 13px; }
+.read dt { color: var(--muted); }
+.read dd { margin: 0; text-align: right; font: 500 12.5px var(--mono); color: var(--ink); }
+.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+.steps li { position: relative; padding: 0 0 10px 34px; color: var(--dim); font-size: 13.5px; counter-increment: s; }
+.steps li::before {
+  content: counter(s); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line);
+  display: grid; place-items: center; font: 500 11px var(--mono); color: var(--dim);
+}
+.steps li.done { color: var(--muted); }
+.steps li.done::before { content: "✓"; background: #2c382e; border-color: #3f5a44; color: var(--ok); }
+.steps li.now { color: var(--ink); font-size: 14.5px; }
+.steps li.now::before { border-color: var(--molten); color: var(--molten-2); background: #3a2414; }
+.steps li .why { display: block; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+.steps li:not(.now) .why { display: none; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 5px 11px; font-size: 12.5px; cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--molten-2); }
+.note { font-size: 12px; color: var(--dim); }
+kbd.k { font: 500 11px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--muted); }
+
+.verdict .type { font: 700 28px/1.1 var(--display); margin: 2px 0 4px; }
+.verdict .stars { font-size: 22px; letter-spacing: 3px; color: var(--molten-2); }
+.verdict .stars i { font-style: normal; color: #4a403a; }
+.verdict .stars small { font: 500 13px var(--mono); letter-spacing: 0; vertical-align: 3px; }
+.verdict ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; }
+.verdict ul li { margin-bottom: 5px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.shelfitem { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.shelfitem .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+.shelfitem div { flex: 1; min-width: 0; }
+.shelfitem strong { display: block; font: 600 15px var(--display); }
+.shelfitem span { font-size: 12px; color: var(--muted); }
+.shelfitem button { border: 1px solid var(--line); background: none; border-radius: 6px; color: var(--dim); cursor: pointer; padding: 2px 8px; }
+.shelfitem button:hover { color: var(--bad); border-color: #6b2a24; }
+
+dialog { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; max-width: 560px; width: calc(100% - 32px); padding: 22px 24px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+dialog::backdrop { background: rgba(0,0,0,.55); }
+dialog h2 { font: 700 24px var(--display); margin: 0 0 8px; }
+dialog ol { padding-left: 20px; color: var(--muted); font-size: 14px; }
+dialog ol li { margin-bottom: 6px; }
+dialog ol b { color: var(--ink); }
+dialog p { color: var(--muted); font-size: 14px; }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 900px) {
+  html, body { height: auto; }
+  body { overflow: auto; min-height: 100%; }
+  .brand em { display: none; }
+  .top { flex-wrap: wrap; gap: 10px; }
+  main { grid-template-columns: 1fr; }
+  .stage { border-right: 0; border-bottom: 1px solid var(--line); }
+  .cv { flex: none; height: 58vh; min-height: 340px; }
+  .act { padding: 9px 11px; font-size: 13.5px; }
+  .act kbd { display: none; }
+  .hint3d { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+</style>
+
+<header class="top">
+  <div class="brand"><b>Goblet <i>Works</i></b><em>a glassblowing sandbox for making goblets</em></div>
+  <div class="top-actions">
+    <button class="chipbtn" id="undoBtn" title="Undo (Ctrl/⌘ Z)">Undo</button>
+    <button class="chipbtn" id="newBtn" title="Knock the glass off and start a fresh pipe">New pipe</button>
+    <button class="chipbtn" id="shelfBtn">Shelf</button>
+    <button class="chipbtn" id="soundBtn" aria-pressed="true">Sound on</button>
+    <button class="chipbtn" id="helpBtn">How to</button>
+  </div>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="cv" id="glwrap">
+      <canvas id="gl" aria-label="3D glassblowing bench"></canvas>
+      <div id="toasts" aria-live="polite"></div>
+      <div class="status3d" id="status3d"></div>
+      <div class="hint3d" id="hint3d">Use the tool on the glass · drag empty space or right-drag to orbit · scroll to zoom</div>
+    </div>
+    <div class="bar" id="workBar">
+      <button class="act primary" id="gatherBtn">Gather <kbd>G</kbd></button>
+      <button class="act" id="blowBtn" title="Hold to blow down the pipe">Blow <kbd>B</kbd></button>
+      <button class="act" id="heatBtn" title="Hold to warm the glass in the glory hole">Reheat <kbd>R</kbd></button>
+      <button class="act on" id="turnBtn" aria-pressed="true" title="Keep the pipe rolling so the glass stays centred">Turning <kbd>T</kbd></button>
+      <button class="act" id="bitBtn" title="An assistant brings a hot gob of glass to the end of the piece">Add bit <kbd>N</kbd></button>
+      <span class="gap"></span>
+      <button class="act" id="puntyBtn" title="Attach a punty to the end and crack the piece off the blowpipe">Transfer <kbd>X</kbd></button>
+      <button class="act" id="annealBtn" title="Put the finished piece in the annealer">Anneal <kbd>A</kbd></button>
+    </div>
+    <div class="bar" id="doneBar" hidden>
+      <button class="act primary" id="againBtn">Gather a new piece</button>
+      <button class="act" id="shelfBtn2">See the shelf</button>
+    </div>
+  </section>
+
+  <aside>
+    <div id="workPanel">
+      <h2>At the bench</h2>
+      <p>Glass only moves while it glows. Keep it <b>hot and turning</b>, and keep going back to the glory hole. A goblet is three pieces of glass: a <b>bowl</b> you blow, a <b>stem</b> you pull, and a <b>foot</b> you paddle flat.</p>
+
+      <h3>Tools</h3>
+      <div class="tools" id="tools"></div>
+      <p class="tooltip" id="toolTip"></p>
+
+      <h3>Heat map</h3>
+      <canvas id="heat" aria-label="Side profile of the glass coloured by temperature"></canvas>
+      <div class="legend">
+        <span style="--c:#56626e">rigid</span><span style="--c:#9b3a2c">stiff</span><span style="--c:#e8601f">workable</span><span style="--c:#ffd27a">soft</span>
+      </div>
+      <dl class="read">
+        <dt>Temperature</dt><dd id="rTemp">–</dd>
+        <dt>Length × max Ø</dt><dd id="rSize">–</dd>
+        <dt>Thinnest wall</dt><dd id="rWall">–</dd>
+        <dt>Bowl holds</dt><dd id="rCap">–</dd>
+      </dl>
+
+      <h3>Making a goblet</h3>
+      <ol class="steps" id="steps"></ol>
+
+      <h3>Glass colour</h3>
+      <div class="swatches" id="swatches"></div>
+      <p class="note" style="margin-top:8px">Applies to the next gather or bit, so you can make a coloured foot or stem.</p>
+
+      <h3>Pace</h3>
+      <div class="seg" id="paceSeg">
+        <button data-pace="relaxed">Relaxed</button><button data-pace="studio">Studio</button>
+      </div>
+      <p class="note" style="margin-top:8px">Studio cools glass about twice as fast, more like a real shop.</p>
+    </div>
+
+    <div id="donePanel" class="verdict" hidden></div>
+    <div id="shelfPanel" hidden></div>
+  </aside>
+</main>
+
+<dialog id="help">
+  <h2>How to make a goblet</h2>
+  <ol>
+    <li><b>Gather</b> <kbd class="k">G</kbd>: dip the pipe into the furnace. Gather a second time for a bigger piece.</li>
+    <li><b>Blow</b>: hold <kbd class="k">B</kbd>. Hot, thin walls inflate fastest, so warm the glass evenly before you blow.</li>
+    <li><b>Reheat</b>: hold <kbd class="k">R</kbd> when the glow fades. Glass you work below about 550 °C cracks.</li>
+    <li><b>Jacks</b> <kbd class="k">J</kbd>: hold them on the glass to squeeze it down to the pointer's radius. Pinch a <b>jack line</b> near the pipe; that's where the piece will crack off later.</li>
+    <li><b>Stem</b>: press <kbd class="k">N</kbd> to add a hot bit to the end. Grab it with <b>Tweezers</b> <kbd class="k">P</kbd> and drag away from the pipe to pull a stem.</li>
+    <li><b>Foot</b>: add another bit, then push the <b>Paddle</b> <kbd class="k">F</kbd> against the end to flatten it into a disc.</li>
+    <li><b>Transfer</b> <kbd class="k">X</kbd>: a punty goes on the foot, and the pipe cracks off at the jack line.</li>
+    <li><b>Open</b> <kbd class="k">O</kbd>: drag outward inside the rim to flare it. Use <b>Shears</b> <kbd class="k">S</kbd> to trim a ragged edge.</li>
+    <li><b>Anneal</b> <kbd class="k">A</kbd> while the piece is still above 400 °C.</li>
+  </ol>
+  <p>The pipe keeps rolling unless you stop it with <kbd class="k">T</kbd>. Hot glass on a still pipe sags; <b>Block</b> <kbd class="k">K</kbd> and turning bring it back to centre. Ctrl/⌘ Z undoes, even a crack.</p>
+  <p class="note">The physics is simplified so you can build intuition. It won't predict a real piece exactly.</p>
+  <form method="dialog" class="row"><button class="act primary">Light the furnace</button></form>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const gauss = (x, s) => Math.exp(-(x * x) / (2 * s * s));
+const fmt = (v, d = 0) => Number(v).toFixed(d);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =====================================================================
+   Glass and constants. Units are centimetres, seconds and °C.
+   ===================================================================== */
+const PIPE_R = 1.1, BORE = 0.35, AMB = 25, FURNACE_T = 1150, MAX_R = 9, MAX_LEN = 42;
+const COLORS = {
+  clear:    { name: 'Clear',    c: [0.93, 0.97, 1.0] },
+  cobalt:   { name: 'Cobalt',   c: [0.22, 0.38, 0.95] },
+  amber:    { name: 'Amber',    c: [0.98, 0.62, 0.22] },
+  emerald:  { name: 'Emerald',  c: [0.22, 0.78, 0.45] },
+  ruby:     { name: 'Gold ruby', c: [0.92, 0.18, 0.36] },
+  amethyst: { name: 'Amethyst', c: [0.66, 0.42, 0.92] },
+  smoke:    { name: 'Smoke',    c: [0.5, 0.5, 0.53] },
+};
+const TOOLS = {
+  jacks:  { name: 'Jacks',    key: 'J', tip: 'Hold them on the glass to squeeze it down to the pointer\'s radius. Squeezed glass grows longer. Use them for the jack line, the waist and the bowl\'s shape.' },
+  pull:   { name: 'Tweezers', key: 'P', tip: 'Grab the glass and drag it away from the pipe. Only the hottest glass near the grab stretches, which is how a stem gets pulled from a fresh bit.' },
+  paddle: { name: 'Paddle',   key: 'F', tip: 'Push the wooden paddle against the end of the piece. Hot glass at the end squashes into a disc, which becomes the foot.' },
+  block:  { name: 'Block',    key: 'K', tip: 'A wet cherrywood block. Hold it on the glass to smooth lumps and bring sagging glass back to centre. The steam cools the glass a little.' },
+  open:   { name: 'Open',     key: 'O', tip: 'Jacks used inside the rim, after the transfer. Drag outward near the opening to flare it into a bowl.' },
+  shears: { name: 'Shears',   key: 'S', tip: 'Click to cut. On the pipe they trim the end; on the punty they trim the rim. The glass has to be hot to cut cleanly.' },
+};
+
+// How soft is glass at temperature T (°C)? 0 = rigid, 1 = runny, straight from the furnace.
+// Every tool, the blow and gravity sag scale by this. Cooling is modelled separately in cool().
+function workability(T) {
+  // TODO(human): replace this straight-line placeholder with a curve that behaves like real glass.
+  return clamp((T - 520) / (1100 - 520), 0, 1);
+}
+
+/* =====================================================================
+   State. The piece is a list of rings ("segs") from the blowpipe end (index 0)
+   to the tip. Each has length dz, outer radius R, bubble radius r, temperature T,
+   colour c, a gravity bend, and stress st. A ring's glass volume is π(R² − r²)·dz,
+   and the tools keep that volume while they change its shape.
+   ===================================================================== */
+const store = {
+  load() { try { return JSON.parse(localStorage.getItem('gobletworks.v1')) || {}; } catch (e) { return {}; } },
+  save() { try { localStorage.setItem('gobletworks.v1', JSON.stringify({ shelf: S.shelf, pace: S.pace, color: S.color, sound: Snd.on })); } catch (e) {} },
+};
+const saved = store.load();
+const S = {
+  segs: [], punty: false, ragged: false, turning: true,
+  phase: 'bare',               // bare · work · broken · done · shelf
+  tool: 'jacks', color: COLORS[saved.color] ? saved.color : 'clear',
+  pace: saved.pace === 'studio' ? 'studio' : 'relaxed',
+  blowing: false, reheating: false,
+  ptr: { x: 0, rho: 0, over: false, down: false, mode: null, grab: null, cx: 0, cy: 0 },
+  zEnd: 0, shelf: Array.isArray(saved.shelf) ? saved.shelf.slice(0, 12) : [], verdict: null, undo: [], hints: {},
+};
+
+const mk = (dz, R, r, T, c) => ({ dz, R, r, T, c: c.slice(), bend: 0, y: 0, st: 0, z: 0, d: 0 });
+const area = s => s.R * s.R - s.r * s.r;
+// z: distance from the pipe end along the piece. d: distance from whatever holds it (pipe or punty).
+function layout(segs = S.segs, punty = S.punty) {
+  let z = 0;
+  for (const s of segs) { s.z = z + s.dz / 2; z += s.dz; }
+  for (const s of segs) s.d = punty ? z - s.z : s.z;
+  if (segs === S.segs) S.zEnd = z;
+  return z;
+}
+const cavityEnd = segs => { let k = -1; for (let i = 0; i < segs.length; i++) { if (segs[i].r > 0) k = i; else break; } return k; };
+const maxR = segs => segs.reduce((m, s) => Math.max(m, s.R), 0);
+
+// After any change: keep the bubble one connected cavity open at the pipe end, and keep the pipe end on the pipe.
+function tidy() {
+  const segs = S.segs; let open = true;
+  for (const s of segs) {
+    s.R = Math.min(s.R, MAX_R);
+    if (!open || s.r <= 0) { if (s.r !== 0) { const A = area(s); s.r = 0; s.R = Math.sqrt(Math.max(A, 0.01)); } open = false; }
+  }
+  if (!S.punty && segs.length) {
+    const s = segs[0];
+    if (s.r < BORE) { const A = area(s); s.r = BORE; s.R = Math.sqrt(A + BORE * BORE); }
+    s.R = Math.max(s.R, PIPE_R + 0.08);
+  }
+}
+// Keep rings between ~1 and ~4 mm long, splitting stretched ones and merging squashed ones.
+function resample() {
+  const segs = S.segs;
+  for (let i = 0; i < segs.length;) {
+    const s = segs[i];
+    if (s.dz > 0.42 && segs.length < 200) {
+      const a = { ...s, c: s.c.slice() }; a.dz = s.dz / 2; a.bend = s.bend / 2; s.dz /= 2; s.bend /= 2;
+      segs.splice(i + 1, 0, a); continue;
+    }
+    i++;
+  }
+  for (let i = 0; i < segs.length && segs.length > 3;) {
+    if (segs[i].dz < 0.1) {
+      const j = i === segs.length - 1 ? i - 1 : (i === 0 ? 0 : (segs[i - 1].dz < segs[i + 1].dz ? i - 1 : i));
+      merge(j); continue;
+    }
+    i++;
+  }
+}
+function merge(i) {
+  const segs = S.segs, a = segs[i], b = segs[i + 1];
+  const va = area(a) * a.dz, vb = area(b) * b.dz, dz = a.dz + b.dz, v = va + vb;
+  const r = a.r > 0 && b.r > 0 ? (a.r * a.dz + b.r * b.dz) / dz : 0;
+  const m = mk(dz, Math.sqrt(v / dz + r * r), r, (a.T * va + b.T * vb) / v, a.c.map((c, k) => (c * va + b.c[k] * vb) / v));
+  m.bend = a.bend + b.bend; m.st = Math.max(a.st, b.st); m.y = (a.y + b.y) / 2;
+  segs.splice(i, 2, m);
+}
+
+/* ---------- undo ---------- */
+const snap = () => JSON.stringify({ segs: S.segs.map(s => [s.dz, s.R, s.r, s.T, s.c, s.bend, s.st]), punty: S.punty, ragged: S.ragged, phase: S.phase });
+function pushUndo() { S.undo.push(snap()); if (S.undo.length > 40) S.undo.shift(); }
+function undo() {
+  if (S.phase === 'done' || S.phase === 'shelf' || !S.undo.length) return;
+  const o = JSON.parse(S.undo.pop());
+  S.segs = o.segs.map(a => { const s = mk(a[0], a[1], a[2], a[3], a[4]); s.bend = a[5]; s.st = a[6]; return s; });
+  S.punty = o.punty; S.ragged = o.ragged; S.phase = o.phase === 'broken' ? 'work' : o.phase;
+  clearShards(); layout(); updateSag(0); syncUI(); toast('Undone.');
+}
+
+/* =====================================================================
+   Studio actions
+   ===================================================================== */
+function canWork(msg = true) {
+  if (S.phase === 'done' || S.phase === 'shelf') return false;
+  if (S.phase === 'broken') { if (msg) toastOnce('broken', 'That piece is on the floor. Undo, or gather a new one.', 'warn'); return false; }
+  return true;
+}
+function gather() {
+  if (!canWork()) return;
+  if (S.punty) return toast('Gathers go on the blowpipe. Anneal this piece or start a new pipe.', 'warn');
+  const col = COLORS[S.color].c;
+  if (S.segs.length && (layout() > MAX_LEN - 4 || maxR(S.segs) > MAX_R - 1)) return toast('That\'s all the glass one pipe can hold.', 'warn');
+  pushUndo();
+  if (!S.segs.length) {
+    // first gather: a honey-like teardrop of solid glass on the end of the pipe
+    const n = 22;
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n, R = Math.max(0.35, 2.6 * Math.pow(Math.sin(Math.PI * (0.12 + 0.88 * t)), 0.55));
+      S.segs.push(mk(0.24, R, 0, FURNACE_T, col));
+    }
+    S.phase = 'work';
+    toast('A gather of molten glass. Keep it turning. Hold <b>B</b> to blow a bubble.', 'hot');
+  } else {
+    // later gathers coat what's there, thicker towards the tip, and add a little to the end
+    const L = layout(); let cold = 0;
+    for (const s of S.segs) {
+      const t = 0.45 + 0.4 * (s.d / L), A0 = area(s), R2 = s.R + t, A1 = R2 * R2 - s.r * s.r, w = (A1 - A0) / A1;
+      if (s.T < 500) cold++;
+      s.R = R2; s.T = lerp(s.T, FURNACE_T, w); s.c = s.c.map((c, k) => lerp(c, col[k], w));
+    }
+    const tip = S.segs[S.segs.length - 1];
+    for (let i = 0; i < 5; i++) S.segs.push(mk(0.24, Math.max(0.35, tip.R * Math.cos((i + 1) / 5.6 * Math.PI / 2)), 0, FURNACE_T, col));
+    if (cold > 2) { for (const s of S.segs) s.st += 0.25; toast('Gathered over cold glass. That traps stress, so reheat before you gather.', 'warn'); }
+    else toast('Another gather goes over the first.', 'hot');
+  }
+  tidy(); resample(); Snd.plunge(); syncUI();
+}
+function addBit() {
+  if (!canWork()) return;
+  if (!S.segs.length) return toast('Gather some glass first (G).', 'warn');
+  if (S.punty) return toast('Add bits before the transfer, while the piece is still on the pipe.', 'warn');
+  const tip = S.segs[S.segs.length - 1];
+  if (tip.T < 620) return toast('The end is too cold for a bit to stick. Reheat it first.', 'warn');
+  if (layout() > MAX_LEN - 3) return toast('There\'s no room for more glass on this piece.', 'warn');
+  pushUndo();
+  const col = COLORS[S.color].c, n = 8;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n;
+    S.segs.push(mk(0.24, Math.max(0.3, 1.65 * Math.pow(Math.sin(Math.PI * (0.22 + 0.78 * t)), 0.5)), 0, 1120, col));
+  }
+  tidy(); resample(); Snd.plunge(0.6); syncUI();
+  toast('A hot bit goes on the end. Pull it with <b>Tweezers</b> for a stem, or <b>Paddle</b> it for a foot.', 'hot');
+}
+function transfer() {
+  if (!canWork()) return;
+  if (S.punty) return toast('It\'s already on the punty.');
+  if (S.segs.length < 6) return toast('Make something first.', 'warn');
+  const tip = S.segs[S.segs.length - 1];
+  if (tip.T < 480) return toast('The foot is too cold for the punty to stick. Reheat it first.', 'warn');
+  pushUndo();
+  const s0 = S.segs[0];
+  S.punty = true;
+  S.ragged = raggedNeck();
+  for (const s of S.segs) s.bend = -s.bend;
+  layout(); updateSag(0); Snd.crack(0.35); syncUI();
+  toast(S.ragged
+    ? 'Punty on, pipe off. Without a tight jack line the crack-off is ragged, so open the rim and trim it with <b>Shears</b>.'
+    : 'Cracked off cleanly at the jack line. Now <b>Open</b> the rim.', S.ragged ? 'warn' : 'good');
+}
+// The pipe cracks off cleanly only at a jack line: a neck much narrower than the bowl.
+const raggedNeck = () => S.segs[0].R > Math.min(2.6, 0.5 * maxR(S.segs));
+function shear(x) {
+  const segs = S.segs, L = layout();
+  if (x <= 0.3 || x >= L - 0.2) return;
+  const cut = segs.filter(s => s.d > x), keep = segs.filter(s => s.d <= x);
+  if (!cut.length || keep.length < 3) return;
+  const at = keep.reduce((b, s) => Math.abs(s.d - x) < Math.abs(b.d - x) ? s : b, keep[0]);
+  if (!S.punty && keep[keep.length - 1].r > 0) return toast('Cutting there would open the bubble. Transfer to the punty first, then trim the rim.', 'warn');
+  pushUndo();
+  if (at.T < 600) { for (const s of keep) if (Math.abs(s.d - x) < 1) s.st += 0.45; Snd.tink(); toast('Too cold to shear cleanly, so the cut left stress. Shear hot.', 'warn'); }
+  S.segs = keep;
+  if (S.punty) { S.ragged = false; toast('Trimmed the rim clean.', 'good'); } else toast('Trimmed the end.');
+  Snd.snip(); tidy(); syncUI();
+}
+function anneal() {
+  if (!canWork() || !S.segs.length) return;
+  const minT = Math.min(...S.segs.map(s => s.T)), maxSt = Math.max(...S.segs.map(s => s.st));
+  if (minT < 400) return breakPiece('It cracked in the annealer from thermal shock. It had cooled below 400 °C, so warm it in the glory hole first next time.');
+  if (maxSt > 0.8) return breakPiece('It cracked in the annealer from the stress built up in it.');
+  if (!S.punty) {
+    S.ragged = raggedNeck();
+  }
+  layout();
+  S.verdict = judge(S.segs);
+  for (const s of S.segs) s.T = AMB;
+  S.phase = 'done'; S.blowing = S.reheating = false; S.ptr.down = false;
+  Snd.chime(); showDone(); syncUI();
+}
+function breakPiece(reason) {
+  if (S.phase !== 'work') return;
+  S.phase = 'broken'; S.blowing = S.reheating = false; S.ptr.down = false;
+  Snd.crack(1); spawnShards(); syncUI();
+  toast(reason + ' Ctrl/⌘ Z to undo.', 'bad');
+}
+function newPipe() {
+  if (S.phase === 'work' && S.segs.length) pushUndo();
+  S.segs = []; S.punty = false; S.ragged = false; S.phase = 'bare'; S.verdict = null;
+  clearShards(); syncUI(); toast('A clean pipe. Press <b>G</b> to gather from the furnace.', 'hot');
+}
+
+/* =====================================================================
+   Physics, run every frame while working
+   ===================================================================== */
+function blow(dt) {
+  const segs = S.segs; if (!segs.length) return;
+  if (S.punty) { S.blowing = false; return toastOnce('noblow', 'The piece is off the pipe now, so you can\'t blow into it.', 'warn'); }
+  const k = cavityEnd(segs);
+  for (let i = 0; i <= k; i++) {
+    const s = segs[i], soft = workability(s.T); if (soft <= 0) continue;
+    const t = Math.max(0.04, s.R - s.r);
+    // hoop stress ~ r / t: thin, wide walls inflate fastest, which is why uneven heat blows out lopsided
+    let dr = Math.min(1.5 * dt, soft * dt * (0.4 + 0.55 * s.r / t));
+    if (i === 0) dr *= 0.25;
+    if (s.R + dr > MAX_R) continue;
+    const A = area(s); s.r += dr;
+    const el = 1 + 0.16 * dr / Math.max(s.r, 0.4);
+    s.dz *= el; s.R = Math.sqrt(s.r * s.r + A / el);
+    if (s.R - s.r < 0.035) return breakPiece('The bubble blew out where the wall got too thin.');
+  }
+  // the air pushes the bubble further into solid glass, keeping a wall at the bottom
+  if (k >= 0 && k + 1 < segs.length) {
+    const nx = segs[k + 1], L = layout();
+    // the front only advances once the ring before it has opened up, so the bubble grows round rather than racing down the gather as a tube
+    if (L - (nx.z + nx.dz / 2) > 0.9 && segs[k].r > (k === 0 ? 0 : 0.12 + 0.35 * segs[Math.max(0, k - 1)].r)) {
+      const A = area(nx); nx.r += workability(nx.T) * dt * (0.25 + 2.2 * segs[k].r) * 0.4;
+      nx.R = Math.sqrt(nx.r * nx.r + A);
+    }
+  }
+  tidy(); resample();
+}
+function reheat(dt) {
+  const L = layout();
+  for (const s of S.segs) {
+    const ratio = Math.min(2.2, 2 * s.R / Math.max(area(s), 0.05));
+    if (s.T < 470) s.st += dt * (470 - s.T) / 120;   // thermal shock from heating cold glass too fast
+    s.T += (1200 - s.T) * Math.min(1, dt * 0.55 * (0.6 + 0.5 * ratio) * (0.55 + 0.45 * s.d / Math.max(L, 1)));
+  }
+}
+function cool(dt) {
+  const segs = S.segs, n = segs.length, k = 0.021 * (S.pace === 'studio' ? 1 : 0.45);
+  for (let i = 0; i < n; i++) {
+    const s = segs[i], ratio = Math.min(2.2, 2 * s.R / Math.max(area(s), 0.05));
+    let f = k * ratio;
+    if ((i === 0 && !S.punty) || (i === n - 1 && S.punty)) f *= 1.6;   // the steel draws heat out
+    s.T -= f * (s.T - AMB) * dt;
+  }
+  const T = segs.map(s => s.T), c = Math.min(0.45, 2.5 * dt);
+  for (let i = 0; i < n; i++) segs[i].T += ((T[i - 1] ?? T[i]) + (T[i + 1] ?? T[i]) - 2 * T[i]) * c;
+}
+// Surface tension: hot glass pulls ripples between neighbouring rings smooth, keeping each ring's volume.
+function surfaceTension(dt) {
+  const segs = S.segs, n = segs.length; if (n < 3) return;
+  const R0 = segs.map(s => s.R), r0 = segs.map(s => s.r);
+  for (let i = 1; i < n - 1; i++) {
+    const s = segs[i], w = Math.min(0.5, 0.7 * workability(s.T) * dt); if (w <= 0) continue;
+    const R2 = s.R + ((R0[i - 1] + R0[i + 1]) / 2 - s.R) * w;
+    if (s.r > 0) { const rr = R2 * R2 - area(s); if (rr > 0.0625) { s.r = Math.sqrt(rr); s.R = R2; } }
+    else squeeze(s, Math.max(0.2, R2));
+  }
+}
+function stressStep(dt) {
+  let worst = 0;
+  for (const s of S.segs) {
+    if (s.T < 430) s.st += dt * 0.035 * (430 - s.T) / 100 * (S.pace === 'studio' ? 1 : 0.6);
+    if (s.T > 600) s.st = Math.max(0, s.st - dt * 0.3 * workability(s.T));
+    worst = Math.max(worst, s.st);
+  }
+  if (worst >= 1) breakPiece('Crack! Stress built up in glass that was worked or left too cold.');
+}
+// Gravity: while the pipe is still, each ring bends under the glass hanging beyond it. Turning averages that out.
+function updateSag(dt) {
+  const segs = S.segs, n = segs.length; if (!n) return;
+  const ord = [...Array(n).keys()]; if (S.punty) ord.reverse();   // holder → far end
+  if (dt > 0 && S.phase === 'work') {
+    if (!S.turning) {
+      let m = 0, md = 0; const mom = new Array(n);
+      for (let k = n - 1; k >= 0; k--) { const s = segs[ord[k]], mass = area(s) * s.dz; m += mass; md += mass * s.d; mom[ord[k]] = md - m * s.d; }
+      segs.forEach((s, i) => { const w = workability(s.T); s.bend = clamp(s.bend + 1.8e-4 * w * w * mom[i] * dt * s.dz, -0.3, 0.3); });
+    } else for (const s of segs) s.bend *= 1 - Math.min(1, 1.6 * workability(s.T) * dt);
+  }
+  let th = 0, y = 0;
+  for (const i of ord) { const s = segs[i]; th += s.bend; y += Math.sin(th) * s.dz; s.y = y; }
+}
+function contact(s, g, dt) {
+  if (s.T < 545) { s.st += (545 - s.T) / 150 * g * dt * 1.6; Snd.tink(); toastOnce('cold', 'The steel rings on cold glass, and that builds stress. Reheat (R).', 'warn'); }
+}
+// Squeeze a ring to radius R2 while keeping its glass: a hollow ring gives up bubble, a solid one gets longer.
+function squeeze(s, R2) {
+  const A = area(s);
+  if (s.r > 0) {
+    const rr = R2 * R2 - A;
+    if (rr > 0.0004) { s.r = Math.sqrt(rr); s.R = R2; return; }
+    s.r = 0; s.dz *= A / (R2 * R2); s.R = R2; return;
+  }
+  s.dz *= (s.R * s.R) / (R2 * R2); s.R = R2;
+}
+function scaleLen(s, nd) { const f = Math.sqrt(s.dz / nd); s.R *= f; s.r *= f; s.dz = nd; }
+
+function applyTool(dt) {
+  const p = S.ptr, segs = S.segs;
+  if (!p.down || p.mode !== 'tool' || S.phase !== 'work' || !segs.length) return;
+  const L = layout(), n = segs.length;
+  const holderMin = s => (!S.punty && s === segs[0]) ? PIPE_R + 0.08 : (S.punty && s === segs[n - 1]) ? 0.9 : 0.2;
+  switch (S.tool) {
+    case 'jacks': {
+      for (const s of segs) {
+        // jacks narrow a hollow ring but never seal it: the neck keeps an air passage to the bubble beyond
+        const target = Math.max(holderMin(s), p.rho, s.r > 0 ? Math.sqrt(area(s) + 0.0625) : 0.2), g = gauss(s.d - p.x, 0.55);
+        if (g < 0.02 || s.R <= target) continue;
+        contact(s, g, dt);
+        squeeze(s, Math.max(target, s.R - (s.R - target) * Math.min(1, 3.5 * workability(s.T) * g * dt)));
+        s.T -= 22 * g * dt;
+      }
+      Snd.scrape(0.5);
+      break;
+    }
+    case 'open': {
+      if (!S.punty) { toastOnce('open', 'Open the rim after the transfer (X). On the pipe there\'s no opening to get into.', 'warn'); break; }
+      const rim = segs[0].r;
+      if (rim <= 0) { toastOnce('norim', 'There\'s no opening to get the jacks into.', 'warn'); break; }
+      const reach = 1.5 + 1.4 * rim;
+      for (const s of segs) {
+        if (s.r <= 0) break;
+        const g = gauss(s.d - p.x, 0.9) * (s.z <= reach ? 1 : Math.exp(-(s.z - reach) / 0.6));
+        if (g < 0.02 || s.R >= p.rho) continue;
+        contact(s, g, dt);
+        const A = area(s), R2 = Math.min(MAX_R, s.R + (p.rho - s.R) * Math.min(1, 2.5 * workability(s.T) * g * dt));
+        s.R = R2; s.r = Math.sqrt(R2 * R2 - A); s.T -= 18 * g * dt;
+      }
+      Snd.scrape(0.4);
+      break;
+    }
+    case 'pull': {
+      if (p.grab == null) p.grab = clamp(p.x, 0.3, L);
+      const want = (p.x - p.grab) * Math.min(1, 10 * dt);
+      if (Math.abs(want) < 1e-4) break;
+      if (want > 0 && L > MAX_LEN) { toastOnce('long', 'That\'s as long as this piece can get.', 'warn'); break; }
+      const ws = segs.map(s => s.d <= p.grab + 0.15 ? workability(s.T) * gauss(p.grab - s.d, 1.4) * (s.r > 0 ? 0.35 : 1) : 0);
+      const W = ws.reduce((a, w, i) => a + w * segs[i].dz, 0);
+      const give = clamp(W / 0.5, 0, 1), ext = want * give;
+      if (give < 0.15 && Math.abs(want) > 0.03) for (const s of segs) contact(s, gauss(p.grab - s.d, 1) * 0.5, dt);
+      if (W > 1e-6) segs.forEach((s, i) => {
+        if (!ws[i]) return;
+        scaleLen(s, Math.max(0.05, s.dz + ext * ws[i] * s.dz / W));
+        s.T -= 6 * dt * gauss(p.grab - s.d, 1);
+      });
+      p.grab += ext;
+      break;
+    }
+    case 'paddle': {
+      const over = L - p.x; if (over <= 0.02) break;
+      const want = over * Math.min(1, 6 * dt);
+      const ws = segs.map(s => workability(s.T) * gauss(L - s.d, 0.9));
+      const W = ws.reduce((a, w, i) => a + w * segs[i].dz, 0);
+      const amt = want * clamp(W / 0.4, 0, 1);
+      segs.forEach((s, i) => {
+        const g = gauss(L - s.d, 0.9); if (g < 0.05) return;
+        contact(s, g * 0.6, dt);
+        if (W > 1e-6 && ws[i]) scaleLen(s, Math.max(0.04, s.dz - amt * ws[i] * s.dz / W));
+        s.T -= 10 * dt * g;
+      });
+      Snd.scrape(0.25);
+      break;
+    }
+    case 'block': {
+      const R0 = segs.map(s => s.R);
+      segs.forEach((s, i) => {
+        const g = gauss(s.d - p.x, 1.6), soft = workability(s.T) * g; if (g < 0.02) return;
+        s.bend *= 1 - Math.min(1, 3 * g * dt);
+        s.T -= 12 * g * dt;
+        if (soft < 0.01) return;
+        const target = ((R0[i - 1] ?? R0[i]) + 2 * R0[i] + (R0[i + 1] ?? R0[i])) / 4;
+        const R2 = Math.max(holderMin(s), s.R + (target - s.R) * Math.min(1, 4 * soft * dt));
+        if (s.r > 0) { const rr = R2 * R2 - area(s); if (rr > 0.01) { s.r = Math.sqrt(rr); s.R = R2; } }
+        else squeeze(s, R2);
+      });
+      Snd.steam(0.5);
+      break;
+    }
+  }
+  tidy(); resample();
+}
+
+/* =====================================================================
+   Reading a finished piece: what did you make, and how well?
+   ===================================================================== */
+function analyze(segs) {
+  const P = segs.map(s => ({ ...s })); let z = 0;
+  for (const s of P) { s.z = z + s.dz / 2; z += s.dz; }
+  const L = z, n = P.length, k = cavityEnd(P);
+  const bowl = P.slice(0, k + 1);
+  const cap = bowl.reduce((a, s) => a + Math.PI * s.r * s.r * s.dz, 0);
+  const vol = P.reduce((a, s) => a + Math.PI * area(s) * s.dz, 0);
+  const bowlR = bowl.reduce((m, s) => Math.max(m, s.R), 0), cavR = bowl.reduce((m, s) => Math.max(m, s.r), 0);
+  const depth = k >= 0 ? P[k].z + P[k].dz / 2 : 0;
+  let footR = 0; for (let i = n - 1; i > k && i >= 0; i--) { if (L - (P[i].z - P[i].dz / 2) > 1.0) break; footR = Math.max(footR, P[i].R); }
+  let stemLen = 0; const stemR = [];
+  for (let i = k + 1; i < n; i++) {
+    const s = P[i]; if (s.z > L - 1.0) break;
+    if (s.R < Math.max(1.0, 0.45 * bowlR)) { stemLen += s.dz; stemR.push(s.R); }
+  }
+  // judge the stem's evenness on its middle half, ignoring where it flares into the bowl and foot
+  const mid = stemR.slice(Math.floor(stemR.length / 4), Math.ceil(stemR.length * 3 / 4));
+  const stemMin = mid.length ? Math.min(...mid) : 0, stemMax = mid.length ? Math.max(...mid) : 0;
+  // and the walls between the rim and the thick base of the bowl
+  let wMin = 99, wMax = 0;
+  for (let i = Math.min(2, k); i <= Math.max(0, k - 3); i++) { const t = P[i].R - P[i].r; wMin = Math.min(wMin, t); wMax = Math.max(wMax, t); }
+  if (wMin === 99) wMin = wMax = k >= 0 ? P[0].R - P[0].r : 0;
+  let mz = 0; for (const s of P) mz += Math.PI * area(s) * s.dz * s.z;
+  const com = vol ? mz / vol : 0;
+  const lean = P.length ? Math.abs(P[n - 1].y - P[0].y) : 0;
+  const baseR = n ? 0.75 * P[n - 1].R : 0, h = Math.max(0.5, L - com);
+  const stable = Math.atan2(baseR, h) > 0.17 && lean < baseR * 0.8;
+  return { L, cap, vol, bowlR, cavR, depth, rimR: k >= 0 ? P[0].r : 0, footR, stemLen, stemMin, stemMax, wMin, wMax, lean, stable,
+    hollow: k >= 0 && cap > 1, stress: P.reduce((m, s) => Math.max(m, s.st), 0), maxR: maxR(P) };
+}
+function judge(segs) {
+  const a = analyze(segs), notes = [];
+  const rimOpen = a.hollow && a.rimR >= 0.55 * a.cavR && S.punty;
+  const hasStem = a.stemLen >= 1.5, hasFoot = a.footR >= 1.8 && a.footR >= 0.42 * a.bowlR;
+  let type, goblet = false;
+  if (a.vol < 6) type = 'A drip of glass';
+  else if (!a.hollow) type = hasStem && hasFoot ? 'Solid sculpture' : 'Paperweight';
+  else if (!rimOpen) type = !S.punty ? (hasFoot ? 'Bud vase' : 'Fishing float') : (hasFoot ? 'Vase' : 'Bottle');
+  else if (hasStem && hasFoot) {
+    goblet = true;
+    const aspect = a.depth / Math.max(0.5, 2 * a.cavR);
+    type = a.cap < 60 ? 'Cordial glass' : aspect > 1.6 ? 'Champagne flute' : aspect < 0.55 ? 'Coupe' : a.cap > 300 ? 'Water goblet' : 'Wine goblet';
+  }
+  else if (hasStem) type = 'Stemmed cup (no foot)';
+  else if (hasFoot) type = 'Footed tumbler';
+  else type = a.depth < a.cavR ? 'Bowl' : 'Tumbler';
+
+  let stars = goblet ? 5 : 2;
+  if (!goblet) notes.push(a.hollow ? 'Not a goblet yet. A goblet needs an open bowl, a pulled stem and a paddled foot.' : 'There\'s no bubble in it, so blow before you shape.');
+  if (a.hollow && a.wMax / Math.max(a.wMin, 0.01) > 3.5) { stars--; notes.push('Uneven walls. Thin spots blow out further than thick ones, so reheat evenly before you blow.'); }
+  if (a.hollow && a.wMin < 0.08) { stars -= 0.5; notes.push('Paper-thin in places, so it would chip easily.'); }
+  if (a.lean > 0.5) { stars--; notes.push(`It leans ${fmt(a.lean * 10)} mm off-axis because it sagged while the pipe wasn't turning.`); }
+  if (!a.stable) { stars--; notes.push(hasFoot ? 'It tips over. The foot is too small for its height.' : 'It won\'t stand up without a foot.'); }
+  if (S.ragged && a.hollow) { stars -= 0.5; notes.push('Ragged rim from the crack-off. Pinch a tighter jack line, or shear the rim.'); }
+  if (hasStem && a.stemMax / Math.max(a.stemMin, 0.05) > 2.4) { stars -= 0.5; notes.push('A lumpy stem. Pull hot, in one smooth draw.'); }
+  if (a.stress > 0.45) { stars -= 0.5; notes.push('There\'s stress locked in. It may crack later.'); }
+  if (goblet && notes.length === 0) notes.push('Clean walls, true axis and a steady foot. A gaffer would put it out for sale.');
+  stars = clamp(Math.round(stars * 2) / 2, 0.5, 5);
+  return { type, stars, goblet, notes, a, stable: a.stable, ragged: S.ragged, punty: S.punty };
+}
+
+/* =====================================================================
+   Sound: synthesized with Web Audio
+   ===================================================================== */
+const Snd = {
+  on: saved.sound !== false, ctx: null, last: {},
+  init() {
+    if (this.ctx || !this.on) return;
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; this.ctx = new C();
+      const len = this.ctx.sampleRate * 2, buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.noise = buf;
+      this.roar = this.loop(320, 'bandpass', 0.6); this.puff = this.loop(700, 'lowpass', 1);
+    } catch (e) { this.ctx = null; }
+  },
+  loop(freq, type, q) {
+    const src = this.ctx.createBufferSource(); src.buffer = this.noise; src.loop = true;
+    const f = this.ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = this.ctx.createGain(); g.gain.value = 0;
+    src.connect(f).connect(g).connect(this.ctx.destination); src.start();
+    return g;
+  },
+  set(node, v) { if (this.ctx && node) node.gain.setTargetAtTime(this.on ? v : 0, this.ctx.currentTime, 0.08); },
+  burst(dur, freq, type, vol, q = 1) {
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime, src = this.ctx.createBufferSource(); src.buffer = this.noise;
+    const f = this.ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(this.ctx.destination); src.start(t, Math.random()); src.stop(t + dur + 0.05);
+  },
+  tone(freq, dur, vol, type = 'sine', at = 0) {
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime + at, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.05);
+  },
+  throttle(key, ms) { const now = performance.now(); if (now - (this.last[key] || 0) < ms) return false; this.last[key] = now; return true; },
+  tink() { if (this.throttle('tink', 160)) this.tone(2300 + Math.random() * 600, 0.25, 0.08, 'triangle'); },
+  scrape(v) { if (this.throttle('scrape', 120)) this.burst(0.12, 2600, 'bandpass', 0.03 * v, 3); },
+  steam(v) { if (this.throttle('steam', 200)) this.burst(0.3, 4500, 'highpass', 0.05 * v); },
+  plunge(v = 1) { this.burst(0.6, 220, 'lowpass', 0.25 * v); },
+  snip() { this.tone(1800, 0.06, 0.08, 'square'); this.burst(0.08, 3500, 'highpass', 0.1); },
+  crack(v) { this.burst(0.5 * v + 0.1, 1800, 'highpass', 0.5 * v); for (let i = 0; i < 6 * v; i++) this.tone(2500 + Math.random() * 3000, 0.15, 0.05, 'triangle', Math.random() * 0.4); },
+  chime() { [880, 1320, 1760].forEach((f, i) => this.tone(f, 1.6, 0.06, 'sine', i * 0.09)); },
+};
+
+/* =====================================================================
+   3D
+   ===================================================================== */
+let renderer, scene, camera, piece, pipeG, puntyG, benchG, flame, pedestal, shelfBoard, heatLight, holeLight, furnaceLight, envTex;
+const toolMeshes = {}, shards = [], shelfMeshes = [];
+const cam = { az: 0.32, el: 0.2, zoom: 1, dist: 40, target: null };
+const RADIAL = 44;
+let glassMatProto;
+
+function heatRGB(T, out) {
+  const t = clamp((T - 470) / (1150 - 470), 0, 1);
+  // linear-light colours: deep red at dull heat, orange when workable, only a hint of yellow straight from the furnace
+  const I = Math.pow(t, 1.5) * 0.55;
+  const r = 1, g = 0.03 + 0.32 * t * t, b = 0.01 + 0.05 * Math.max(0, t - 0.8) / 0.2;
+  out[0] = r * I; out[1] = g * I; out[2] = b * I;
+  return out;
+}
+
+// The profile a lathe spins: down the inside of the bubble, across the lip at the pipe end, then out along the outside to the tip.
+function profile(segs) {
+  const n = segs.length; if (!n) return null;
+  let z = 0; const Z = segs.map(s => { const c = z + s.dz / 2; z += s.dz; return c; }); const L = z;
+  const pts = [], si = [], push = (r, y, i) => { pts.push(new THREE.Vector2(Math.max(0, r), y)); si.push(i); };
+  const k = cavityEnd(segs);
+  if (k >= 0) {
+    const e = segs[k], endZ = Math.min(Z[k] + Math.min(e.r * 0.6, e.dz / 2 + 0.6), L - 0.12);
+    push(0, endZ, k);
+    for (const a of [0.35, 0.65, 0.88]) push(e.r * Math.sin(a * Math.PI / 2), Z[k] + (endZ - Z[k]) * Math.cos(a * Math.PI / 2), k);
+    for (let i = k; i >= 0; i--) push(segs[i].r, Z[i], i);
+    push(segs[0].r, 0, 0);
+  } else push(0, 0, 0);
+  push(segs[0].R, 0, 0);
+  for (let i = 0; i < n; i++) push(segs[i].R, Z[i], i);
+  const e = segs[n - 1], c = Math.min(e.R * 0.4, 0.5, e.dz * 1.2 + 0.05);
+  for (const a of [0.35, 0.65, 0.88, 1]) push(e.R * Math.cos(a * Math.PI / 2), Z[n - 1] + (L - Z[n - 1] + c) * Math.sin(a * Math.PI / 2), n - 1);
+  return { pts, si, L };
+}
+
+class GlassMesh {
+  constructor() {
+    this.group = new THREE.Group(); this.inner = new THREE.Group(); this.group.add(this.inner);
+    this.mat = glassMatProto.clone();
+    // front faces only: additive glow stacked through both walls of a bubble would burn out to white
+    this.glowMat = new THREE.MeshBasicMaterial({ vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, side: THREE.FrontSide });
+    this.glass = new THREE.Mesh(new THREE.BufferGeometry(), this.mat);
+    this.glow = new THREE.Mesh(new THREE.BufferGeometry(), this.glowMat);
+    this.glass.renderOrder = 2; this.glow.renderOrder = 3;
+    this.inner.add(this.glass, this.glow);
+    this.heat = 0; this.L = 0;
+  }
+  update(segs, sagSign = 1, hot = true) {
+    const prof = profile(segs);
+    if (!prof) { this.group.visible = false; return; }
+    this.group.visible = true; this.L = prof.L;
+    const geo = new THREE.LatheGeometry(prof.pts, RADIAL);
+    const pos = geo.attributes.position, P = prof.pts.length;
+    const sag = new Float32Array(P), tint = new Float32Array(P * 3), hc = new Float32Array(P * 3), tmp = [0, 0, 0];
+    let heat = 0;
+    for (let j = 0; j < P; j++) {
+      const s = segs[prof.si[j]]; sag[j] = s.y * sagSign;
+      const h = hot ? clamp((s.T - 470) / 680, 0, 1) : 0;
+      // molten glass is opaque and dark under its own glow, so the body colour fades as it heats
+      tint.set(s.c.map(c => c * (1 - 0.85 * Math.sqrt(h))), j * 3);
+      if (hot) { heatRGB(s.T, tmp); hc.set(tmp, j * 3); heat += h; }
+    }
+    this.heat = heat / P;
+    const tc = new Float32Array(pos.count * 3), gc = new Float32Array(pos.count * 3);
+    for (let v = 0; v < pos.count; v++) {
+      const j = v % P;
+      pos.setX(v, pos.getX(v) + sag[j]);
+      tc[v * 3] = tint[j * 3]; tc[v * 3 + 1] = tint[j * 3 + 1]; tc[v * 3 + 2] = tint[j * 3 + 2];
+      gc[v * 3] = hc[j * 3]; gc[v * 3 + 1] = hc[j * 3 + 1]; gc[v * 3 + 2] = hc[j * 3 + 2];
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(tc, 3));
+    const g2 = new THREE.BufferGeometry();
+    g2.setAttribute('position', pos); g2.setIndex(geo.index); g2.setAttribute('color', new THREE.BufferAttribute(gc, 3));
+    this.glass.geometry.dispose(); this.glow.geometry.dispose();
+    this.glass.geometry = geo; this.glow.geometry = g2;
+    this.glow.visible = hot && this.heat > 0.001;
+    const hh = clamp(this.heat * 1.6, 0, 1);
+    this.mat.opacity = lerp(0.36, 0.85, hh);
+    this.mat.envMapIntensity = lerp(1.6, 0.25, hh); this.mat.clearcoat = lerp(1, 0.15, hh);
+  }
+  orient(mode, baseY = 0) {
+    const L = this.L, i = this.inner; i.position.set(0, 0, 0); i.rotation.set(0, 0, 0); this.group.rotation.set(0, 0, 0);
+    if (mode === 'pipe') i.rotation.z = -Math.PI / 2;
+    else if (mode === 'punty') { i.rotation.z = Math.PI / 2; i.position.x = L; }
+    else if (mode === 'upright') { i.rotation.x = Math.PI; i.position.y = baseY + L + 0.3; }
+    else if (mode === 'lying') { i.rotation.z = -Math.PI / 2; i.position.set(-L / 2, baseY + this.R * 0.95, 0); this.group.rotation.z = 0.06; }
+  }
+  dispose() { this.glass.geometry.dispose(); this.glow.geometry.dispose(); this.mat.dispose(); this.glowMat.dispose(); }
+}
+
+function makeEnv() {
+  // a dark shop: one big warm softbox overhead, a furnace mouth glowing low on one side, cool window light on the other
+  const sc = new THREE.Scene(), g = new THREE.SphereGeometry(10, 64, 32), p = g.attributes.position, cols = [];
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i) / 10, y = p.getY(i) / 10, z = p.getZ(i) / 10;
+    const base = y > 0 ? 0.08 + 0.18 * y : 0.03;
+    const k1 = Math.exp(-((x - 0.2) ** 2 + (y - 0.85) ** 2 + (z - 0.3) ** 2) * 9);
+    const k2 = Math.exp(-((x - 0.7) ** 2 + (y + 0.1) ** 2 + (z + 0.6) ** 2) * 16);
+    const k3 = Math.exp(-((x + 0.9) ** 2 + (y - 0.3) ** 2 + (z - 0.1) ** 2) * 10);
+    cols.push(base + 2.6 * k1 + 3.2 * k2 + 0.6 * k3, base + 2.4 * k1 + 1.3 * k2 + 0.9 * k3, base + 2.1 * k1 + 0.3 * k2 + 1.3 * k3);
+  }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  sc.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  const pm = new THREE.PMREMGenerator(renderer), rt = pm.fromScene(sc, 0.02); pm.dispose();
+  return rt.texture;
+}
+
+function stripeTexture(a, b) {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 8;
+  const x = c.getContext('2d'); x.fillStyle = a; x.fillRect(0, 0, 64, 8); x.fillStyle = b; x.fillRect(0, 0, 10, 8);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 30); return t;
+}
+
+function init3D() {
+  const cv = $('#gl');
+  if (!window.THREE) { $('#glwrap').insertAdjacentHTML('beforeend', '<div class="nogl">Goblet Works needs three.js, which couldn\'t load. Check your connection and reload.</div>'); return false; }
+  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); }
+  catch (e) { $('#glwrap').insertAdjacentHTML('beforeend', '<div class="nogl">WebGL isn\'t available here, so the bench can\'t be drawn.</div>'); return false; }
+  renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0e0c0b); scene.fog = new THREE.Fog(0x0e0c0b, 160, 420);
+  envTex = makeEnv();
+  camera = new THREE.PerspectiveCamera(36, 1, 0.5, 1500);
+  cam.target = new THREE.Vector3(6, 0, 0);
+
+  scene.add(new THREE.HemisphereLight(0x6a6058, 0x100c0a, 0.3));
+  const key = new THREE.DirectionalLight(0xfff0dc, 0.55); key.position.set(30, 80, 60); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x9cc8ff, 0.35); rim.position.set(-60, 30, -40); scene.add(rim);
+  furnaceLight = new THREE.PointLight(0xff6a1a, 1, 260, 2); furnaceLight.position.set(50, 0, -60); scene.add(furnaceLight);
+  heatLight = new THREE.PointLight(0xff7a2a, 0, 90, 2); scene.add(heatLight);
+  holeLight = new THREE.PointLight(0xff8a30, 0, 80, 2); holeLight.position.set(14, 6, -14); scene.add(holeLight);
+
+  glassMatProto = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff, vertexColors: true, metalness: 0, roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0.03,
+    transparent: true, opacity: 0.4, side: THREE.DoubleSide, envMap: envTex, envMapIntensity: 1.6, reflectivity: 0.6, depthWrite: false,
+  });
+
+  const steel = new THREE.MeshStandardMaterial({ color: 0x9aa2ab, metalness: 0.9, roughness: 0.32, envMap: envTex });
+  const darkSteel = new THREE.MeshStandardMaterial({ color: 0x55595e, metalness: 0.85, roughness: 0.45, envMap: envTex, envMapIntensity: 0.5 });
+  const wood = new THREE.MeshStandardMaterial({ color: 0x5b3d26, roughness: 0.75, metalness: 0 });
+  const wetWood = new THREE.MeshStandardMaterial({ color: 0x3a2516, roughness: 0.45, metalness: 0 });
+  const brick = new THREE.MeshStandardMaterial({ color: 0x2a1e18, roughness: 0.95 });
+
+  // floor
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshStandardMaterial({ color: 0x1a1715, roughness: 0.95 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -78; scene.add(floor);
+
+  // the gaffer's bench: two long arms the pipe rolls along, a seat, legs
+  benchG = new THREE.Group();
+  for (const x of [-62, -36]) {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 72), darkSteel); arm.position.set(x, -PIPE_R - 1.5, 6); benchG.add(arm);
+    for (const z of [-26, 38]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(3, 75, 3), darkSteel); leg.position.set(x, -40, z); benchG.add(leg); }
+  }
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(34, 4, 30), wood); seat.position.set(-49, -30, 22); benchG.add(seat);
+  scene.add(benchG);
+
+  // furnace and glory hole glowing in the background
+  const furnace = new THREE.Mesh(new THREE.BoxGeometry(100, 120, 70), brick); furnace.position.set(60, -18, -170); scene.add(furnace);
+  const mouth = new THREE.Mesh(new THREE.CircleGeometry(16, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 1.4, 0.35) })); mouth.position.set(60, -8, -134.8); scene.add(mouth);
+  const hole = new THREE.Mesh(new THREE.CylinderGeometry(18, 18, 26, 32), brick); hole.rotation.z = Math.PI / 2; hole.position.set(-90, -6, -110); scene.add(hole);
+  const holeMouth = new THREE.Mesh(new THREE.CircleGeometry(10, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 1.0, 0.25) })); holeMouth.rotation.y = Math.PI / 2; holeMouth.position.set(-76.8, -6, -110); scene.add(holeMouth);
+
+  // blowpipe, with a stripe so you can see it roll
+  pipeG = new THREE.Group();
+  const pipeGeo = new THREE.CylinderGeometry(PIPE_R, PIPE_R, 130, 24, 1, true); pipeGeo.rotateZ(Math.PI / 2); pipeGeo.translate(-65, 0, 0);
+  const pipe = new THREE.Mesh(pipeGeo, new THREE.MeshStandardMaterial({ map: stripeTexture('#8c939b', '#3b3f44'), metalness: 0.85, roughness: 0.35, envMap: envTex }));
+  const mouthpiece = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 6, 20), new THREE.MeshStandardMaterial({ color: 0xb08d57, metalness: 0.9, roughness: 0.3 }));
+  mouthpiece.rotation.z = Math.PI / 2; mouthpiece.position.x = -132;
+  pipeG.add(pipe, mouthpiece); pipeG.userData.spin = pipe; scene.add(pipeG);
+
+  // punty: a solid rod with a little gather of its own where it holds the foot
+  puntyG = new THREE.Group();
+  const pGeo = new THREE.CylinderGeometry(0.8, 0.8, 120, 18); pGeo.rotateZ(Math.PI / 2); pGeo.translate(-60.5, 0, 0);
+  const prod = new THREE.Mesh(pGeo, new THREE.MeshStandardMaterial({ map: stripeTexture('#7d848c', '#33373b'), metalness: 0.85, roughness: 0.4, envMap: envTex }));
+  const pblob = new THREE.Mesh(new THREE.SphereGeometry(1.25, 20, 14), new THREE.MeshStandardMaterial({ color: 0x3a4a52, roughness: 0.2, metalness: 0.1, transparent: true, opacity: 0.85 }));
+  pblob.scale.set(0.7, 1, 1); pblob.position.x = -0.4;
+  puntyG.add(prod, pblob); puntyG.userData.spin = prod; puntyG.visible = false; scene.add(puntyG);
+
+  // the glass
+  piece = new GlassMesh(); scene.add(piece.group);
+
+  // glory-hole flame wrapped around the piece while reheating
+  flame = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 32, 1, true),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 0.6, 0.15), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide }));
+  flame.geometry.rotateZ(Math.PI / 2); flame.visible = false; scene.add(flame);
+
+  // display pedestal and shelf
+  pedestal = new THREE.Group();
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(11, 12, 60, 48), new THREE.MeshStandardMaterial({ color: 0x24201d, roughness: 0.6 }));
+  ped.position.y = -42.7; pedestal.add(ped);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(11.5, 11.5, 0.6, 48), new THREE.MeshStandardMaterial({ color: 0x0c0b0a, roughness: 0.15, metalness: 0.2 }));
+  top.position.y = -12.3; pedestal.add(top);
+  pedestal.visible = false; scene.add(pedestal);
+  shelfBoard = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 22), wood); shelfBoard.visible = false; scene.add(shelfBoard);
+
+  // hand tools
+  const blade = (len) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, len), steel); return m; };
+  const jacks = new THREE.Group();
+  const jA = blade(10), jB = blade(10); jA.position.z = jB.position.z = 4; jacks.add(jA, jB);
+  const bow = new THREE.Mesh(new THREE.TorusGeometry(1, 0.22, 8, 24, Math.PI), steel); bow.rotation.y = Math.PI / 2; bow.position.z = 9; jacks.add(bow);
+  jacks.userData = { a: jA, b: jB, bow }; toolMeshes.jacks = jacks; toolMeshes.open = jacks;
+  const tw = new THREE.Group();
+  const tA = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, 11, 8), steel), tB = tA.clone();
+  tA.rotation.x = tB.rotation.x = Math.PI / 2; tA.position.set(0, 0.5, 5.5); tB.position.set(0, -0.5, 5.5); tA.rotation.z = 0.05; tB.rotation.z = -0.05;
+  tw.add(tA, tB); toolMeshes.pull = tw;
+  const pad = new THREE.Group();
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.7, 11, 9), wood); board.position.set(0.35, 0, 2.5);
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 14, 10), wood); handle.rotation.x = Math.PI / 2; handle.position.set(0.35, 0, 13);
+  pad.add(board, handle); toolMeshes.paddle = pad;
+  const blk = new THREE.Group();
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 3.4, 28, 1, true, Math.PI / 2, Math.PI), wetWood); cup.rotation.z = Math.PI / 2; cup.material.side = THREE.DoubleSide;
+  const bh = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 14, 10), wood); bh.position.y = -8;
+  blk.add(cup, bh); blk.userData = { cup, bh }; toolMeshes.block = blk;
+  const sh = new THREE.Group();
+  const sA = new THREE.Mesh(new THREE.BoxGeometry(0.12, 9, 0.6), steel), sB = sA.clone();
+  sA.rotation.x = 0.35; sB.rotation.x = -0.35; sA.position.z = sB.position.z = 1.5; sh.add(sA, sB); toolMeshes.shears = sh;
+  for (const k of ['jacks', 'pull', 'paddle', 'block', 'shears']) { toolMeshes[k].visible = false; scene.add(toolMeshes[k]); }
+
+  bindPointer(cv);
+  return true;
+}
+
+/* ---------- shards when a piece breaks ---------- */
+function spawnShards() {
+  if (!scene) return;
+  const L = S.zEnd || layout(), R = Math.max(1, maxR(S.segs)), avg = [0, 0, 0];
+  S.segs.forEach(s => s.c.forEach((c, k) => avg[k] += c / S.segs.length));
+  const mat = glassMatProto.clone(); mat.vertexColors = false; mat.color.setRGB(avg[0], avg[1], avg[2]); mat.opacity = 0.6;
+  const n = REDUCED ? 8 : 22;
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.Mesh(new THREE.TetrahedronGeometry(0.4 + Math.random() * R * 0.45), mat);
+    m.position.set(Math.random() * L, (Math.random() - 0.5) * R, (Math.random() - 0.5) * R);
+    m.userData.v = new THREE.Vector3((Math.random() - 0.3) * 40, Math.random() * 30, (Math.random() - 0.5) * 40);
+    m.userData.w = new THREE.Vector3(Math.random() * 8, Math.random() * 8, Math.random() * 8);
+    scene.add(m); shards.push(m);
+  }
+  piece.group.visible = false;
+}
+function clearShards() { for (const m of shards) { scene && scene.remove(m); m.geometry.dispose(); } shards.length = 0; }
+function stepShards(dt) {
+  for (const m of shards) {
+    const v = m.userData.v; if (!v) continue;
+    v.y -= 400 * dt; m.position.addScaledVector(v, dt);
+    m.rotation.x += m.userData.w.x * dt; m.rotation.y += m.userData.w.y * dt;
+    if (m.position.y < -77.5) { m.position.y = -77.5; v.y *= -0.25; v.x *= 0.6; v.z *= 0.6; m.userData.w.multiplyScalar(0.5); if (Math.abs(v.y) < 5) m.userData.v = null; }
+  }
+}
+
+/* ---------- pointer: tools on the glass, orbit everywhere else ---------- */
+const ndc = { x: 0, y: 0 };
+function pointerWorld(e) {
+  if (!camera) return null;
+  const r = $('#gl').getBoundingClientRect();
+  const v = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ndc.x = v.x; ndc.y = v.y;
+  const ray = new THREE.Raycaster(); ray.setFromCamera(v, camera);
+  const d = camera.position.clone().sub(cam.target), n = new THREE.Vector3(0, d.y, d.z);
+  if (n.lengthSq() < 1e-6) n.set(0, 0, 1);
+  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(n.normalize(), new THREE.Vector3());
+  const hit = ray.ray.intersectPlane(plane, new THREE.Vector3());
+  return hit ? { x: hit.x, rho: Math.hypot(hit.y, hit.z), y: hit.y } : null;
+}
+function overGlass(p) {
+  if (!p || S.phase !== 'work' || !S.segs.length) return false;
+  const L = S.zEnd, reachEnd = (S.tool === 'pull' || S.tool === 'paddle') ? 8 : 1.5;
+  return p.x > -1 && p.x < L + reachEnd && p.rho < maxR(S.segs) + (S.tool === 'open' ? 6 : 3.5);
+}
+function bindPointer(cv) {
+  const ptrs = new Map(); let pinch = 0;
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  cv.addEventListener('pointerdown', e => {
+    Snd.init(); cv.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); pinch = 0;
+    const P = S.ptr, p = pointerWorld(e);
+    P.cx = e.clientX; P.cy = e.clientY;
+    if (ptrs.size > 1) { P.down = false; P.mode = 'orbit'; return; }
+    if (p) { P.x = p.x; P.rho = p.rho; }
+    if (e.button === 0 && !e.shiftKey && overGlass(p)) {
+      if (S.tool === 'shears') { shear(p.x); P.mode = null; return; }
+      pushUndo(); P.down = true; P.mode = 'tool'; P.grab = null;
+    } else { P.mode = 'orbit'; cv.classList.add('orbiting'); }
+  });
+  cv.addEventListener('pointermove', e => {
+    const P = S.ptr, p = pointerWorld(e), q = ptrs.get(e.pointerId);
+    if (p) { P.x = p.x; P.rho = p.rho; }
+    P.over = overGlass(p);
+    if (q && P.mode === 'orbit' && ptrs.size === 1) {
+      cam.az -= (e.clientX - q.x) * 0.006; cam.el = clamp(cam.el + (e.clientY - q.y) * 0.005, -0.25, 1.3);
+    }
+    if (q) { q.x = e.clientX; q.y = e.clientY; }
+    if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch) cam.zoom = clamp(cam.zoom * pinch / d, 0.35, 3); pinch = d;
+    }
+  });
+  const up = e => { ptrs.delete(e.pointerId); pinch = 0; if (!ptrs.size) { S.ptr.down = false; S.ptr.mode = null; S.ptr.grab = null; cv.classList.remove('orbiting'); } };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('pointerleave', () => { S.ptr.over = false; });
+  cv.addEventListener('wheel', e => { e.preventDefault(); cam.zoom = clamp(cam.zoom * Math.exp(e.deltaY * 0.001), 0.35, 3); }, { passive: false });
+}
+
+function placeTools() {
+  for (const k in toolMeshes) toolMeshes[k].visible = false;
+  const P = S.ptr;
+  if (S.phase !== 'work' || !S.segs.length || !(P.over || P.down)) return;
+  const m = toolMeshes[S.tool]; if (!m) return;
+  const L = S.zEnd, segs = S.segs;
+  const near = segs.reduce((b, s) => Math.abs(s.d - P.x) < Math.abs(b.d - P.x) ? s : b, segs[0]);
+  const sagAt = -near.y;
+  m.visible = true; m.rotation.set(0, 0, 0);
+  switch (S.tool) {
+    case 'jacks': case 'open': {
+      const rr = S.tool === 'open' ? Math.max(P.rho, 0.4) : Math.max(P.rho, 0.25);
+      m.position.set(clamp(P.x, -0.5, L + 1), sagAt, 0);
+      m.userData.a.position.y = rr + 0.18; m.userData.b.position.y = -rr - 0.18;
+      m.userData.bow.scale.setScalar(rr + 0.18);
+      break;
+    }
+    case 'pull': { const gx = P.down && P.grab != null ? P.grab : clamp(P.x, 0, L); const s = segs.reduce((b, q) => Math.abs(q.d - gx) < Math.abs(b.d - gx) ? q : b, segs[0]); m.position.set(gx, -s.y, s.R * 0.6); break; }
+    case 'paddle': m.position.set(Math.max(P.x, 0.5), -segs[S.punty ? 0 : segs.length - 1].y, 0); break;
+    case 'block': { const R = near.R + 0.25; m.position.set(P.x, sagAt, 0); m.userData.cup.scale.set(R, 1, R); m.userData.bh.position.y = -R - 7; break; }
+    case 'shears': m.position.set(P.x, sagAt, 0); break;
+  }
+}
+
+/* =====================================================================
+   Frame loop
+   ===================================================================== */
+let lastT = performance.now(), uiTimer = 0;
+function frame(now) {
+  const dtAll = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  const steps = dtAll > 0.025 ? 2 : 1, dt = dtAll / steps;
+  for (let i = 0; i < steps; i++) {
+    if (S.phase === 'work' && S.segs.length) {
+      layout();
+      if (S.reheating) reheat(dt);
+      if (S.blowing) blow(dt);
+      if (S.phase !== 'work') break;
+      applyTool(dt);
+      cool(dt); surfaceTension(dt); tidy(); updateSag(dt); stressStep(dt);
+    }
+  }
+  Snd.set(Snd.roar, S.reheating && S.phase === 'work' ? 0.22 : 0);
+  Snd.set(Snd.puff, S.blowing && S.phase === 'work' && !S.punty ? 0.12 : 0);
+  if (renderer) render(dtAll, now);
+  uiTimer -= dtAll; if (uiTimer <= 0) { uiTimer = 0.2; liveUI(); }
+  requestAnimationFrame(frame);
+}
+
+function render(dt, now) {
+  const working = S.phase === 'work' || S.phase === 'bare' || S.phase === 'broken';
+  benchG.visible = working; pedestal.visible = S.phase === 'done'; shelfBoard.visible = S.phase === 'shelf';
+  pipeG.visible = working && !S.punty; puntyG.visible = working && S.punty;
+  for (const m of shelfMeshes) m.group.visible = S.phase === 'shelf';
+  const spin = S.turning && working ? dt * 5 : 0;
+  pipeG.userData.spin.rotation.x += spin; puntyG.userData.spin.rotation.x += spin;
+  stepShards(dt);
+
+  let L = layout(), R = Math.max(2, maxR(S.segs));
+  if (S.phase === 'work' || S.phase === 'bare') {
+    piece.update(S.segs, S.punty ? -1 : 1, true);
+    piece.orient(S.punty ? 'punty' : 'pipe');
+  }
+  if (S.phase === 'done') piece.group.rotation.y += REDUCED ? 0 : dt * 0.5;
+
+  // hot glass lights up the bench
+  const tipY = S.segs.length ? -S.segs[Math.floor(S.segs.length / 2)].y : 0;
+  heatLight.position.set(L / 2, tipY - R - 6, 4);
+  heatLight.intensity = S.phase === 'work' ? piece.heat * 1.4 : 0;
+  const fl = 0.85 + 0.15 * Math.sin(now * 0.011) * Math.sin(now * 0.0037);
+  furnaceLight.intensity = 1 * fl;
+  const reh = S.reheating && S.phase === 'work';
+  flame.visible = reh;
+  holeLight.intensity = lerp(holeLight.intensity, reh ? 3.5 * fl : 0, Math.min(1, dt * 8));
+  if (reh) {
+    flame.scale.set(L + 3, R + 2.5, R + 2.5); flame.position.set(L / 2, tipY, 0);
+    flame.material.opacity = 0.18 + 0.08 * Math.sin(now * 0.03);
+  }
+  placeTools();
+
+  // camera framing per mode
+  let want, dist;
+  if (S.phase === 'done') { want = new THREE.Vector3(0, -12 + piece.L / 2 + 1, 0); dist = Math.max(34, piece.L * 2.6, R * 6); }
+  else if (S.phase === 'shelf') { want = new THREE.Vector3(0, -2, 0); dist = Math.max(60, S.shelfWidth * 1.05 || 60); }
+  else { want = new THREE.Vector3(Math.max(5, L / 2), -0.5, 0); dist = clamp(L * 1.5 + R * 3.4, 26, 130); }
+  cam.target.lerp(want, Math.min(1, dt * 3));
+  cam.dist = lerp(cam.dist, dist * cam.zoom, Math.min(1, dt * 3));
+  const ce = Math.cos(cam.el);
+  camera.position.set(cam.target.x + Math.sin(cam.az) * ce * cam.dist, cam.target.y + Math.sin(cam.el) * cam.dist, cam.target.z + Math.cos(cam.az) * ce * cam.dist);
+  camera.lookAt(cam.target);
+  renderer.render(scene, camera);
+}
+
+/* =====================================================================
+   UI
+   ===================================================================== */
+function toast(html, kind = '') {
+  const box = $('#toasts'), t = document.createElement('div');
+  t.className = 'toast ' + kind; t.innerHTML = html; box.prepend(t);
+  while (box.children.length > 3) box.lastChild.remove();
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 400); }, 4200);
+}
+function toastOnce(key, html, kind) { const now = performance.now(); if (now - (S.hints[key] || 0) < 7000) return; S.hints[key] = now; toast(html, kind); }
+
+const STEPS = [
+  { t: 'Gather', why: 'Press <kbd class="k">G</kbd> to dip the pipe into the furnace. Gather twice for a bigger goblet.', done: (a) => S.segs.length > 0 },
+  { t: 'Blow a bubble', why: 'Hold <kbd class="k">B</kbd>. Warm the glass evenly first, because the hottest, thinnest wall inflates fastest.', done: (a) => a.cap >= 8 },
+  { t: 'Pull a stem', why: 'Add a bit (<kbd class="k">N</kbd>), grab it with Tweezers (<kbd class="k">P</kbd>) and drag away from the pipe.', done: (a) => a.stemLen >= 1.5 },
+  { t: 'Paddle a foot', why: 'Add another bit, then push the Paddle (<kbd class="k">F</kbd>) against the end until it\'s a wide disc.', done: (a) => a.footR >= 1.8 && a.footR >= 0.42 * a.bowlR },
+  { t: 'Transfer to the punty', why: 'Use Jacks to pinch a tight jack line beside the pipe, then press <kbd class="k">X</kbd>.', done: () => S.punty },
+  { t: 'Open the rim', why: 'Use Open (<kbd class="k">O</kbd>) and drag outward just inside the opening. Trim it with Shears (<kbd class="k">S</kbd>).', done: (a) => S.punty && a.hollow && a.rimR >= 0.6 * a.cavR },
+  { t: 'Anneal', why: 'Press <kbd class="k">A</kbd> while the whole piece is above 400 °C. Reheat first if the heat map shows grey.', done: () => S.phase === 'done' },
+];
+
+function buildUI() {
+  $('#tools').innerHTML = Object.entries(TOOLS).map(([k, t]) => `<button class="tool" data-tool="${k}" aria-pressed="${k === S.tool}">${t.name}<kbd>${t.key}</kbd></button>`).join('');
+  $('#tools').addEventListener('click', e => { const b = e.target.closest('[data-tool]'); if (b) setTool(b.dataset.tool); });
+  $('#swatches').innerHTML = Object.entries(COLORS).map(([k, c]) => `<button class="sw" data-color="${k}" title="${c.name}" aria-label="${c.name} glass" aria-pressed="${k === S.color}" style="background:rgb(${c.c.map(v => Math.round(v * 235)).join(',')})"></button>`).join('');
+  $('#swatches').addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (!b) return; S.color = b.dataset.color; store.save(); syncUI(); toast(`${COLORS[S.color].name} glass for the next gather or bit.`); });
+  $('#paceSeg').addEventListener('click', e => { const b = e.target.closest('[data-pace]'); if (!b) return; S.pace = b.dataset.pace; store.save(); syncUI(); });
+
+  const hold = (btn, key) => {
+    const on = () => { Snd.init(); if (!canWork()) return; if (!S.segs.length) return toast('Gather some glass first (G).', 'warn'); S[key] = true; syncUI(); };
+    const off = () => { S[key] = false; syncUI(); };
+    btn.addEventListener('pointerdown', e => { btn.setPointerCapture(e.pointerId); on(); });
+    btn.addEventListener('pointerup', off); btn.addEventListener('pointercancel', off); btn.addEventListener('lostpointercapture', off);
+  };
+  hold($('#blowBtn'), 'blowing'); hold($('#heatBtn'), 'reheating');
+  $('#gatherBtn').onclick = () => { Snd.init(); gather(); };
+  $('#bitBtn').onclick = addBit;
+  $('#turnBtn').onclick = toggleTurn;
+  $('#puntyBtn').onclick = transfer;
+  $('#annealBtn').onclick = anneal;
+  $('#undoBtn').onclick = undo;
+  $('#newBtn').onclick = newPipe;
+  $('#againBtn').onclick = () => S.phase === 'shelf' ? leaveShelf() : newPipe();
+  $('#shelfBtn').onclick = () => S.phase === 'shelf' ? leaveShelf() : showShelf();
+  $('#shelfBtn2').onclick = showShelf;
+  $('#soundBtn').onclick = () => { Snd.on = !Snd.on; if (Snd.on) Snd.init(); store.save(); syncUI(); };
+  $('#helpBtn').onclick = () => $('#help').showModal();
+
+  addEventListener('keydown', e => {
+    if (e.target.closest?.('input, textarea') || $('#help').open) return;
+    const k = e.key.toLowerCase();
+    if ((e.metaKey || e.ctrlKey) && k === 'z') { e.preventDefault(); return undo(); }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    Snd.init();
+    if (e.repeat && (k === 'b' || k === 'r')) return;
+    const tool = Object.keys(TOOLS).find(t => TOOLS[t].key.toLowerCase() === k);
+    if (tool) return setTool(tool);
+    if (k === 'b' || k === 'r') { const key = k === 'b' ? 'blowing' : 'reheating'; if (!canWork()) return; if (!S.segs.length) return toast('Gather some glass first (G).', 'warn'); S[key] = true; syncUI(); }
+    else if (k === 'g') gather(); else if (k === 'n') addBit(); else if (k === 't') toggleTurn();
+    else if (k === 'x') transfer(); else if (k === 'a') anneal();
+  });
+  addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k === 'b') { S.blowing = false; syncUI(); } if (k === 'r') { S.reheating = false; syncUI(); } });
+  addEventListener('blur', () => { S.blowing = S.reheating = false; syncUI(); });
+}
+function setTool(t) { S.tool = t; syncUI(); }
+function toggleTurn() { S.turning = !S.turning; syncUI(); if (!S.turning && S.phase === 'work') toastOnce('turn', 'The pipe has stopped, so hot glass will start to sag. Press <b>T</b> to roll it again.', 'warn'); }
+
+function syncUI() {
+  const done = S.phase === 'done', shelf = S.phase === 'shelf';
+  $('#workPanel').hidden = done || shelf; $('#donePanel').hidden = !done; $('#shelfPanel').hidden = !shelf;
+  $('#workBar').hidden = done || shelf; $('#doneBar').hidden = !done && !shelf;
+  $('#shelfBtn2').hidden = shelf;
+  $('#hint3d').hidden = done || shelf;
+  if (done || shelf) $('#status3d').innerHTML = '';
+  $('#againBtn').textContent = shelf ? 'Back to the bench' : 'Gather a new piece';
+  document.querySelectorAll('.tool').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === S.tool));
+  document.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', b.dataset.color === S.color));
+  document.querySelectorAll('#paceSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.pace === S.pace));
+  $('#toolTip').textContent = TOOLS[S.tool].tip;
+  $('#blowBtn').classList.toggle('hot', S.blowing); $('#heatBtn').classList.toggle('hot', S.reheating);
+  $('#turnBtn').classList.toggle('on', S.turning); $('#turnBtn').setAttribute('aria-pressed', S.turning);
+  $('#turnBtn').firstChild.textContent = S.turning ? 'Turning ' : 'Stopped ';
+  const has = S.segs.length > 0, working = S.phase === 'work';
+  $('#gatherBtn').disabled = S.punty || S.phase === 'broken';
+  $('#gatherBtn').classList.toggle('primary', !has);
+  $('#blowBtn').disabled = !working || S.punty; $('#heatBtn').disabled = !working;
+  $('#bitBtn').disabled = !working || S.punty; $('#puntyBtn').disabled = !working || S.punty;
+  $('#annealBtn').disabled = !working; $('#annealBtn').classList.toggle('primary', working && S.punty);
+  $('#undoBtn').disabled = done || shelf;
+  $('#soundBtn').textContent = Snd.on ? 'Sound on' : 'Sound off'; $('#soundBtn').setAttribute('aria-pressed', Snd.on);
+  $('#shelfBtn').textContent = shelf ? 'Bench' : `Shelf${S.shelf.length ? ' (' + S.shelf.length + ')' : ''}`;
+  liveUI();
+}
+
+const RAMP = [[300, [74, 88, 102]], [470, [86, 98, 110]], [560, [155, 58, 44]], [760, [232, 96, 31]], [960, [255, 165, 58]], [1150, [255, 226, 140]]];
+function rampColor(T) {
+  if (T <= RAMP[0][0]) return `rgb(${RAMP[0][1]})`;
+  for (let i = 1; i < RAMP.length; i++) if (T <= RAMP[i][0]) {
+    const [t0, a] = RAMP[i - 1], [t1, b] = RAMP[i], f = (T - t0) / (t1 - t0);
+    return `rgb(${a.map((v, k) => Math.round(lerp(v, b[k], f))).join(',')})`;
+  }
+  return `rgb(${RAMP[RAMP.length - 1][1]})`;
+}
+function drawHeat() {
+  const cv = $('#heat'), dpr = Math.min(2, devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight;
+  if (!W) return;
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+  const segs = S.segs;
+  x.fillStyle = '#5a5f66'; x.fillRect(0, H / 2 - 2, 14, 4);
+  if (!segs.length) { x.fillStyle = '#7a7067'; x.font = '12px IBM Plex Sans, sans-serif'; x.fillText('No glass on the pipe yet', 22, H / 2 + 4); return; }
+  const L = layout(), mr = Math.max(3, maxR(segs)), sc = Math.min((W - 26) / Math.max(L, 10), (H / 2 - 8) / mr), cy = H / 2, x0 = 14;
+  for (const s of segs) {
+    const a = x0 + (s.d - s.dz / 2) * sc, w = s.dz * sc + 0.6, yo = -s.y * sc;
+    x.fillStyle = rampColor(s.T); x.fillRect(a, cy + yo - s.R * sc, w, 2 * s.R * sc);
+    if (s.r > 0) { x.fillStyle = '#151210'; x.fillRect(a, cy + yo - s.r * sc, w, 2 * s.r * sc); }
+    if (s.st > 0.25) { x.fillStyle = `rgba(255,80,70,${clamp(s.st, 0, 1)})`; x.fillRect(a, cy + yo - s.R * sc - 4, w, 3); }
+  }
+}
+function liveUI() {
+  if (S.phase === 'done' || S.phase === 'shelf') return;
+  drawHeat();
+  const segs = S.segs, st = $('#status3d');
+  if (!segs.length) {
+    $('#rTemp').textContent = $('#rSize').textContent = $('#rWall').textContent = $('#rCap').textContent = '–';
+    st.innerHTML = ''; renderSteps(null); return;
+  }
+  const a = analyze(segs), Ts = segs.map(s => s.T), lo = Math.min(...Ts), hi = Math.max(...Ts);
+  $('#rTemp').textContent = `${fmt(lo)}–${fmt(hi)} °C`;
+  $('#rSize').textContent = `${fmt(a.L, 1)} × ${fmt(a.maxR * 2, 1)} cm`;
+  $('#rWall').textContent = a.hollow ? `${fmt(a.wMin * 10, 1)} mm` : 'solid';
+  $('#rCap').textContent = a.hollow ? `${fmt(a.cap)} ml` : '–';
+  const pills = [];
+  if (S.phase === 'work') {
+    const w = workability(hi);
+    pills.push(`<span class="pill ${w > 0.25 ? 'hot' : ''}">${w > 0.6 ? 'soft' : w > 0.2 ? 'workable' : w > 0 ? 'stiff' : 'rigid'} · ${fmt(hi)}°</span>`);
+    if (!S.turning) pills.push('<span class="pill warn">not turning</span>');
+    if (a.stress > 0.5) pills.push('<span class="pill bad">stress</span>');
+    if (S.punty) pills.push('<span class="pill">on punty</span>');
+  }
+  st.innerHTML = pills.join('');
+  renderSteps(a);
+}
+function renderSteps(a) {
+  const aa = a || { cap: 0, stemLen: 0, footR: 0, bowlR: 0, hollow: false, rimR: 0, cavR: 0 };
+  let now = -1;
+  const html = STEPS.map((s, i) => {
+    const d = s.done(aa); if (!d && now < 0) now = i;
+    return `<li class="${d ? 'done' : now === i ? 'now' : ''}">${s.t}<span class="why">${s.why}</span></li>`;
+  }).join('');
+  const el = $('#steps'); if (el.innerHTML !== html) el.innerHTML = html;
+}
+
+/* ---------- finished piece and shelf ---------- */
+const starHTML = n => { let h = ''; for (let i = 1; i <= 5; i++) h += n >= i ? '★' : '<i>★</i>'; return h + (n % 1 ? ' <small>+½</small>' : ''); };
+function avgColor(segs) { const c = [0, 0, 0]; segs.forEach(s => s.c.forEach((v, k) => c[k] += v / segs.length)); return c; }
+function showDone() {
+  const v = S.verdict, a = v.a;
+  piece.update(S.segs, 1, false); piece.R = a.maxR;
+  piece.orient(v.stable ? 'upright' : 'lying', -12);
+  $('#donePanel').innerHTML = `
+    <h3 style="margin-top:0">Out of the annealer</h3>
+    <div class="type">${v.type}</div>
+    <div class="stars" aria-label="${v.stars} out of 5">${starHTML(v.stars)}</div>
+    <ul>${v.notes.map(n => `<li>${n}</li>`).join('')}</ul>
+    <dl class="read" style="margin-top:16px">
+      <dt>Height</dt><dd>${fmt(a.L, 1)} cm</dd>
+      <dt>Widest</dt><dd>${fmt(a.maxR * 2, 1)} cm</dd>
+      ${a.hollow ? `<dt>Holds</dt><dd>${fmt(a.cap)} ml</dd><dt>Bowl depth</dt><dd>${fmt(a.depth, 1)} cm</dd>` : ''}
+      ${a.stemLen > 0.5 ? `<dt>Stem</dt><dd>${fmt(a.stemLen, 1)} cm</dd>` : ''}
+      ${a.footR > 0 ? `<dt>Foot Ø</dt><dd>${fmt(a.footR * 2, 1)} cm</dd>` : ''}
+      <dt>Glass</dt><dd>${fmt(a.vol * 2.5)} g</dd>
+    </dl>
+    <div class="row">
+      <button class="act primary" id="keepBtn">Put it on the shelf</button>
+    </div>`;
+  $('#keepBtn').onclick = () => {
+    if (S.shelf.length >= 12) return toast('The shelf is full. Remove a piece from it first.', 'warn');
+    S.shelf.push({ name: v.type, stars: v.stars, cap: a.hollow ? Math.round(a.cap) : 0, stable: v.stable, date: Date.now(),
+      segs: S.segs.map(s => [+s.dz.toFixed(3), +s.R.toFixed(3), +s.r.toFixed(3), s.c.map(c => +c.toFixed(3)), +s.y.toFixed(3)]) });
+    store.save(); $('#keepBtn').disabled = true; $('#keepBtn').textContent = 'On the shelf'; syncUI();
+    toast('Added to your shelf.', 'good');
+  };
+  cam.zoom = 1; cam.el = 0.18;
+}
+function showShelf() {
+  if (S.phase === 'work' && S.segs.length) return toast('Finish or anneal the piece on your pipe first. Glass won\'t wait.', 'warn');
+  S.prevPhase = S.phase === 'shelf' ? S.prevPhase : S.phase;
+  S.phase = 'shelf';
+  for (const m of shelfMeshes) { scene && scene.remove(m.group); m.dispose(); } shelfMeshes.length = 0;
+  piece.group.visible = false;
+  let x = 0; const items = [];
+  for (const it of S.shelf) {
+    const segs = it.segs.map(a => { const s = mk(a[0], a[1], a[2], AMB, a[3]); s.y = a[4]; return s; });
+    if (!scene) continue;
+    const gm = new GlassMesh(); gm.update(segs, 1, false); gm.R = maxR(segs);
+    const w = Math.max(gm.R * 2, it.stable ? 0 : gm.L) + 4;
+    gm.orient(it.stable ? 'upright' : 'lying', -12);
+    items.push([gm, x + w / 2]); x += w;
+    scene.add(gm.group); shelfMeshes.push(gm);
+  }
+  for (const [gm, cx] of items) gm.group.position.x = cx - x / 2;
+  S.shelfWidth = Math.max(40, x);
+  if (shelfBoard) { shelfBoard.scale.x = S.shelfWidth + 10; shelfBoard.position.set(0, -13, 0); }
+  cam.zoom = 1; cam.el = 0.2; cam.az = 0;
+  $('#shelfPanel').innerHTML = `
+    <h2>Your shelf</h2>
+    <p>${S.shelf.length ? 'Everything you\'ve annealed and kept. It\'s saved in this browser.' : 'Nothing here yet. Anneal a piece and put it on the shelf.'}</p>
+    ${S.shelf.map((it, i) => `<div class="shelfitem"><span class="dot" style="background:rgb(${avgColor(it.segs.map(a => ({ c: a[3] }))).map(v => Math.round(v * 235)).join(',')})"></span>
+      <div><strong>${it.name}</strong><span>${starHTML(it.stars)}${it.cap ? ' · ' + it.cap + ' ml' : ''}</span></div>
+      <button data-del="${i}" aria-label="Remove ${it.name}">✕</button></div>`).join('')}
+    <div class="row"><button class="act primary" id="benchBtn">Back to the bench</button></div>`;
+  $('#shelfPanel').onclick = e => {
+    const d = e.target.closest('[data-del]'); if (d) { S.shelf.splice(+d.dataset.del, 1); store.save(); showShelf(); return; }
+    if (e.target.closest('#benchBtn')) leaveShelf();
+  };
+  syncUI();
+}
+function leaveShelf() {
+  for (const m of shelfMeshes) { scene && scene.remove(m.group); m.dispose(); } shelfMeshes.length = 0;
+  if (S.prevPhase === 'done') { S.phase = 'done'; piece.group.visible = true; syncUI(); return; }
+  newPipe();
+}
+
+/* ---------- boot ---------- */
+buildUI();
+const ok = init3D();
+function resize() {
+  if (!renderer) return;
+  const r = $('#glwrap').getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix();
+  drawHeat();
+}
+new ResizeObserver(resize).observe($('#glwrap'));
+new ResizeObserver(drawHeat).observe($('#heat'));
+syncUI();
+if (ok) { resize(); requestAnimationFrame(frame); toast('The furnace is lit. Press <b>G</b> to gather glass on the pipe.', 'hot'); }
+})();
+</script>
