@@ -11,3 +11,4 @@ Projects made for the 30-day assignment, one folder each.
 | [Goblet Works](goblet-works/) | A 3D glassblowing sandbox: gather, blow, pull a stem, paddle a foot and open the rim to make goblets, then keep them on a shelf. |
 | [Clean Bones](clean-bones/) | An osteology prep game: clean a rabbit skeleton with beetles, superworms or maceration, then degrease, whiten and lay it out for grading. |
 | [Carcass](carcass/) | A specimen prep simulator that starts with a whole raccoon: skin, gut, deflesh, bag the small bones and macerate, with every mistake carried to a museum grade. |
+| [Vitrigraph Lab](vitrigraph-lab/) | A vitrigraph kiln learning game: load a pot with colored glass, heat it, pull cane by hand, then chop it to see the murrini cross-sections. A bonus module for Before The Heat. |
