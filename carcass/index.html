@@ -1,0 +1,2408 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carcass</title>
+<style>
+/* Layout: a steel prep bench. Header with stage rail and clock, scene (canvas + DOM overlay) left with meters above, notebook panel right. */
+:root {
+  --bg: #d8dbd6;
+  --bg-2: #ccd0ca;
+  --card: #eef0eb;
+  --steel: #b6bcb7;
+  --ink: #1f2321;
+  --muted: #565d59;
+  --dim: #858c87;
+  --line: #b4bab4;
+  --line-2: #9ba29c;
+  --tag: #e9dcae;
+  --tag-ink: #5a4a1e;
+  --flesh: #a4473f;
+  --blood: #6e2420;
+  --bile: #7a7631;
+  --ok: #2e5a45;
+  --warn: #a2651c;
+  --bad: #8e2c25;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 14.5px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--ok); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- header ---------- */
+.top {
+  display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap;
+  padding: 10px max(16px, env(safe-area-inset-left)); border-bottom: 1px solid var(--line-2); background: var(--bg-2);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand b { font: 700 23px/1 var(--serif); letter-spacing: -0.01em; }
+.brand em { font: italic 14px var(--serif); color: var(--muted); white-space: nowrap; }
+.rail { display: flex; gap: 3px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+.rail li {
+  font: 500 11.5px var(--mono); padding: 3px 7px; border-radius: 5px; border: 1px solid var(--line);
+  color: var(--dim); background: var(--card); white-space: nowrap;
+}
+.rail li.done { color: var(--ok); border-color: #9fb8aa; }
+.rail li.now { color: #f1efe6; background: var(--ink); border-color: var(--ink); }
+.top-right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.clock { font: 500 13px var(--mono); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; white-space: nowrap; }
+.chip { border: 1px solid var(--line-2); background: var(--card); padding: 4px 11px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--muted); }
+.chip:hover { color: var(--ink); border-color: var(--muted); }
+.chip[aria-pressed="true"] { color: var(--ink); background: #fff7dc; border-color: var(--warn); }
+
+/* ---------- main ---------- */
+main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; min-height: 0; }
+.bench { display: grid; grid-template-rows: auto 1fr; min-height: 0; min-width: 0; }
+.meters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.meter { min-width: 0; }
+.meter .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.meter .lbl b { font: 600 12px var(--mono); color: var(--ink); }
+.bar { height: 7px; border-radius: 4px; background: var(--card); border: 1px solid var(--line); overflow: hidden; margin-top: 3px; }
+.bar i { display: block; height: 100%; width: 0; transition: width .4s, background .4s; }
+.stage { position: relative; min-height: 0; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 45%, #c9cec9 0%, #b3b9b4 70%, #a6ada7 100%); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.overlay > * { pointer-events: auto; }
+.hint {
+  position: absolute; left: 12px; bottom: 12px; max-width: min(520px, calc(100% - 24px));
+  background: rgba(31,35,33,.86); color: #ecebe4; font-size: 13px; padding: 7px 11px; border-radius: 7px; pointer-events: none;
+}
+
+/* ---------- side panel ---------- */
+.panel { border-left: 1px solid var(--line-2); background: var(--card); display: flex; flex-direction: column; min-height: 0; }
+.panel-body { overflow-y: auto; padding: 14px 16px 18px; flex: 1; min-height: 0; }
+.panel h2 { font: 700 21px/1.15 var(--serif); margin: 0 0 4px; }
+.panel .kicker { font: 500 11.5px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+.panel p { margin: 6px 0 10px; color: var(--muted); }
+.panel h3 { font: 600 13px var(--sans); margin: 14px 0 6px; color: var(--ink); }
+.btn {
+  border: 1px solid var(--line-2); background: #fff; padding: 7px 12px; border-radius: 7px; cursor: pointer;
+  font-size: 13.5px; text-align: left;
+}
+.btn:hover:not(:disabled) { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--ink); color: #f1efe6; border-color: var(--ink); }
+.btn.on { background: #fff7dc; border-color: var(--warn); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.opts { display: grid; gap: 6px; }
+.opt { display: block; width: 100%; }
+.opt small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.why { display: inline-block; margin-left: 6px; font: 600 11px var(--mono); color: var(--warn); border-bottom: 1px dotted var(--warn); cursor: help; }
+.gauge { font: 12px var(--mono); color: var(--muted); }
+.gauge .bar { height: 10px; }
+.stat { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; border-bottom: 1px dashed var(--line); }
+.stat b { font: 600 12.5px var(--mono); }
+.next { margin-top: 14px; }
+.log { border-top: 1px solid var(--line); max-height: 30%; overflow-y: auto; padding: 8px 16px 10px; font-size: 12.5px; background: var(--bg-2); }
+.log div { padding: 2px 0; color: var(--muted); }
+.log div.warn { color: var(--warn); }
+.log div.bad { color: var(--bad); }
+.log div.ok { color: var(--ok); }
+.log time { font: 11px var(--mono); color: var(--dim); margin-right: 6px; }
+input[type=range] { width: 100%; accent-color: var(--ink); }
+
+/* checklist */
+.check { font-size: 12.5px; }
+.check .stat span.lost { color: var(--bad); }
+.check .stat span.risk { color: var(--warn); }
+
+/* tray items (stage 5) and tooth chips (stage 7) */
+.item {
+  position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; cursor: grab; touch-action: none;
+  display: grid; place-items: center; border-radius: 50%; user-select: none;
+}
+.item:active { cursor: grabbing; }
+.item svg { width: 40px; height: 40px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+.bag {
+  position: absolute; width: 112px; min-height: 92px; border: 2px dashed #7f8781; border-radius: 9px; background: rgba(238,240,235,.82);
+  padding: 6px; font-size: 12px; text-align: center; display: flex; flex-direction: column; gap: 3px; align-items: center;
+}
+.bag.hot { border-color: var(--ok); background: rgba(225,239,230,.95); }
+.bag.discard { border-color: var(--bad); }
+.bag .tagl { font: 600 11px var(--mono); background: var(--tag); color: var(--tag-ink); padding: 1px 6px; border-radius: 3px; }
+.bag .tagl.blank { background: #fff; color: var(--dim); cursor: pointer; border: 1px solid var(--line); }
+.bag .cnt { font: 11px var(--mono); color: var(--muted); }
+.teeth { display: grid; gap: 4px; }
+.jaw { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 2px; }
+.sock { aspect-ratio: 1/1.5; border: 1px solid var(--line-2); border-radius: 4px; display: grid; place-items: center; font: 600 10px var(--mono); background: #f5f2e8; cursor: pointer; }
+.sock.full { background: #e6dcc4; color: var(--ink); }
+.sock.empty { background: #3a3532; color: #b8b0a4; }
+.sock.lost { background: repeating-linear-gradient(45deg, #3a3532 0 3px, #5a4f49 3px 6px); color: #c9a5a0; }
+.tchip { padding: 4px 8px; border: 1px solid var(--line-2); border-radius: 12px; background: #fff; cursor: pointer; font: 12px var(--mono); }
+.tchip.sel { background: var(--ink); color: #f1efe6; }
+
+/* tooltip */
+#tip {
+  position: fixed; z-index: 50; max-width: 300px; background: #1f2321; color: #ecebe4; font-size: 12.5px; line-height: 1.45;
+  padding: 8px 10px; border-radius: 7px; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.25);
+}
+
+/* modal (events, choices) */
+.modal { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(20,22,21,.45); padding: 16px; }
+.modal .box { background: var(--card); border-radius: 12px; max-width: 520px; width: 100%; padding: 18px 20px; box-shadow: 0 20px 60px rgba(0,0,0,.35); max-height: 90vh; overflow-y: auto; }
+.modal h3 { font: 700 20px/1.2 var(--serif); margin: 0 0 6px; }
+.modal p { color: var(--muted); margin: 6px 0 12px; }
+
+/* grade card */
+.card { max-width: 760px !important; }
+.label-card { border: 1px solid var(--line-2); background: #fbf8ee; padding: 12px 14px; border-radius: 6px; font: 13px var(--mono); }
+.label-card .big { font: 700 44px/1 var(--serif); }
+.mist { border-top: 1px solid var(--line); padding: 8px 0; }
+.mist b { font-size: 14px; }
+.mist .c { color: var(--muted); font-size: 13px; }
+.mist .f { font-size: 13px; color: var(--ok); }
+.mist .pen { float: right; font: 600 12px var(--mono); color: var(--bad); }
+.mist.hidden-rev b::after { content: " · revealed at grading"; font: 500 11px var(--mono); color: var(--warn); }
+
+@media (max-width: 860px) {
+  body { overflow: auto; grid-template-rows: auto auto; }
+  main { grid-template-columns: 1fr; }
+  .bench { grid-template-rows: auto 62vh; }
+  .panel { border-left: 0; border-top: 1px solid var(--line-2); }
+  .meters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rail { order: 3; width: 100%; }
+  .bag { width: 84px; min-height: 70px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<header class="top">
+  <div class="brand"><b>Carcass</b><em>a specimen prep bench</em></div>
+  <ol class="rail" id="rail" aria-label="Stages"></ol>
+  <div class="top-right">
+    <span class="clock" id="clock">Day 0 · 08:00</span>
+    <button class="chip" id="soundBtn" aria-pressed="false">Sound off</button>
+  </div>
+</header>
+
+<main>
+  <section class="bench">
+    <div class="meters">
+      <div class="meter" data-tip="How bad the room smells. Rises with rotting tissue, punctured gut and foul water. Falls slowly with time and ventilation."><div class="lbl">Stench <b id="mStenchV">0</b></div><div class="bar"><i id="mStench"></i></div></div>
+      <div class="meter" data-tip="Your exposure to pathogens. Raccoons can carry raccoon roundworm (Baylisascaris procyonis) eggs in faeces, rabies in brain and saliva, and leptospirosis in urine. Missing PPE multiplies every spike. It never goes down."><div class="lbl">Contamination <b id="mContamV">0</b></div><div class="bar"><i id="mContam"></i></div></div>
+      <div class="meter" data-tip="Total time since the carcass arrived. Some steps take hours, maceration and degreasing take weeks."><div class="lbl">Time elapsed <b id="mTimeV">0 d</b></div><div class="bar"><i id="mTime"></i></div></div>
+      <div class="meter" data-tip="Your running estimate of the specimen's quality. Some damage (grease, bleach) doesn't show until later, so this can be optimistic."><div class="lbl">Specimen quality <b id="mQualV">100</b></div><div class="bar"><i id="mQual"></i></div></div>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="cv"></canvas>
+      <div class="overlay" id="overlay"></div>
+      <div class="hint" id="hint" hidden></div>
+    </div>
+  </section>
+  <aside class="panel">
+    <div class="panel-body" id="panel"></div>
+    <div class="log" id="log" aria-live="polite"></div>
+  </aside>
+</main>
+
+<div id="tip" hidden></div>
+<div class="modal" id="modal" hidden><div class="box" id="modalBox"></div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   CARCASS — a natural-history bone prep simulator.
+   One file, no libraries. Structure:
+     1. DATA      animals, decomposition states, mistakes
+     2. STATE     the single save object S and helpers that change it
+     3. UI KIT    DOM builder, meters, log, tooltip, modal, sound
+     4. SCENE     canvas engine, flies and smell lines
+     5. STAGES    one object per stage in STAGES[], each with mount()
+     6. GRADING   final score and the specimen card
+   To add an animal: add an entry to ANIMALS with the same keys as
+   the raccoon (bones, teeth, art). Stage code reads only from S.animal.
+   ===================================================================== */
+
+/* ============================== 1. DATA ============================== */
+
+/* Small geometry helpers used by the animal art tables. Everything is in
+   the scene's logical coordinate space, W x H = 900 x 560. */
+const W = 900, H = 560;
+function capPath(x1, y1, x2, y2, r) {
+  const p = new Path2D(), a = Math.atan2(y2 - y1, x2 - x1);
+  p.arc(x1, y1, r, a + Math.PI / 2, a - Math.PI / 2);
+  p.arc(x2, y2, r, a - Math.PI / 2, a + Math.PI / 2);
+  p.closePath();
+  return p;
+}
+function ellPath(x, y, rx, ry, rot = 0) { const p = new Path2D(); p.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); return p; }
+function polyPath(pts) { const p = new Path2D(); pts.forEach(([x, y], i) => i ? p.lineTo(x, y) : p.moveTo(x, y)); p.closePath(); return p; }
+function distSeg(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1, L = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / L));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+/* Skeleton art (lateral, facing left) for the raccoon. Each part names the
+   bone group it belongs to so a nick can be charged to the right bone. */
+function raccoonSkeleton() {
+  const parts = [];
+  const add = (group, path, kind = 'bone') => parts.push({ group, path, kind });
+  // skull
+  const skull = ellPath(188, 240, 62, 40, -0.06);
+  skull.addPath(polyPath([[134, 222], [82, 238], [80, 256], [134, 266]]));
+  add('cranium', skull);
+  add('mandible', polyPath([[86, 262], [200, 268], [222, 248], [234, 284], [206, 294], [92, 278]]));
+  // spine: [group, count, x0, x1, base y, arch, size]
+  const runs = [['cervical', 7, 252, 330, 252, 0, 9], ['thoracic', 14, 336, 510, 254, 12, 7.5], ['lumbar', 6, 518, 598, 252, 4, 11]];
+  for (const [g, n, x0, x1, y0, arch, s] of runs) {
+    for (let i = 0; i < n; i++) {
+      const u = n === 1 ? 0 : i / (n - 1), x = x0 + (x1 - x0) * u, y = y0 - arch * Math.sin(Math.PI * u);
+      add(g, capPath(x - s * .55, y, x + s * .55, y, s * .8));
+    }
+  }
+  add('sacrum', capPath(606, 260, 642, 268, 10));
+  for (let i = 0; i < 20; i++) {
+    const u = i / 19, x = 652 + 210 * u, y = 272 + 110 * u * u, s = 8 - 5 * u;
+    add('caudal', capPath(x - s * .7, y, x + s * .7, y + 1, s * .6));
+  }
+  // ribs: two-segment curves from the spine down and back
+  for (let i = 0; i < 13; i++) {
+    const x = 344 + i * 12.5, top = 258 - 10 * Math.sin(Math.PI * i / 13), len = 118 - Math.abs(i - 5) * 5;
+    const r = new Path2D();
+    r.addPath(capPath(x, top, x + 10, top + len * .55, 3));
+    r.addPath(capPath(x + 10, top + len * .55, x + 4 - i * 2, top + len, 3));
+    add('ribs', r);
+  }
+  for (let i = 0; i < 8; i++) add('sternum', capPath(352 + i * 13, 382, 360 + i * 13, 384, 4));
+  // limbs
+  add('scapula', polyPath([[318, 264], [378, 262], [346, 332]]));
+  add('humerus', capPath(345, 326, 320, 402, 9));
+  add('radius', capPath(320, 404, 330, 482, 6));
+  add('ulna', capPath(328, 398, 340, 480, 5));
+  add('carpals', capPath(332, 486, 300, 502, 6));
+  add('pelvis', polyPath([[588, 262], [652, 262], [668, 300], [640, 322], [614, 304]]));
+  add('femur', capPath(640, 302, 614, 396, 9));
+  add('tibia', capPath(614, 400, 650, 482, 7));
+  add('fibula', capPath(624, 400, 658, 478, 3));
+  add('tarsals', capPath(652, 486, 598, 506, 6));
+  return parts;
+}
+
+/* Soft tissue outline used to seed the defleshing grid: [path, starting thickness]. */
+function raccoonMuscle() {
+  return [
+    [ellPath(452, 300, 205, 98), 1.0],
+    [ellPath(288, 268, 70, 46), 0.95],
+    [ellPath(178, 248, 84, 48), 0.45],
+    [capPath(340, 300, 326, 482, 24), 0.85],
+    [capPath(630, 290, 622, 398, 32), 1.0],
+    [capPath(622, 398, 650, 482, 18), 0.7],
+    [capPath(652, 272, 760, 320, 12), 0.35],
+    [capPath(760, 320, 866, 382, 7), 0.25],
+    [capPath(334, 486, 298, 503, 11), 0.3],
+    [capPath(654, 486, 596, 507, 11), 0.3],
+  ];
+}
+
+/* ANIMALS: everything species-specific lives here.
+   bones:  checklist groups. n = how many elements. small = easy to lose.
+           feet:'fore'|'hind' marks foot bones; maleOnly drops it for females.
+   teeth:  formula per quadrant; 'canFall' lists single-rooted types that
+           slip out during maceration.
+   art:    coordinates for the ventral (skinning/evisceration) and lateral
+           (defleshing) scenes. */
+const ANIMALS = {
+  raccoon: {
+    id: 'raccoon', name: 'Raccoon', taxon: 'Procyon lotor', massKg: 6.8,
+    fur: ['#7f7b73', '#a59f93', '#3b3834'],
+    bones: [
+      { id: 'cranium', name: 'Cranium', n: 1, weight: 30 },
+      { id: 'mandible', name: 'Mandibles (L, R)', n: 2, weight: 10 },
+      { id: 'hyoid', name: 'Hyoid apparatus', n: 1, small: true, weight: 3 },
+      { id: 'cervical', name: 'Cervical vertebrae', n: 7 },
+      { id: 'thoracic', name: 'Thoracic vertebrae', n: 14 },
+      { id: 'lumbar', name: 'Lumbar vertebrae', n: 6 },
+      { id: 'sacrum', name: 'Sacrum', n: 1 },
+      { id: 'caudal', name: 'Caudal vertebrae', n: 20, small: true },
+      { id: 'ribs', name: 'Ribs', n: 28 },
+      { id: 'sternum', name: 'Sternebrae', n: 8, small: true },
+      { id: 'scapula', name: 'Scapulae', n: 2, weight: 4 },
+      { id: 'humerus', name: 'Humeri', n: 2, weight: 4 },
+      { id: 'radius', name: 'Radii', n: 2, weight: 3 },
+      { id: 'ulna', name: 'Ulnae', n: 2, weight: 3 },
+      { id: 'carpals', name: 'Carpals', n: 14, small: true, feet: 'fore' },
+      { id: 'metacarpals', name: 'Metacarpals', n: 10, small: true, feet: 'fore' },
+      { id: 'foreph', name: 'Fore phalanges', n: 28, small: true, feet: 'fore' },
+      { id: 'pelvis', name: 'Os coxae (L, R)', n: 2, weight: 4 },
+      { id: 'femur', name: 'Femora', n: 2, weight: 4 },
+      { id: 'patella', name: 'Patellae', n: 2, small: true },
+      { id: 'tibia', name: 'Tibiae', n: 2, weight: 3 },
+      { id: 'fibula', name: 'Fibulae', n: 2 },
+      { id: 'tarsals', name: 'Tarsals', n: 14, small: true, feet: 'hind' },
+      { id: 'metatarsals', name: 'Metatarsals', n: 10, small: true, feet: 'hind' },
+      { id: 'hindph', name: 'Hind phalanges', n: 28, small: true, feet: 'hind' },
+      { id: 'sesamoids', name: 'Sesamoids', n: 8, small: true },
+      { id: 'baculum', name: 'Baculum', n: 1, small: true, maleOnly: true, weight: 2 },
+    ],
+    teeth: { formula: ['I', 'I', 'I', 'C', 'P', 'P', 'P', 'P', 'M', 'M'], canFall: ['I', 'C', 'P1'] },
+    art: { skeleton: raccoonSkeleton, muscle: raccoonMuscle, orbit: [150, 236], foramen: [238, 262] },
+  },
+  /* To add more, copy the raccoon's shape. Sketches:
+     rabbit:     { bones: [... no baculum, 16 caudals, fragile nasal bones ...], teeth: formula I2/1 ... (lagomorph peg teeth) }
+     deerSkull:  { skull-only: bones: cranium, mandibles, antler pedicles; skip skinning legs; art.skeleton returns just the skull }
+     bird:       { bones: pneumatic, very fragile (boost nick risk), no teeth (teeth: null), sclerotic rings as small bones } */
+};
+
+/* Decomposition state changes how every stage behaves. */
+const DECOMP = {
+  fresh: {
+    label: 'Fresh', blurb: 'Roadside, found this morning. Still limp, no smell yet.',
+    stench: 6, peelRate: 1, peelTension: 1, skinWall: 1.35, gutSize: 1, gutWobble: 2, deflesh: 1, nickMul: 1, wet: 0.7, macMul: 1, hideSlip: false,
+  },
+  bloated: {
+    label: 'Bloated', blurb: 'Under a porch for four August days. Swollen, green-tinged belly, fur slipping.',
+    stench: 42, peelRate: 1.6, peelTension: 0.7, skinWall: 0.9, gutSize: 1.45, gutWobble: 5, deflesh: 1.4, nickMul: 0.85, wet: 1, macMul: 1.4, hideSlip: true,
+  },
+  dried: {
+    label: 'Dried', blurb: 'Behind a shed since spring. Leathery, sunken, flesh like jerky.',
+    stench: 14, peelRate: 0.45, peelTension: 1.6, skinWall: 2.4, gutSize: 0.7, gutWobble: 0.5, deflesh: 0.55, nickMul: 1.6, wet: 0.15, macMul: 0.6, hideSlip: false,
+  },
+};
+
+/* MISTAKES: every way to go wrong. Penalties are in quality points.
+   hidden:true  = not shown on the live quality meter; revealed at grading.
+   safety:true  = affects you, not the bone; listed separately.
+   hide:true    = side-goal hide damage only.
+   'fix' is the note a working preparator would leave. */
+const MISTAKES = {
+  ppe_gloves: { title: 'Worked without nitrile gloves', safety: true, cause: 'Bare hands in body fluids.', fix: 'Nitrile gloves, changed whenever they tear. Raccoon roundworm eggs and leptospires enter through cuts and mouths.' },
+  ppe_cotton: { title: 'Cotton work gloves', safety: true, cause: 'Cloth wicks fluid straight to your skin and stays wet.', fix: 'Fabric gloves are for handling clean bone. Wet work wants nitrile.' },
+  ppe_mask: { title: 'No mask', safety: true, cause: 'Aerosols from flushing and spraying went unfiltered.', fix: 'An N95 or half-face respirator during flushing, scraping dried tissue, and any time water is sprayed.' },
+  ppe_eyes: { title: 'No eye protection', safety: true, cause: 'Splash-back reaches the eyes during gut puncture and brain flushing.', fix: 'Safety glasses or a face shield. Mucous membranes are an easy way in.' },
+  workspace: { title: 'Prepped in a food area', safety: true, cause: 'Kitchen surfaces got carcass fluid on them.', fix: 'Outdoors on a tarp, or a dedicated bench you can bleach. Never where food goes.' },
+  incision_deep: { title: 'Cut through the abdominal wall', q: 2, cause: 'The skin incision went too deep over the belly.', fix: 'Lift the skin with forceps and cut blade-edge-up, just through the hide. Let the muscle wall keep the gut contained.' },
+  incision_ragged: { title: 'Ragged incision', hide: true, cause: 'The cut wandered off the midline.', fix: 'Mark the midline first and work slowly. A straight seam is far easier to sew back for a study skin.' },
+  hide_tear: { title: 'Tore the hide', hide: true, cause: 'Pulled harder than the connective tissue could give.', fix: 'Peel in short pulls and let the skin relax between them. Use the blade to free stuck fascia instead of yanking.' },
+  hide_slip: { title: 'Fur slipping on a bloated hide', hide: true, cause: 'Decomposition loosened the hair follicles before you got to it.', fix: 'Once hair slips, the hide is rarely saveable. Freeze fresh finds quickly if you want the skin.' },
+  feet_in_hide: { title: 'Left foot bones in the hide', q: 0, cause: 'Cutting at the wrist or ankle left carpals, metapodials and phalanges inside the skin.', fix: 'For a skeleton, skin out every toe, or take the foot off whole and macerate it skin-on. The skin sloughs and the bones stay together.' },
+  tail_snapped: { title: 'Tail snapped while stripping', q: 0, cause: 'Pulling the tail core out too hard tore off the last caudal vertebrae, which stayed in the skin.', fix: 'Slit the tail skin along the underside, or ease the core out with a tail stripper in small pulls.' },
+  gut_puncture: { title: 'Punctured the gut', q: 3, cause: 'The blade crossed the stomach or intestine.', fix: 'Keep the blade on the attachment, not the organ. Lift loops aside with a gloved finger before cutting mesentery.' },
+  bladder_puncture: { title: 'Punctured the bladder', q: 1, cause: 'Urine spilled into the cavity.', fix: 'Tie or clamp the bladder neck and lift it out whole.' },
+  untied_gut: { title: 'Cut the gut without tying it off', q: 1.5, cause: 'Gut contents leaked from the open end.', fix: 'Tie a ligature (or a cable tie) around the oesophagus and the colon first, then cut on the far side of the tie.' },
+  organ_torn: { title: 'Tore an organ out', q: 0.5, cause: 'Pulled before all its attachments were cut.', fix: 'Free every attachment first. Torn organs spray and smear.' },
+  hyoid_lost: { title: 'Threw out the hyoid', q: 0, cause: 'The hyoid sits in the throat and went into the bucket with the tongue and windpipe.', fix: 'Before discarding the pluck, feel for the hyoid at the base of the tongue and cut it free.' },
+  bone_nick: { title: 'Nicked bone with the blade', q: 1.2, cause: 'Kept scraping after the tissue was gone.', fix: 'Gross defleshing is about bulk. Stop at a thin film and let maceration or beetles finish. Switch to a scalpel near bone.' },
+  orbit_nick: { title: 'Gouged the orbit', q: 2, cause: 'Used a knife on the eye.', fix: 'Scoop eyes with a small spoon or curette, working around the globe.' },
+  eyes_left: { title: 'Left the eyes in', q: 1, cause: 'The eyes rotted in place during maceration.', fix: 'Remove eyes early; they hold fluid and fat.' },
+  ethmoid_break: { title: 'Broke the ethmoid / turbinates', q: 4, cause: 'Jabbing a wire through the braincase shattered the paper-thin bones behind the nose.', fix: 'Stir gently, flush with water through the foramen magnum, and let water do the work.' },
+  brain_left: { title: 'Left the brain in', q: 3, hidden: true, cause: 'Brain is mostly fat. It rotted inside the braincase and soaked grease into it.', fix: 'Flush the brain out through the foramen magnum with a hose or syringe before maceration.' },
+  small_discarded: { title: 'Discarded a bone as tissue', q: 0, cause: 'A small bone went in the waste bucket.', fix: 'When in doubt, bag it. Gristle can be thrown out later; a sesamoid cannot be found again.' },
+  tissue_bagged: { title: 'Bagged tissue with bones', q: 0.3, cause: 'Gristle in a bone bag rots and stains its neighbours.', fix: 'Cartilage bends, tendon is stringy, fat is greasy. Bone is hard and doesn\'t give.' },
+  mislabeled: { title: 'Bone in the wrong bag', q: 1, cause: 'The bag label now lies about what is inside.', fix: 'Check each element against a reference before it goes in. A mislabeled bag can wreck a later identification.' },
+  unlabeled: { title: 'Unlabeled bags', q: 2, cause: 'Bags without tags got mixed up during maceration.', fix: 'Pencil on Tyvek or acid-free card, inside the bag. Ink runs, marker fades.' },
+  small_left: { title: 'Left small bones on the tray', q: 0, cause: 'Loose bones were cleared away with the scraps.', fix: 'Sweep the tray into a sieve, not a bin.' },
+  beetles_wet: { title: 'Gave beetles a wet specimen', q: 1, cause: 'Dermestids avoid wet tissue; it moulded and the colony suffered.', fix: 'Dry the specimen until the flesh is leathery before it goes in the tank.' },
+  colony_died: { title: 'Lost the beetle colony', q: 2, cause: 'The colony crashed from cold, heat, mould or hunger.', fix: 'Keep a colony around 26–28 °C, dry, ventilated, and fed between specimens.' },
+  not_frozen: { title: 'Didn\'t freeze after beetles', q: 8, cause: 'Live larvae and eggs rode out on the bones. Dermestids loose in a collection eat specimens.', fix: 'A week in the freezer (or two freeze cycles) before a specimen leaves the beetle room. Museums are strict about this.' },
+  rancid: { title: 'Let maceration water go rancid', q: 4, cause: 'Foul water sat too long and tea-stained the bone.', fix: 'Change water when it goes opaque, and keep a cup of old water as a bacterial starter.' },
+  teeth_dumped: { title: 'Poured teeth down the drain', q: 0, cause: 'Loose teeth were in the water you threw out.', fix: 'Pour every change through a fine sieve or a paint strainer.' },
+  small_dumped: { title: 'Poured foot bones away', q: 0, cause: 'Small bones loosened from whole-macerated feet went out with the water.', fix: 'Sieve every pour, or keep feet in a mesh bag inside the bucket.' },
+  residual: { title: 'Pulled the specimen with tissue on it', q: 5, cause: 'Soft tissue remained when maceration stopped. It hardens and stains.', fix: 'Finish maceration completely; tissue left on now will not come off in degreasing.' },
+  boiled: { title: 'Boiled the bones', q: 3, cause: 'A rolling boil cracks bone, pops teeth, and sets grease into it.', fix: 'Hold a bare simmer, around 80–90 °C, with the lid ajar. Watch it.' },
+  cooked_grease: { title: 'Cooked grease into the bone', q: 0, hidden: true, cause: 'Heat drives fat into the bone where degreasing struggles to reach it.', fix: 'Keep heat low or avoid it. Cold or warm maceration leaves grease mobile.' },
+  burial_stain: { title: 'Soil staining', q: 4, cause: 'Tannins and minerals in the soil dyed the bone brown.', fix: 'Burial is easy but stains. Use a mesh bag, sand or leaf-poor soil, and expect to accept some colour.' },
+  scavenged: { title: 'Scavenger dug up the burial', q: 0, cause: 'Something dug in and carried bones off.', fix: 'Bury in a mesh bag, under a weighted crate or paving slab.' },
+  heater_cooked: { title: 'Warm bath ran too hot', q: 1, cause: 'Above about 40 °C the bacteria die off and grease starts to set.', fix: 'Aim for 29–35 °C (85–95 °F). An aquarium heater and a thermometer, checked daily.' },
+  teeth_lost: { title: 'Teeth lost', q: 0, cause: 'Loose teeth went missing during maceration.', fix: 'Collect teeth at every water change and store them in a labeled vial.' },
+  tooth_wrong: { title: 'Seated a tooth in the wrong socket', q: 1, cause: 'Wrong tooth type for that socket.', fix: 'Match root count and crown shape. Dry-fit before gluing.' },
+  grease_left: { title: 'Degreasing cut short', q: 0, hidden: true, cause: 'Fat left in the bone seeps out over months, yellowing it and making it tacky.', fix: 'Soak in warm water and dish soap, change it whenever it clouds, and keep going until fresh water stays clear for a week.' },
+  bleach: { title: 'Whitened with household bleach', q: 15, hidden: true, cause: 'Sodium hypochlorite eats the collagen that holds bone together. It looks white, then turns chalky and flakes.', fix: 'Hydrogen peroxide (3% soak or 12% developer paste) whitens without destroying the protein matrix.' },
+  peroxide_long: { title: 'Left strong peroxide on too long', q: 2, cause: 'Days under 12% peroxide etched the bone surface.', fix: 'A day or two is plenty at 12%. Check every few hours.' },
+  heat_dry: { title: 'Forced drying with heat', q: 6, cause: 'Uneven heat shrinks the outside before the inside; bone and teeth crack.', fix: 'Air-dry slowly in the shade for several days.' },
+  superglue: { title: 'Superglued the teeth', q: 2, cause: 'Cyanoacrylate is irreversible and yellows. A curator can\'t undo it.', fix: 'Use a reversible conservation adhesive such as Paraloid B-72, or leave teeth loose in a labeled vial.' },
+  consolidant_over: { title: 'Consolidant on sound bone', q: 1, cause: 'Coated healthy bone; it went glossy and plasticky.', fix: 'Consolidate only fragile, cracked or chalky elements, with a thin solution.' },
+};
+
+/* ============================== 2. STATE ============================= */
+
+/* S is the whole game. Every stage reads and writes it; nothing else holds state. */
+let S;
+function newGame(animalId = 'raccoon') {
+  const A = ANIMALS[animalId];
+  const sex = Math.random() < 0.5 ? 'male' : 'female';
+  const bones = {};
+  for (const b of A.bones) {
+    if (b.maleOnly && sex !== 'male') continue;
+    bones[b.id] = { ...b, have: b.n, lost: 0, bagged: false };
+  }
+  const teeth = [];
+  for (const jaw of ['U', 'L']) for (const side of ['R', 'L']) {
+    let p = 0;
+    A.teeth.formula.forEach((type, i) => {
+      if (type === 'P') p++;
+      const code = type === 'P' ? 'P' + p : type;
+      teeth.push({ id: `${jaw}${side}${i}`, jaw, side, type, code, slot: i, state: 'seated', canFall: A.teeth.canFall.includes(type) || A.teeth.canFall.includes(code) });
+    });
+  }
+  S = {
+    animal: A, decomp: null, sex, saveHide: false,
+    ppe: {}, workspace: null,
+    hours: 8, stench: 0, contam: 0,
+    mistakes: [], bones, teeth,
+    hide: { damage: 0 },
+    // spec holds the bone's physical condition; grading reads it.
+    spec: { stain: 0, grease: 0.5, greaseCooked: 0, cracks: 0, residual: 0, chalky: false, infest: false, nicks: 0, brainLeft: false, consolidated: false, display: null },
+    tray: [],           // loose small items produced by earlier stages, sorted in stage 5
+    flags: {},          // one-off decisions (feet choices, tail method, ...)
+    stage: 0,
+  };
+}
+
+/* Record a mistake. Repeats of the same key stack into one entry with a count. */
+function addMistake(key, detail) {
+  const m = MISTAKES[key];
+  let e = S.mistakes.find(x => x.key === key);
+  if (!e) { e = { key, n: 0, details: [] }; S.mistakes.push(e); }
+  e.n++;
+  if (detail && !e.details.includes(detail)) e.details.push(detail);
+  if (!m.hidden) log(m.title + (detail ? ` (${detail})` : ''), m.safety ? 'warn' : 'bad');
+  updateMeters();
+}
+function hasMistake(key) { return S.mistakes.some(x => x.key === key); }
+
+/* Lose k bones from a group. Loss is permanent and charged to the cause. */
+function loseBones(id, k, causeKey) {
+  const b = S.bones[id];
+  if (!b) return 0;
+  k = Math.min(k, b.have);
+  if (k <= 0) return 0;
+  b.have -= k; b.lost += k;
+  log(`Lost ${k} × ${b.name.toLowerCase()}`, 'bad');
+  if (causeKey) addMistake(causeKey, `${k} ${b.name.toLowerCase()}`);
+  updateMeters();
+  return k;
+}
+
+/* PPE multiplies every exposure. Which items matter depends on the splash type. */
+function expose(amount, kinds = ['hands']) {
+  let mul = 1;
+  if (kinds.includes('hands')) mul *= S.ppe.gloves === 'nitrile' ? 0.25 : S.ppe.gloves === 'cotton' ? 1.4 : 1.8;
+  if (kinds.includes('eyes') && !S.ppe.eyes) mul *= 1.6;
+  if (kinds.includes('air') && !S.ppe.mask) mul *= 1.5;
+  if (S.workspace === 'kitchen') mul *= 1.3;
+  S.contam = Math.min(100, S.contam + amount * mul);
+  updateMeters();
+}
+function stink(amount) { S.stench = Math.max(0, Math.min(100, S.stench + amount)); updateMeters(); }
+
+/* Advance the clock. Stench drifts toward a floor set by what's on the bench. */
+function advance(hours, stenchFloor = null) {
+  S.hours += hours;
+  if (stenchFloor != null) S.stench += (stenchFloor - S.stench) * Math.min(1, hours / 24);
+  updateMeters();
+}
+
+/* Live quality estimate: visible penalties plus lost bones. Hidden damage is not counted here. */
+function liveQuality() {
+  let q = 100;
+  for (const e of S.mistakes) { const m = MISTAKES[e.key]; if (!m.hidden && m.q) q -= m.q * e.n; }
+  q -= lostBonePenalty();
+  return Math.max(0, Math.round(q));
+}
+function lostBonePenalty() {
+  let p = 0;
+  for (const b of Object.values(S.bones)) if (b.lost) p += b.lost * (b.weight || (b.small ? 0.6 : 2));
+  p += S.teeth.filter(t => t.state === 'lost').length * 1.2;
+  return p;
+}
+
+/* ============================== 3. UI KIT ============================ */
+
+const $ = s => document.querySelector(s);
+/* el('div', {class:'x', onclick: fn}, child, 'text', ...) */
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (k === 'class') n.className = v;
+    else if (k === 'html') n.innerHTML = v;
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(c));
+  return n;
+}
+/* A "why?" tag that shows the reasoning behind an option on hover or tap. */
+const why = text => el('span', { class: 'why', 'data-tip': text, tabindex: 0 }, 'why?');
+
+function fmtTime(h) {
+  const d = Math.floor(h / 24), hh = Math.floor(h % 24), mm = Math.floor((h % 1) * 60);
+  return `Day ${d} · ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+function fmtSpan(h) {
+  const d = (h - 8) / 24;
+  return d < 1 ? `${Math.round(h - 8)} h` : d < 14 ? `${d.toFixed(1)} d` : `${(d / 7).toFixed(1)} wk`;
+}
+function updateMeters() {
+  if (!S) return;
+  const set = (id, v, color) => { const b = $('#' + id); b.style.width = Math.min(100, v) + '%'; b.style.background = color; };
+  const ramp = v => v < 34 ? '#6f8f7c' : v < 67 ? '#b0812e' : '#8e2c25';
+  set('mStench', S.stench, ramp(S.stench)); $('#mStenchV').textContent = Math.round(S.stench);
+  set('mContam', S.contam, ramp(S.contam)); $('#mContamV').textContent = Math.round(S.contam);
+  const days = (S.hours - 8) / 24;
+  set('mTime', Math.min(100, days / 90 * 100), '#5b6a73'); $('#mTimeV').textContent = fmtSpan(S.hours);
+  const q = liveQuality();
+  set('mQual', q, q > 75 ? '#2e5a45' : q > 50 ? '#b0812e' : '#8e2c25'); $('#mQualV').textContent = q;
+  $('#clock').textContent = fmtTime(S.hours);
+}
+
+function log(msg, kind = '') {
+  const L = $('#log');
+  L.prepend(el('div', { class: kind }, el('time', {}, S ? fmtTime(S.hours).replace('Day ', 'D') : ''), msg));
+  while (L.children.length > 80) L.lastChild.remove();
+}
+
+function setHint(text) { const h = $('#hint'); h.hidden = !text; h.textContent = text || ''; }
+
+/* Tooltip: any element with data-tip. Works with hover, keyboard focus and tap. */
+(() => {
+  const tip = $('#tip');
+  const show = (t, x, y) => {
+    tip.textContent = t; tip.hidden = false;
+    const r = tip.getBoundingClientRect();
+    tip.style.left = Math.max(8, Math.min(innerWidth - r.width - 8, x + 14)) + 'px';
+    tip.style.top = Math.max(8, Math.min(innerHeight - r.height - 8, y + 14)) + 'px';
+  };
+  const find = e => e.target.closest && e.target.closest('[data-tip]');
+  document.addEventListener('pointerover', e => { const t = find(e); if (t) show(t.dataset.tip, e.clientX, e.clientY); });
+  document.addEventListener('pointermove', e => { const t = find(e); if (t) show(t.dataset.tip, e.clientX, e.clientY); else tip.hidden = true; });
+  document.addEventListener('focusin', e => { const t = find(e); if (t) { const r = t.getBoundingClientRect(); show(t.dataset.tip, r.left, r.bottom); } });
+  document.addEventListener('focusout', () => tip.hidden = true);
+})();
+
+/* Modal with a title, body and choice buttons. Returns a promise of the chosen value. */
+function ask(title, body, choices) {
+  return new Promise(res => {
+    const box = $('#modalBox'); box.className = 'box'; box.innerHTML = '';
+    box.append(el('h3', {}, title));
+    if (typeof body === 'string') box.append(el('p', {}, body)); else if (body) box.append(body);
+    const opts = el('div', { class: 'opts' });
+    for (const c of choices) {
+      opts.append(el('button', { class: 'btn opt' + (c.primary ? ' primary' : ''), onclick: () => { $('#modal').hidden = true; res(c.value); } },
+        c.label, c.note ? el('small', {}, c.note) : null));
+    }
+    box.append(opts);
+    $('#modal').hidden = false;
+    opts.querySelector('button').focus();
+  });
+}
+
+/* ---------- sound: synthesised, off by default ---------- */
+const SND = {
+  on: false, ac: null, noise: null, buzzGain: null,
+  init() {
+    if (this.ac) return;
+    const ac = this.ac = new (window.AudioContext || window.webkitAudioContext)();
+    const len = ac.sampleRate * 1.5, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.noise = buf;
+    // fly buzz: two detuned saws through a bandpass, gain follows the fly count
+    const g = this.buzzGain = ac.createGain(); g.gain.value = 0;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 3;
+    for (const f of [196, 211]) { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(bp); o.start(); }
+    bp.connect(g); g.connect(ac.destination);
+  },
+  // filtered noise burst: the building block for squelch, tear, slosh, scrape
+  burst({ dur = .2, f0 = 800, f1 = 200, q = 1, type = 'lowpass', vol = .25 } = {}) {
+    if (!this.on || !this.ac) return;
+    const ac = this.ac, t = ac.currentTime, src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    src.buffer = this.noise; f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(f); f.connect(g); g.connect(ac.destination); src.start(t, Math.random()); src.stop(t + dur + .05);
+  },
+  squelch() { this.burst({ dur: .28, f0: 600, f1: 90, q: 6, vol: .35 }); },
+  tear() { this.burst({ dur: .18, f0: 2400, f1: 900, q: 2, type: 'bandpass', vol: .2 }); },
+  scrape() { this.burst({ dur: .07, f0: 3200, f1: 1800, q: 4, type: 'bandpass', vol: .06 }); },
+  nick() { this.burst({ dur: .05, f0: 5200, f1: 4000, q: 12, type: 'bandpass', vol: .4 }); },
+  slosh() { this.burst({ dur: .6, f0: 500, f1: 120, q: 2, vol: .3 }); },
+  hiss() { this.burst({ dur: .5, f0: 3000, f1: 1500, q: .7, type: 'highpass', vol: .2 }); },
+  setBuzz(v) { if (this.buzzGain) this.buzzGain.gain.setTargetAtTime(this.on ? v * .02 : 0, this.ac.currentTime, .3); },
+};
+$('#soundBtn').addEventListener('click', e => {
+  SND.on = !SND.on; SND.init(); if (SND.ac.state === 'suspended') SND.ac.resume();
+  e.currentTarget.setAttribute('aria-pressed', SND.on); e.currentTarget.textContent = SND.on ? 'Sound on' : 'Sound off';
+});
+
+/* ============================== 4. SCENE ============================= */
+/* One canvas for every stage. A stage sets `scene` = { draw(ctx, t, dt), down(p), move(p), up(p), smell:[x,y] }.
+   Pointer positions arrive already mapped to logical 900 x 560 coordinates. */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let scene = null, view = { s: 1, ox: 0, oy: 0, dpr: 1 }, pointer = { x: -99, y: -99, down: false, inside: false };
+function fit() {
+  const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  cv.width = r.width * dpr; cv.height = r.height * dpr;
+  const s = Math.min(r.width / W, r.height / H);
+  view = { s, ox: (r.width - W * s) / 2, oy: (r.height - H * s) / 2, dpr, cw: r.width, ch: r.height };
+}
+new ResizeObserver(fit).observe(cv);
+function toLogical(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left - view.ox) / view.s, y: (e.clientY - r.top - view.oy) / view.s, t: performance.now() };
+}
+/* Map logical coords to CSS pixels inside the stage (for DOM overlays). */
+function toScreen(x, y) { return { left: view.ox + x * view.s, top: view.oy + y * view.s }; }
+
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId); Object.assign(pointer, toLogical(e), { down: true });
+  if (SND.on && SND.ac && SND.ac.state === 'suspended') SND.ac.resume();
+  scene?.down?.({ ...pointer });
+});
+cv.addEventListener('pointermove', e => { Object.assign(pointer, toLogical(e), { inside: true }); scene?.move?.({ ...pointer }); });
+const endPtr = () => { if (!pointer.down) return; pointer.down = false; scene?.up?.({ ...pointer }); };
+cv.addEventListener('pointerup', endPtr);
+cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('pointerleave', () => { pointer.inside = false; });
+
+/* ---------- ambient FX: flies and smell lines, driven by the Stench meter ---------- */
+const flies = [];
+function drawFx(c, t, dt) {
+  const src = scene?.smell || [450, 290];
+  const want = S ? Math.floor(S.stench / 11) : 0;
+  while (flies.length < want) flies.push({ x: src[0] + (Math.random() - .5) * 300, y: src[1] - 200, vx: 0, vy: 0, ph: Math.random() * 9 });
+  while (flies.length > want) flies.pop();
+  SND.setBuzz(Math.min(1, flies.length / 6));
+  // smell lines: thin wavering strokes rising off the source
+  if (S && S.stench > 22) {
+    const a = Math.min(.45, (S.stench - 22) / 120);
+    c.save(); c.strokeStyle = `rgba(110,118,62,${a})`; c.lineWidth = 2; c.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+      const bx = src[0] - 60 + i * 60, ph = t / 900 + i * 2;
+      c.beginPath();
+      for (let k = 0; k <= 20; k++) {
+        const u = k / 20, y = src[1] - 30 - u * 150 - ((t / 40) % 30), x = bx + Math.sin(ph + u * 6) * 10 * (1 + u);
+        k ? c.lineTo(x, y) : c.moveTo(x, y);
+      }
+      c.stroke();
+    }
+    c.restore();
+  }
+  // flies: wander, get pulled toward the source, land briefly
+  c.save();
+  for (const f of flies) {
+    f.ph += dt;
+    const ax = (src[0] - f.x) * .0009 + (Math.random() - .5) * .9, ay = (src[1] - 40 - f.y) * .0009 + (Math.random() - .5) * .9;
+    f.vx = (f.vx + ax) * .93; f.vy = (f.vy + ay) * .93;
+    f.x += f.vx * dt * 60; f.y += f.vy * dt * 60;
+    c.fillStyle = 'rgba(20,22,18,.9)'; c.beginPath(); c.ellipse(f.x, f.y, 2.6, 1.8, Math.atan2(f.vy, f.vx), 0, 7); c.fill();
+    c.fillStyle = 'rgba(200,210,220,.35)';
+    const w = Math.sin(t / 12 + f.ph) * 2;
+    c.beginPath(); c.ellipse(f.x - 1, f.y - 2, 2.4, 1.3 + w * .2, -.6, 0, 7); c.fill();
+  }
+  c.restore();
+}
+
+let lastT = performance.now();
+function frame(t) {
+  const dt = Math.min(.05, (t - lastT) / 1000); lastT = t;
+  const c = ctx;
+  c.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+  c.clearRect(0, 0, view.cw || 0, view.ch || 0);
+  c.setTransform(view.dpr * view.s, 0, 0, view.dpr * view.s, view.dpr * view.ox, view.dpr * view.oy);
+  if (scene?.draw) scene.draw(c, t, dt);
+  drawFx(c, t, dt);
+  if (scene?.cursor) scene.cursor(c, t);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* Shared art: a steel tray the specimen lies on. */
+function drawTray(c) {
+  c.save();
+  c.fillStyle = '#c3c8c3'; c.strokeStyle = '#8f968f'; c.lineWidth = 3;
+  c.beginPath(); c.roundRect(40, 40, 820, 480, 26); c.fill(); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 2;
+  c.beginPath(); c.roundRect(56, 56, 788, 448, 18); c.stroke();
+  c.restore();
+}
+/* Blade cursor: a small scalpel drawn at the pointer. */
+function drawBlade(c, p, color = '#d7dcdf') {
+  if (!pointer.inside && !pointer.down) return;
+  c.save(); c.translate(p.x, p.y); c.rotate(-0.7);
+  c.fillStyle = color; c.strokeStyle = '#4b5155'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, 0); c.lineTo(10, -4); c.lineTo(26, -3); c.lineTo(26, 3); c.lineTo(8, 3); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = '#3e4447'; c.fillRect(26, -3, 34, 6);
+  c.restore();
+}
+
+/* ============================== 5. STAGES ============================ */
+/* Each stage: { key, title, mount(panel) }. mount() fills the side panel,
+   sets `scene`, and calls goStage(next) when the player moves on. */
+
+function goStage(i) {
+  S.stage = i; scene = null; flies.length = 0; $('#tip').hidden = true;
+  $('#overlay').innerHTML = ''; setHint('');
+  renderRail();
+  const P = $('#panel'); P.innerHTML = ''; P.scrollTop = 0;
+  STAGES[i].mount(P);
+  updateMeters();
+}
+function renderRail() {
+  const R = $('#rail'); R.innerHTML = '';
+  STAGES.forEach((s, i) => R.append(el('li', { class: i < S.stage ? 'done' : i === S.stage ? 'now' : '', title: s.title }, `${i + 1} ${s.short}`)));
+}
+function stageHead(P, i, text) {
+  P.append(el('div', { class: 'kicker' }, `Stage ${i + 1} of ${STAGES.length}`), el('h2', {}, STAGES[i].title), el('p', {}, text));
+}
+/* "Continue" button whose enabled state is re-checked every frame via ready(). */
+function nextButton(P, label, ready, go) {
+  const b = el('button', { class: 'btn primary next', onclick: () => { if (ready()) go(); } }, label);
+  P.append(b);
+  const tick = () => { if (!b.isConnected) return; b.disabled = !ready(); requestAnimationFrame(tick); };
+  tick();
+  return b;
+}
+
+/* ---------- textures painted once at load ---------- */
+function makeTex(paint) { const c = document.createElement('canvas'); c.width = W; c.height = H; paint(c.getContext('2d')); return c; }
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const TEX = {
+  fur: makeTex(c => {
+    const r = rng(7);
+    c.fillStyle = '#7d7970'; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 26000; i++) {
+      const x = r() * W, y = r() * H, a = -0.3 + r() * 0.6, L = 4 + r() * 7;
+      c.strokeStyle = ['#5f5b54', '#99948a', '#b3ada2', '#3f3c37', '#86817a'][Math.floor(r() * 5)];
+      c.lineWidth = .8; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); c.stroke();
+    }
+  }),
+  belly: makeTex(c => {
+    const r = rng(11);
+    c.fillStyle = '#a49e92'; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 18000; i++) {
+      const x = r() * W, y = r() * H, L = 3 + r() * 5;
+      c.strokeStyle = ['#bdb7aa', '#8d877c', '#c9c3b6'][Math.floor(r() * 3)];
+      c.lineWidth = .7; c.beginPath(); c.moveTo(x, y); c.lineTo(x + L * .3, y + L); c.stroke();
+    }
+  }),
+  meat: makeTex(c => {
+    const r = rng(23);
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#93372f'); g.addColorStop(1, '#7c2b25');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    // muscle fibres and fascia sheen
+    for (let i = 0; i < 2600; i++) {
+      const x = r() * W, y = r() * H, L = 18 + r() * 40, a = 0.15 + r() * 0.3;
+      c.strokeStyle = r() < .5 ? 'rgba(60,15,12,.35)' : 'rgba(190,96,84,.35)';
+      c.lineWidth = .8 + r(); c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); c.stroke();
+    }
+    for (let i = 0; i < 90; i++) {
+      c.fillStyle = 'rgba(235,225,215,.12)'; c.beginPath(); c.ellipse(r() * W, r() * H, 10 + r() * 30, 3 + r() * 6, r() * 3, 0, 7); c.fill();
+    }
+    for (let i = 0; i < 160; i++) { // fat flecks
+      c.fillStyle = 'rgba(232,214,160,.5)'; c.beginPath(); c.ellipse(r() * W, r() * H, 2 + r() * 6, 1 + r() * 3, r() * 3, 0, 7); c.fill();
+    }
+  }),
+};
+
+/* ---------- ventral raccoon (stages 1-3) ---------- */
+/* Layout of the animal on its back, head left. Regions are what you peel in stage 2. */
+const VR = {
+  head: [185, 290, 70, 56], body: [455, 290, 212, 116],
+  legs: { foreL: [318, 200, 282, 92, 22], foreR: [318, 380, 282, 488, 22], hindL: [592, 205, 644, 92, 26], hindR: [592, 375, 644, 488, 26] },
+  tail: [[652, 290], [720, 300], [792, 294], [870, 306]],
+  incision: [[252, 290], [650, 290]],
+};
+function inEll(p, [x, y, rx, ry]) { return ((p.x - x) / rx) ** 2 + ((p.y - y) / ry) ** 2 <= 1; }
+function tailDist(p) { let d = 1e9; for (let i = 0; i < 3; i++) d = Math.min(d, distSeg(p.x, p.y, ...VR.tail[i], ...VR.tail[i + 1])); return d; }
+
+/* draw the whole carcass. o.peel = {region: 0..1}; o.skinned = everything peeled; o.cavity = draw opened belly. */
+function drawVentral(c, t, o = {}) {
+  const D = DECOMP[S.decomp || 'fresh'], bloat = S.decomp === 'bloated' ? 1.1 : S.decomp === 'dried' ? .93 : 1;
+  const [bx, by, brx, bry] = VR.body, bodyP = ellPath(bx, by, brx, bry * bloat);
+  const peel = o.peel || {}, P = id => o.skinned ? 1 : (peel[id] || 0);
+  const legPath = k => { const [x1, y1, x2, y2, r] = VR.legs[k]; return capPath(x1, y1, x2, y2, r); };
+  const tailP = new Path2D(); // tail as a tapered chain
+  for (let i = 0; i < 3; i++) tailP.addPath(capPath(...VR.tail[i], ...VR.tail[i + 1], 18 - i * 4));
+  const headP = ellPath(...VR.head); headP.addPath(polyPath([[130, 262], [100, 284], [100, 296], [130, 318]]));
+  c.save();
+  // shadow
+  c.fillStyle = 'rgba(40,44,42,.18)'; c.beginPath(); c.ellipse(470, 312, 330, 150, 0, 0, 7); c.fill();
+  // meat underneath everything
+  const all = new Path2D(); all.addPath(bodyP); all.addPath(headP); all.addPath(tailP);
+  for (const k in VR.legs) all.addPath(legPath(k));
+  c.save(); c.clip(all); c.drawImage(TEX.meat, 0, 0);
+  if (S.decomp === 'bloated') { c.fillStyle = 'rgba(90,110,50,.25)'; c.fillRect(0, 0, W, H); }
+  if (S.decomp === 'dried') { c.fillStyle = 'rgba(70,40,20,.35)'; c.fillRect(0, 0, W, H); }
+  c.restore();
+  // fur, peeled back from the incision outward. Inner hide edge drawn pale.
+  const furLayer = (path, tex, revealClip) => {
+    c.save(); c.clip(path);
+    if (revealClip) { const r = new Path2D(); r.rect(0, 0, W, H); r.addPath(revealClip); c.clip(r, 'evenodd'); }
+    c.drawImage(tex, 0, 0); c.restore();
+  };
+  // flanks: reveal band grows from midline
+  for (const [id, sign] of [['flankL', -1], ['flankR', 1]]) {
+    const half = new Path2D(); half.rect(0, sign < 0 ? 0 : by, W, H / 2 + (sign < 0 ? by - H / 2 : 0));
+    c.save(); c.clip(half);
+    const band = P(id) * (bry * bloat + 4), rev = new Path2D(); rev.rect(0, sign < 0 ? by - band : by, W, band);
+    furLayer(bodyP, TEX.belly, P(id) >= 1 ? fullRect() : rev);
+    if (P(id) > 0 && P(id) < 1) hideEdge(c, bx - brx, by + sign * band, bx + brx, by + sign * band);
+    c.restore();
+  }
+  // legs: reveal from the body outward
+  for (const k in VR.legs) {
+    const [x1, y1, x2, y2, r] = VR.legs[k], u = P(k);
+    if (u >= 1) continue;
+    const sx = x1 + (x2 - x1) * u, sy = y1 + (y2 - y1) * u;
+    c.save(); c.clip(capPath(sx, sy, x2, y2, r)); c.drawImage(TEX.fur, 0, 0); c.restore();
+    c.fillStyle = '#2f2c28'; c.beginPath(); c.ellipse(x2, y2, r * .8, r * .7, 0, 0, 7); c.fill(); // paw pad
+    if (u > 0) { c.strokeStyle = '#e6d9c6'; c.lineWidth = 3; c.beginPath(); c.arc(sx, sy, r, 0, 7); c.stroke(); }
+  }
+  // tail: reveal from base, keep the rings
+  {
+    const u = P('tail');
+    if (u < 1) {
+      c.save(); c.clip(tailP);
+      const cut = new Path2D(); cut.rect(652 + u * 220, 0, W, H); c.clip(cut);
+      c.drawImage(TEX.fur, 0, 0);
+      c.fillStyle = 'rgba(30,28,25,.75)';
+      for (let i = 0; i < 6; i++) { c.fillRect(672 + i * 34, 250, 14, 100); }
+      c.restore();
+    }
+  }
+  // head: reveal from the neck toward the nose
+  {
+    const u = P('head');
+    if (u < 1) {
+      const keep = new Path2D(); keep.rect(0, 0, 258 - u * 175, H);
+      c.save(); c.clip(headP); c.clip(keep); c.drawImage(TEX.fur, 0, 0);
+      // mask and ears so it reads as a raccoon
+      c.fillStyle = 'rgba(28,26,24,.85)'; c.beginPath(); c.ellipse(165, 258, 22, 13, -.3, 0, 7); c.ellipse(165, 322, 22, 13, .3, 0, 7); c.fill();
+      c.fillStyle = '#e8e4da'; c.beginPath(); c.ellipse(104, 290, 6, 5, 0, 0, 7); c.fill();
+      c.restore();
+      if (u > 0) hideEdge(c, 258 - u * 175, 240, 258 - u * 175, 340);
+    }
+    if (u < .7) { c.fillStyle = '#4a4640'; c.beginPath(); c.ellipse(222, 230, 14, 18, -.5, 0, 7); c.ellipse(222, 350, 14, 18, .5, 0, 7); c.fill(); }
+  }
+  // dried carcass: sunken ribs showing through
+  if (S.decomp === 'dried' && !o.skinned) {
+    c.strokeStyle = 'rgba(50,40,30,.25)'; c.lineWidth = 3;
+    for (let i = 0; i < 8; i++) { c.beginPath(); c.arc(330 + i * 22, 290, 80, -1, 1); c.stroke(); }
+  }
+  // wet sheen on exposed meat
+  if (o.skinned || Object.values(peel).some(v => v > 0)) {
+    c.save(); c.clip(all); c.globalCompositeOperation = 'screen';
+    const sh = c.createRadialGradient(400 + Math.sin(t / 2500) * 40, 250, 10, 420, 270, 220);
+    sh.addColorStop(0, S.decomp === 'dried' ? 'rgba(255,240,220,.05)' : 'rgba(255,240,235,.22)'); sh.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = sh; c.fillRect(0, 0, W, H); c.restore();
+  }
+  c.restore();
+}
+function fullRect() { const r = new Path2D(); r.rect(-10, -10, W + 20, H + 20); return r; }
+function hideEdge(c, x1, y1, x2, y2) { c.save(); c.strokeStyle = '#eadfcf'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.restore(); }
+
+/* ======================= STAGE 1: PREP & SAFETY ====================== */
+const stagePPE = {
+  key: 'ppe', title: 'Prep & safety', short: 'Prep',
+  mount(P) {
+    stageHead(P, 0, 'A raccoon on the bench. Decide what you\'re working with and how you\'re protecting yourself before anything gets cut.');
+    // decomposition state
+    P.append(el('h3', {}, 'What state is it in?'));
+    const dbox = el('div', { class: 'opts' });
+    const renderD = () => {
+      dbox.innerHTML = '';
+      for (const [k, d] of Object.entries(DECOMP)) {
+        dbox.append(el('button', { class: 'btn opt' + (S.decomp === k ? ' on' : ''), 'aria-pressed': S.decomp === k, onclick: () => { S.decomp = k; S.stench = d.stench; renderD(); updateMeters(); } },
+          el('b', {}, d.label), el('small', {}, d.blurb)));
+      }
+    };
+    renderD(); P.append(dbox);
+    P.append(el('p', {}, el('small', {}, 'Fresh skins and guts cleanly. Bloated rots fast in water but fights you everywhere else. Dried is ideal for beetles and miserable to cut.'),
+      why('Decomposition sets the rules. Bacteria in a bloated carcass have already loosened hair and swollen the gut with gas. A dried one has lost most of its water, so the flesh is tough but beetles love it.')));
+
+    // PPE
+    P.append(el('h3', {}, 'Protective gear'));
+    const items = [
+      ['gloves', 'nitrile', 'Nitrile gloves', 'Fluid-proof, puncture-resistant enough, cheap to change.', 'Raccoon roundworm eggs, leptospires and gut bacteria all get in through hands and cuts.'],
+      ['gloves', 'cotton', 'Cotton work gloves', 'Comfortable, already in the garage.', 'Cloth wicks fluid onto your skin and holds it there. Good for handling clean bone, not wet work.'],
+      ['mask', true, 'N95 mask', 'Filters aerosols when flushing or spraying.', 'A mask won\'t stop the smell, but it does stop droplets from brain flushing and gut spray.'],
+      ['eyes', true, 'Safety glasses', 'Splash protection.', 'A punctured bloated gut can spray. Brain flushing splashes back.'],
+      ['apron', true, 'Waterproof apron', 'Keeps fluid off your clothes.', 'Not critical, but you will thank yourself.'],
+    ];
+    const pbox = el('div', { class: 'opts' });
+    const renderP = () => {
+      pbox.innerHTML = '';
+      for (const [k, v, label, note, tip] of items) {
+        const on = S.ppe[k] === v;
+        pbox.append(el('button', { class: 'btn opt' + (on ? ' on' : ''), 'aria-pressed': on, onclick: () => { S.ppe[k] = on ? undefined : v; renderP(); } },
+          el('b', {}, (on ? '✓ ' : '') + label), why(tip), el('small', {}, note)));
+      }
+    };
+    renderP(); P.append(pbox);
+
+    P.append(el('h3', {}, 'Where are you working?'));
+    const wbox = el('div', { class: 'row' });
+    const renderW = () => {
+      wbox.innerHTML = '';
+      for (const [k, label] of [['tarp', 'Outdoors on a tarp'], ['garage', 'Garage bench'], ['kitchen', 'Kitchen table']]) {
+        wbox.append(el('button', { class: 'btn' + (S.workspace === k ? ' on' : ''), onclick: () => { S.workspace = k; renderW(); } }, label));
+      }
+    };
+    renderW(); P.append(wbox);
+
+    nextButton(P, 'Glove up and start →', () => S.decomp && S.workspace, () => {
+      // charge PPE choices now so they appear in the log and the final report
+      if (S.ppe.gloves === 'cotton') addMistake('ppe_cotton');
+      else if (!S.ppe.gloves) addMistake('ppe_gloves');
+      if (!S.ppe.mask) addMistake('ppe_mask');
+      if (!S.ppe.eyes) addMistake('ppe_eyes');
+      if (S.workspace === 'kitchen') { addMistake('workspace'); expose(8); }
+      expose(3);
+      log(`Raccoon, ${S.sex}, ${DECOMP[S.decomp].label.toLowerCase()}. ${S.animal.massKg} kg.`);
+      advance(0.5);
+      goStage(1);
+    });
+
+    scene = {
+      smell: [450, 280],
+      draw(c, t) { drawTray(c); if (S.decomp) drawVentral(c, t); else drawShrouded(c); },
+    };
+    setHint('Choose its condition, your gear and your workspace.');
+  },
+};
+function drawShrouded(c) {
+  c.save(); c.fillStyle = '#3c4f5c'; c.beginPath(); c.ellipse(470, 300, 320, 150, 0, 0, 7); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.08)'; for (let i = 0; i < 6; i++) { c.fillRect(170 + i * 100, 160, 3, 280); }
+  c.fillStyle = '#e8e3d4'; c.font = 'italic 18px Georgia, serif'; c.textAlign = 'center'; c.fillText('a contractor bag, tied off', 470, 306);
+  c.restore();
+}
+
+/* ========================== STAGE 2: SKINNING ======================== */
+const PEEL_REGIONS = [
+  { id: 'foreL', label: 'Left foreleg', leg: 'fore' }, { id: 'foreR', label: 'Right foreleg', leg: 'fore' },
+  { id: 'hindL', label: 'Left hindleg', leg: 'hind' }, { id: 'hindR', label: 'Right hindleg', leg: 'hind' },
+  { id: 'tail', label: 'Tail' }, { id: 'head', label: 'Head & neck' },
+  { id: 'flankL', label: 'Left flank' }, { id: 'flankR', label: 'Right flank' },
+];
+function peelHit(p) {
+  for (const r of PEEL_REGIONS) {
+    if (r.leg) { const [x1, y1, x2, y2, rad] = VR.legs[r.id]; if (distSeg(p.x, p.y, x1, y1, x2, y2) < rad + 4) return r; }
+  }
+  if (tailDist(p) < 18 && p.x > 660) return PEEL_REGIONS[4];
+  if (inEll(p, VR.head) || (p.x < 130 && Math.abs(p.y - 290) < 25)) return PEEL_REGIONS[5];
+  if (inEll(p, VR.body)) return PEEL_REGIONS[p.y < VR.body[1] ? 6 : 7];
+  return null;
+}
+
+const stageSkin = {
+  key: 'skin', title: 'Skinning', short: 'Skin',
+  mount(P) {
+    const D = DECOMP[S.decomp];
+    stageHead(P, 1, 'One long cut down the belly, then peel the hide back off every part of the body.');
+    const st = { phase: 'choose', samples: [], depth: 0, last: null, gashes: [], ragged: 0, peel: {}, tension: 0, hold: null, holdT: 0, asking: false, stripTail: null };
+    const [[ax, ay], [bx, by]] = VR.incision;
+    for (let i = 0; i <= 40; i++) st.samples.push({ x: ax + (bx - ax) * i / 40, y: ay + (by - ay) * i / 40, hit: false });
+    PEEL_REGIONS.forEach(r => st.peel[r.id] = 0);
+    S.flags.feet = {};
+
+    const body = el('div'); P.append(body);
+    const render = () => {
+      body.innerHTML = '';
+      if (st.phase === 'choose') {
+        body.append(el('h3', {}, 'Keep the hide?'), el('p', {}, 'A saved hide can become a study skin or tanned pelt. It means slower, gentler peeling, and it changes what happens at the feet.'));
+        body.append(el('div', { class: 'opts' },
+          el('button', { class: 'btn opt', onclick: () => choose(true) }, el('b', {}, 'Save the hide'), el('small', {}, 'Side goal. Tears and slips count against the hide grade.')),
+          el('button', { class: 'btn opt', onclick: () => choose(false) }, el('b', {}, 'Skeleton only'), el('small', {}, 'Faster. Tears don\'t matter.'))));
+      } else if (st.phase === 'incise') {
+        body.append(el('h3', {}, 'Ventral incision'),
+          el('p', {}, 'Drag along the dashed line from throat to vent. Go slowly: speed is depth. You want through the skin, not the belly wall.', why('Skinners lift the skin and cut blade-edge-up so the knife never drops into the muscle. Opening the abdominal wall now means the gut is exposed while you peel.')));
+        st.gaugeEl = el('div', { class: 'gauge' }); body.append(st.gaugeEl);
+        st.progEl = el('div', { class: 'stat' }); body.append(st.progEl);
+      } else {
+        body.append(el('h3', {}, 'Peel'),
+          el('p', {}, 'Press and hold on a part of the body to work the hide off it. Tension builds while you pull; let go before it tears.', why('Hide is held on by fascia, a sheet of connective tissue. Steady short pulls let it separate. Long hard pulls tear the skin before the fascia gives.')));
+        st.gaugeEl = el('div', { class: 'gauge' }); body.append(st.gaugeEl);
+        st.listEl = el('div'); body.append(st.listEl);
+      }
+    };
+    const choose = save => {
+      S.saveHide = save;
+      log(save ? 'Saving the hide.' : 'Skeleton only; the hide goes in the bin.');
+      if (save && D.hideSlip) { addMistake('hide_slip'); S.hide.damage += 35; }
+      st.phase = 'incise'; render();
+      setHint('Drag slowly along the dashed midline.');
+    };
+    render();
+
+    nextButton(P, 'Hide is off →', () => st.phase === 'peel' && Object.values(st.peel).every(v => v >= 1), () => { advance(1.5, D.stench + 8); goStage(2); });
+
+    const tailChoice = async () => {
+      st.asking = true;
+      st.stripTail = await ask('The tail', 'The tail vertebrae sit in a sleeve of skin. You can pull the core out, or cut the sleeve open.', [
+        { value: true, label: 'Strip the core out', note: 'Fast. Pull too hard and the last vertebrae snap off inside the skin.' },
+        { value: false, label: 'Slit the underside and peel', note: 'Slower, safe. Leaves a seam if you\'re saving the hide.', primary: true },
+      ]);
+      log(st.stripTail ? 'Stripping the tail.' : 'Slitting the tail skin.');
+      st.asking = false;
+    };
+    const footChoice = async r => {
+      st.asking = true;
+      const where = r.leg === 'fore' ? 'wrist' : 'ankle';
+      const v = await ask(`${r.label}: the foot`, `You've reached the ${where}. Raccoon feet are long-toed and full of tiny bones.`, [
+        { value: 'skinout', label: 'Skin out to the last toe joint', note: 'Slow and fiddly. Every bone stays with the skeleton.' },
+        { value: 'hide', label: `Cut through at the ${where}`, note: 'The foot stays inside the hide. Standard taxidermy.' },
+        { value: 'whole', label: 'Take the foot off whole, skin on', note: 'Macerate it as is; the skin sloughs in the water.' },
+      ]);
+      S.flags.feet[r.id] = v;
+      const ids = r.leg === 'fore' ? ['carpals', 'metacarpals', 'foreph'] : ['tarsals', 'metatarsals', 'hindph'];
+      if (v === 'hide') ids.forEach(id => loseBones(id, Math.round(S.bones[id].n / 2), 'feet_in_hide'));
+      if (v === 'whole' && S.saveHide) { S.hide.damage += 6; log('The hide is missing a foot now.', 'warn'); }
+      if (v === 'whole') log('Foot set aside whole for maceration.');
+      if (v === 'skinout') log('Skinning out the toes.');
+      st.asking = false;
+    };
+
+    // tear: what it means depends on where and why
+    const tear = r => {
+      SND.tear(); st.tension = .35;
+      if (r.id === 'tail' && st.stripTail && !S.flags.tailSnapped) {
+        S.flags.tailSnapped = true;
+        loseBones('caudal', 3 + Math.floor(Math.random() * 5), 'tail_snapped');
+        return;
+      }
+      if (S.saveHide) { S.hide.damage += 5; addMistake('hide_tear', r.label.toLowerCase()); }
+      else log(`Skin tore on the ${r.label.toLowerCase()}. Doesn't matter, you're not keeping it.`);
+    };
+
+    scene = {
+      smell: [450, 280],
+      down(p) {
+        if (st.phase === 'incise') { st.last = p; st.depth = 0; st.stroke = { ragged: false, breach: false }; }
+        if (st.phase === 'peel' && !st.asking) {
+          const r = peelHit(p);
+          if (!r || st.peel[r.id] >= 1) return;
+          if (r.id === 'tail' && st.stripTail == null) { tailChoice(); return; }
+          st.hold = r; st.holdT = 0;
+        }
+      },
+      move(p) {
+        if (st.phase !== 'incise' || !pointer.down || !st.last) return;
+        const dt = Math.max(1, p.t - st.last.t), d = Math.hypot(p.x - st.last.x, p.y - st.last.y);
+        st.depth += (d / dt - st.depth) * .25;
+        const off = distSeg(p.x, p.y, ...VR.incision[0], ...VR.incision[1]);
+        if (S.decomp === 'dried' && st.depth < .15) { st.last = p; st.skate = true; return; } // blade skates on leathery hide
+        st.skate = false;
+        if (off < 18) {
+          for (const s of st.samples) if (!s.hit && Math.hypot(s.x - p.x, s.y - p.y) < 13) { s.hit = true; if (Math.random() < .3) SND.scrape(); }
+          if (st.depth > D.skinWall && p.x > 340 && p.x < 640) {
+            const lastG = st.gashes[st.gashes.length - 1];
+            if (!lastG || Math.abs(lastG.x - p.x) > 40) {
+              st.gashes.push({ x: p.x, y: p.y });
+              if (st.gashes.length <= 3) addMistake('incision_deep'); else log('Deeper still into the belly wall.', 'bad');
+              S.flags.breached = true; stink(4); SND.squelch();
+            }
+          }
+        } else if (off < 70 && inEll(p, VR.body) && !st.stroke.ragged) {
+          st.stroke.ragged = true; st.ragged++;
+          if (S.saveHide) { S.hide.damage += 3; addMistake('incision_ragged'); } else log('The cut wandered off the midline.', 'warn');
+        }
+        st.last = p;
+        if (st.samples.filter(s => s.hit).length >= 37) {
+          st.samples.forEach(s => s.hit = true);
+          st.phase = 'peel'; render(); log('Incision done. Hide parts along the belly.', 'ok');
+          setHint('Press and hold on a body part to peel. Let go before the tension bar is full.');
+        }
+      },
+      up() { st.last = null; st.hold = null; },
+      draw(c, t, dt) {
+        drawTray(c);
+        drawVentral(c, t, { peel: st.peel });
+        // incision guide and cut
+        if (st.phase !== 'choose') {
+          c.save(); c.setLineDash([6, 6]); c.strokeStyle = 'rgba(30,30,30,.55)'; c.lineWidth = 1.5;
+          c.beginPath(); c.moveTo(...VR.incision[0]); c.lineTo(...VR.incision[1]); c.stroke(); c.setLineDash([]);
+          c.strokeStyle = '#5b1612'; c.lineWidth = 3; c.lineCap = 'round';
+          for (let i = 0; i < st.samples.length - 1; i++) {
+            const a = st.samples[i], b = st.samples[i + 1];
+            if (a.hit && b.hit) { c.beginPath(); c.moveTo(a.x, a.y + Math.sin(i) * .8); c.lineTo(b.x, b.y + Math.sin(i + 1) * .8); c.stroke(); }
+          }
+          for (const g of st.gashes) { c.fillStyle = '#c9b38a'; c.beginPath(); c.ellipse(g.x, g.y, 14, 6, 0, 0, 7); c.fill(); c.strokeStyle = '#5b1612'; c.stroke(); }
+          c.restore();
+        }
+        // peeling: progress and tension
+        if (st.phase === 'peel' && st.hold && !st.asking) {
+          const r = st.hold, legK = r.leg ? r.id : null;
+          let rate = .2 * D.peelRate, trate = .45 * D.peelTension;
+          if (S.saveHide) { rate *= .8; if (r.id === 'head') trate *= 1.5; }
+          if (r.id === 'tail') { if (st.stripTail) { rate *= 1.8; trate *= 2.2; } else { rate *= .6; trate *= .6; } }
+          if (legK && S.flags.feet[legK] === 'skinout') { rate *= .5; trate *= 1.3; }
+          st.holdT += dt;
+          st.peel[r.id] = Math.min(1, st.peel[r.id] + rate * dt);
+          st.tension += trate * dt * (1 + st.holdT * .6);
+          if (Math.random() < dt * 3) SND.burst({ dur: .12, f0: 900, f1: 300, q: 3, vol: .08 });
+          if (S.decomp === 'bloated') stink(dt * .6);
+          if (st.tension >= 1) tear(r);
+          if (legK && st.peel[legK] >= .6 && !S.flags.feet[legK]) { st.hold = null; footChoice(r); }
+          if (st.peel[r.id] >= 1) { st.hold = null; log(`${r.label} skinned.`, 'ok'); }
+        } else st.tension = Math.max(0, st.tension - .9 * dt);
+        // hover label
+        if (st.phase === 'peel' && pointer.inside) {
+          const r = peelHit(pointer);
+          if (r) { c.fillStyle = 'rgba(31,35,33,.85)'; c.font = '13px system-ui'; const s = `${r.label} · ${Math.round(st.peel[r.id] * 100)}%`; const w = c.measureText(s).width;
+            c.fillRect(pointer.x + 14, pointer.y - 26, w + 12, 20); c.fillStyle = '#eee'; c.fillText(s, pointer.x + 20, pointer.y - 12); }
+        }
+        // side panel gauges (cheap DOM updates)
+        if (st.phase === 'incise' && st.gaugeEl) {
+          const dv = Math.min(1, st.depth / (D.skinWall * 1.4)), lbl = st.skate ? 'skating on leathery skin' : st.depth > D.skinWall ? 'into the belly wall' : st.depth > D.skinWall * .7 ? 'deep' : 'through the skin';
+          st.gaugeEl.innerHTML = `Blade depth: <b>${lbl}</b><div class="bar"><i style="width:${dv * 100}%;background:${st.depth > D.skinWall ? '#8e2c25' : st.depth > D.skinWall * .7 ? '#b0812e' : '#6f8f7c'}"></i></div>`;
+          st.progEl.innerHTML = `<span>Incision</span><b>${Math.round(st.samples.filter(s => s.hit).length / st.samples.length * 100)}%</b>`;
+        }
+        if (st.phase === 'peel' && st.gaugeEl) {
+          st.gaugeEl.innerHTML = `Tension<div class="bar"><i style="width:${Math.min(100, st.tension * 100)}%;background:${st.tension > .75 ? '#8e2c25' : st.tension > .5 ? '#b0812e' : '#6f8f7c'}"></i></div>`;
+          if (!st._lt || t - st._lt > 250) {
+            st._lt = t;
+            st.listEl.innerHTML = '';
+            for (const r of PEEL_REGIONS) st.listEl.append(el('div', { class: 'stat' }, el('span', {}, r.label), el('b', {}, st.peel[r.id] >= 1 ? '✓' : Math.round(st.peel[r.id] * 100) + '%')));
+            if (S.saveHide) st.listEl.append(el('div', { class: 'stat' }, el('span', {}, 'Hide condition'), el('b', {}, Math.max(0, 100 - S.hide.damage) + '%')));
+          }
+        }
+      },
+      cursor(c) { if (st.phase === 'incise') drawBlade(c, pointer); },
+    };
+    setHint('Decide whether to keep the hide.');
+  },
+};
+
+/* ======================== STAGE 3: EVISCERATION ====================== */
+/* Organs sit in the opened cavity. Each has attachments that must be cut
+   before it lifts free. Gut organs puncture if the blade crosses them;
+   gut ends must be tied before they're cut. */
+function buildOrgans() {
+  const D = DECOMP[S.decomp], gs = D.gutSize;
+  const rows = [255, 279, 303, 327], pts = [[468, 246]];
+  rows.forEach((y, i) => { for (let k = 0; k <= 10; k++) { const u = i % 2 ? 1 - k / 10 : k / 10; pts.push([472 + 128 * u, y + Math.sin(k * 1.3 + i) * 3]); } });
+  pts.push([632, 322], [650, 304]);
+  return {
+    organs: [
+      { id: 'kidneyL', name: 'Left kidney', shape: 'ell', g: [552, 214, 20, 11], color: '#5f2220', attach: ['renalL'] },
+      { id: 'kidneyR', name: 'Right kidney', shape: 'ell', g: [552, 366, 20, 11], color: '#5f2220', attach: ['renalR'] },
+      { id: 'pluck', name: 'Heart, lungs and throat', shape: 'ell', g: [292, 290, 52, 44], color: '#b8686c', attach: ['diaph1', 'diaph2', 'diaph3', 'trachea'], hyoid: true },
+      { id: 'liver', name: 'Liver', shape: 'lobes', g: [[372, 256, 28, 22], [394, 292, 32, 30], [372, 328, 26, 21]], color: '#561c1a', attach: ['falciform'] },
+      { id: 'intestine', name: 'Intestines', shape: 'tube', gut: true, pts, w: 14 * gs, color: S.decomp === 'bloated' ? '#b9a785' : '#d1a69b', attach: ['mes1', 'mes2', 'mes3', 'rectum'] },
+      { id: 'stomach', name: 'Stomach', shape: 'ell', gut: true, g: [432, 232, 40 * Math.sqrt(gs), 26 * Math.sqrt(gs)], color: S.decomp === 'bloated' ? '#b3a27e' : '#caa094', attach: ['esoph', 'gastric'] },
+      { id: 'bladder', name: 'Bladder', shape: 'ell', gut: 'bladder', g: [624, 262, 17 * Math.sqrt(gs), 12 * Math.sqrt(gs)], color: '#d6c584', attach: ['bladderNeck'] },
+    ],
+    attach: {
+      renalL: { x: 576, y: 216, label: 'renal vessels' }, renalR: { x: 576, y: 364, label: 'renal vessels' },
+      diaph1: { x: 340, y: 246, label: 'diaphragm' }, diaph2: { x: 336, y: 290, label: 'diaphragm' }, diaph3: { x: 340, y: 334, label: 'diaphragm' },
+      trachea: { x: 236, y: 290, label: 'trachea and oesophagus at the throat' },
+      falciform: { x: 352, y: 232, label: 'liver ligament' },
+      mes1: { x: 530, y: 267, label: 'mesentery' }, mes2: { x: 556, y: 291, label: 'mesentery' }, mes3: { x: 508, y: 315, label: 'mesentery' },
+      rectum: { x: 660, y: 300, label: 'colon at the vent', gutEnd: true },
+      esoph: { x: 386, y: 222, label: 'oesophagus', gutEnd: true },
+      gastric: { x: 452, y: 202, label: 'stomach ligament' },
+      bladderNeck: { x: 646, y: 270, label: 'bladder neck', gutEnd: 'bladder' },
+    },
+  };
+}
+
+const stageEvisc = {
+  key: 'evisc', title: 'Evisceration', short: 'Gut',
+  mount(P) {
+    const D = DECOMP[S.decomp];
+    stageHead(P, 2, 'Cut each organ\'s attachments, then lift it out to the bucket. Don\'t open the gut.');
+    const { organs, attach } = buildOrgans();
+    for (const k in attach) Object.assign(attach[k], { cut: false, tied: false });
+    const st = { tool: 'scalpel', last: null, grab: null, pools: [], hyoidFree: false };
+    const wob = () => D.gutWobble + (S.flags.breached ? 2 : 0);
+    const bucket = [800, 470, 58];
+    const freed = o => o.attach.every(a => attach[a].cut);
+    // intestine points with live wobble and drag offset
+    const tubePts = (o, t) => o.pts.map(([x, y]) => [x + (o.dx || 0), y + (o.dy || 0) + (o.removed ? 0 : wob() * Math.sin(t / 650 + x / 37))]);
+    const hitOrgan = (o, p, t, pad = 0) => {
+      const dx = o.dx || 0, dy = o.dy || 0;
+      if (o.shape === 'ell') { const [x, y, rx, ry] = o.g; return inEll(p, [x + dx, y + dy, rx + pad, ry + pad]); }
+      if (o.shape === 'lobes') return o.g.some(([x, y, rx, ry]) => inEll(p, [x + dx, y + dy, rx + pad, ry + pad]));
+      const q = tubePts(o, t);
+      for (let i = 0; i < q.length - 1; i++) if (distSeg(p.x, p.y, ...q[i], ...q[i + 1]) < o.w / 2 + pad) return true;
+      return false;
+    };
+
+    const puncture = (o, p) => {
+      if (o.punctured) return;
+      o.punctured = true;
+      st.pools.push({ x: p.x, y: p.y, r: 8, color: o.gut === 'bladder' ? 'rgba(200,180,60,.55)' : 'rgba(95,90,35,.7)' });
+      if (o.gut === 'bladder') { addMistake('bladder_puncture'); stink(6); expose(6, ['hands']); }
+      else {
+        addMistake('gut_puncture', o.name.toLowerCase());
+        stink(S.decomp === 'bloated' ? 40 : S.decomp === 'dried' ? 8 : 22);
+        expose(S.decomp === 'bloated' ? 16 : 8, S.decomp === 'bloated' ? ['hands', 'eyes', 'air'] : ['hands']);
+        S.spec.stain += .04;
+        if (S.decomp === 'bloated') { SND.hiss(); log('Gas and green fluid spray out of the gut.', 'bad'); }
+      }
+      SND.squelch();
+    };
+    const cutAt = (a, key, p) => {
+      a.cut = true; SND.scrape();
+      if (a.gutEnd && !a.tied) {
+        if (a.gutEnd === 'bladder') { addMistake('bladder_puncture', 'cut untied'); stink(5); }
+        else { addMistake('untied_gut', a.label); stink(12); expose(5); S.spec.stain += .02; }
+        st.pools.push({ x: a.x, y: a.y, r: 6, color: 'rgba(95,90,35,.7)' });
+        SND.squelch();
+      }
+    };
+    // a blade stroke from a to b: cuts attachments it passes, punctures gut it crosses
+    const stroke = (a, b, t) => {
+      const L = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)), n = Math.ceil(L / 3);
+      for (const [k, at] of Object.entries(attach)) if (!at.cut && distSeg(at.x, at.y, a.x, a.y, b.x, b.y) < 8) cutAt(at, k, b);
+      for (const o of organs) {
+        if (o.removed || !o.gut || o.punctured) continue;
+        for (let i = 0; i <= n; i++) {
+          const p = { x: a.x + (b.x - a.x) * i / n, y: a.y + (b.y - a.y) * i / n };
+          if (hitOrgan(o, p, t, -2)) { puncture(o, p); break; }
+        }
+      }
+    };
+
+    const tools = el('div', { class: 'row' });
+    const renderTools = () => {
+      tools.innerHTML = '';
+      for (const [k, label, tip] of [['scalpel', '1 Scalpel', 'Drag or click on an attachment (white dot) to cut it. Anything gut-coloured under the blade gets opened.'], ['tie', '2 Ligature', 'Click a gut end (oesophagus, colon, bladder neck) to tie it off before cutting.'], ['hand', '3 Hand', 'Drag a freed organ to the bucket. Pulling an organ that\'s still attached tears it.']]) {
+        tools.append(el('button', { class: 'btn' + (st.tool === k ? ' on' : ''), 'data-tip': tip, onclick: () => { st.tool = k; renderTools(); } }, label));
+      }
+    };
+    renderTools();
+    P.append(el('h3', {}, 'Tools'), tools,
+      el('p', {}, 'Tie both ends of the gut, cut the mesentery between the loops, then lift. The pluck (heart, lungs, windpipe, tongue) comes out through the diaphragm.',
+        why('The gut is full of bacteria and, in a raccoon, possibly roundworm eggs. Kept closed, it comes out as one sealed bag. Opened, it soaks the cavity and later stains the bone.')));
+    const statusEl = el('div'); P.append(statusEl);
+    const keyH = e => { if (!statusEl.isConnected) return removeEventListener('keydown', keyH); const m = { 1: 'scalpel', 2: 'tie', 3: 'hand' }[e.key]; if (m) { st.tool = m; renderTools(); } };
+    addEventListener('keydown', keyH);
+
+    nextButton(P, 'Cavity is empty →', () => organs.every(o => o.removed), () => { advance(1, D.stench + 10); goStage(3); });
+
+    scene = {
+      smell: [470, 290],
+      down(p) {
+        const t = performance.now();
+        if (st.tool === 'scalpel') { st.last = p; stroke(p, p, t); }
+        if (st.tool === 'tie') {
+          for (const at of Object.values(attach)) if (at.gutEnd && !at.cut && !at.tied && Math.hypot(at.x - p.x, at.y - p.y) < 14) { at.tied = true; log(`Tied off the ${at.label}.`, 'ok'); }
+        }
+        if (st.tool === 'hand') {
+          const pl = organs.find(o => o.id === 'pluck');
+          if (!pl.removed && !st.hyoidFree && Math.hypot(p.x - (262 + (pl.dx || 0)), p.y - (274 + (pl.dy || 0))) < 11) {
+            st.hyoidFree = true; S.tray.push({ kind: 'hyoid' }); log('Freed the hyoid from the base of the tongue and set it on the tray.', 'ok'); return;
+          }
+          for (let i = organs.length - 1; i >= 0; i--) {
+            const o = organs[i];
+            if (!o.removed && hitOrgan(o, p, t, 3)) { st.grab = { o, sx: p.x, sy: p.y, ox: o.dx || 0, oy: o.dy || 0, torn: false }; break; }
+          }
+        }
+      },
+      move(p) {
+        if (!pointer.down) return;
+        if (st.tool === 'scalpel' && st.last) { stroke(st.last, p, performance.now()); st.last = p; }
+        if (st.grab) {
+          const g = st.grab, o = g.o, d = Math.hypot(p.x - g.sx, p.y - g.sy);
+          if (!freed(o)) {
+            if (d > 28 && !g.torn) {
+              g.torn = true; addMistake('organ_torn', o.name.toLowerCase()); expose(3);
+              if (o.gut) puncture(o, p);
+              for (const a of o.attach) { const at = attach[a]; if (!at.cut) cutAt(at, a, p); }
+              SND.tear();
+            }
+            if (!g.torn) { o.dx = g.ox + (p.x - g.sx) * .15; o.dy = g.oy + (p.y - g.sy) * .15; return; }
+          }
+          o.dx = g.ox + p.x - g.sx; o.dy = g.oy + p.y - g.sy;
+        }
+      },
+      up(p) {
+        st.last = null;
+        if (!st.grab) return;
+        const o = st.grab.o; st.grab = null;
+        if (freed(o) && Math.hypot(p.x - bucket[0], p.y - bucket[1]) < bucket[2] + 10) {
+          o.removed = true; SND.squelch(); log(`${o.name} out.`, 'ok');
+          if (o.hyoid && !st.hyoidFree) { st.hyoidFree = true; loseBones('hyoid', 1, 'hyoid_lost'); }
+        } else { o.dx = 0; o.dy = 0; }
+      },
+      draw(c, t) {
+        drawTray(c);
+        drawVentral(c, t, { skinned: true });
+        // opened cavity
+        c.save();
+        const cav = ellPath(470, 290, 200, 100); cav.addPath(ellPath(292, 290, 64, 56));
+        c.fillStyle = '#331310'; c.fill(cav);
+        c.strokeStyle = '#6d2722'; c.lineWidth = 4; c.stroke(cav);
+        c.clip(cav);
+        for (const pool of st.pools) { pool.r = Math.min(pool.r + .05, 60); c.fillStyle = pool.color; c.beginPath(); c.ellipse(pool.x, pool.y, pool.r * 1.4, pool.r, 0, 0, 7); c.fill(); }
+        // diaphragm
+        c.strokeStyle = attach.diaph2.cut ? 'rgba(220,200,190,.25)' : 'rgba(225,205,195,.7)'; c.lineWidth = 5;
+        c.beginPath(); c.moveTo(344, 196); c.quadraticCurveTo(326, 290, 344, 384); c.stroke();
+        c.restore();
+        // organs (dragged one drawn last)
+        const order = organs.filter(o => !o.removed).sort((a, b) => (st.grab?.o === a) - (st.grab?.o === b));
+        for (const o of order) drawOrgan(c, o, t);
+        // hyoid glyph on the pluck
+        const pl = organs.find(o => o.id === 'pluck');
+        if (!pl.removed && !st.hyoidFree) {
+          c.save(); c.translate(262 + (pl.dx || 0), 274 + (pl.dy || 0)); c.strokeStyle = '#efe6cf'; c.lineWidth = 3; c.lineCap = 'round';
+          c.beginPath(); c.moveTo(-8, -6); c.quadraticCurveTo(0, 6, 8, -6); c.stroke(); c.restore();
+        }
+        // ribs over the thorax
+        c.save(); c.strokeStyle = 'rgba(232,220,200,.55)'; c.lineWidth = 4;
+        for (let i = 0; i < 6; i++) { c.beginPath(); c.arc(300, 290, 40 + i * 4, -1.9 - i * .05, -1.2); c.stroke(); c.beginPath(); c.arc(300, 290, 40 + i * 4, 1.2, 1.9 + i * .05); c.stroke(); }
+        c.restore();
+        // attachments
+        for (const [k, at] of Object.entries(attach)) {
+          const owner = organs.find(o => o.attach.includes(k));
+          if (owner.removed) continue;
+          c.save(); c.translate(at.x, at.y);
+          if (at.cut) { c.strokeStyle = 'rgba(240,230,220,.6)'; c.lineWidth = 2; c.beginPath(); c.moveTo(-5, -3); c.lineTo(-1, 0); c.moveTo(5, 3); c.lineTo(1, 0); c.stroke(); }
+          else {
+            c.fillStyle = at.gutEnd ? '#f1e3c6' : '#eae4dc'; c.strokeStyle = '#3a1512'; c.lineWidth = 1.5;
+            c.beginPath(); c.arc(0, 0, 4.5, 0, 7); c.fill(); c.stroke();
+            if (at.gutEnd) { c.strokeStyle = at.tied ? '#2a2724' : 'rgba(241,227,198,.6)'; c.lineWidth = at.tied ? 3 : 1; c.setLineDash(at.tied ? [] : [2, 2]); c.beginPath(); c.arc(0, 0, 9, 0, 7); c.stroke(); }
+          }
+          c.restore();
+        }
+        // bucket
+        c.save(); c.fillStyle = '#6b7275'; c.strokeStyle = '#3f4447'; c.lineWidth = 3;
+        c.beginPath(); c.ellipse(bucket[0], bucket[1], bucket[2], bucket[2] * .55, 0, 0, 7); c.fill(); c.stroke();
+        c.fillStyle = '#2d1513'; c.beginPath(); c.ellipse(bucket[0], bucket[1], bucket[2] - 8, (bucket[2] - 8) * .5, 0, 0, 7); c.fill();
+        c.fillStyle = '#e9e6dc'; c.font = '12px system-ui'; c.textAlign = 'center'; c.fillText('offal bucket', bucket[0], bucket[1] + bucket[2] * .55 + 16);
+        c.restore();
+        // hover hint
+        if (pointer.inside && !pointer.down) {
+          let label = null;
+          for (const [k, at] of Object.entries(attach)) if (!at.cut && Math.hypot(at.x - pointer.x, at.y - pointer.y) < 9 && !organs.find(o => o.attach.includes(k)).removed) label = at.label + (at.gutEnd ? (at.tied ? ' · tied' : ' · untied') : '');
+          if (!label) for (const o of [...organs].reverse()) if (!o.removed && hitOrgan(o, pointer, t)) { label = o.name + (freed(o) ? ' · free' : ` · ${o.attach.filter(a => !attach[a].cut).length} attached`); break; }
+          if (!label && !st.hyoidFree && Math.hypot(pointer.x - 262, pointer.y - 274) < 11) label = 'Hyoid (grab with hand to free it)';
+          if (label) { c.font = '13px system-ui'; const w = c.measureText(label).width; c.fillStyle = 'rgba(31,35,33,.85)'; c.fillRect(pointer.x + 14, pointer.y - 26, w + 12, 20); c.fillStyle = '#eee'; c.fillText(label, pointer.x + 20, pointer.y - 12); }
+        }
+        if (!st._lt || t - st._lt > 300) {
+          st._lt = t; statusEl.innerHTML = '';
+          for (const o of organs) statusEl.append(el('div', { class: 'stat' }, el('span', {}, o.name), el('b', {}, o.removed ? '✓ out' : freed(o) ? 'free' : `${o.attach.filter(a => !attach[a].cut).length} attached` + (o.punctured ? ' · torn' : ''))));
+        }
+      },
+      cursor(c) {
+        if (st.tool === 'scalpel') drawBlade(c, pointer);
+        if (st.tool === 'tie' && pointer.inside) { c.strokeStyle = '#2a2724'; c.lineWidth = 2; c.beginPath(); c.arc(pointer.x, pointer.y, 9, 0, 7); c.stroke(); }
+        if (st.tool === 'hand' && pointer.inside && !st.grab) { c.fillStyle = 'rgba(210,225,230,.5)'; c.beginPath(); c.arc(pointer.x, pointer.y, 10, 0, 7); c.fill(); }
+      },
+    };
+    setHint('Tie the gut ends (2), cut the white attachments (1), then drag organs to the bucket (3).');
+    function drawOrgan(c, o, t) {
+      c.save();
+      const dx = o.dx || 0, dy = o.dy || 0;
+      c.fillStyle = o.color; c.strokeStyle = 'rgba(30,10,8,.6)'; c.lineWidth = 1.5;
+      if (o.shape === 'ell') { const [x, y, rx, ry] = o.g; c.beginPath(); c.ellipse(x + dx, y + dy, rx, ry, 0, 0, 7); c.fill(); c.stroke(); }
+      if (o.shape === 'lobes') for (const [x, y, rx, ry] of o.g) { c.beginPath(); c.ellipse(x + dx, y + dy, rx, ry, 0, 0, 7); c.fill(); c.stroke(); }
+      if (o.shape === 'tube') {
+        const q = tubePts(o, t);
+        c.lineJoin = c.lineCap = 'round';
+        c.strokeStyle = 'rgba(40,15,10,.6)'; c.lineWidth = o.w + 3; c.beginPath(); q.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke();
+        c.strokeStyle = o.color; c.lineWidth = o.w; c.stroke();
+        c.strokeStyle = 'rgba(255,240,230,.3)'; c.lineWidth = o.w * .25; c.stroke();
+      }
+      // gloss highlight
+      if (o.shape !== 'tube') { const [x, y] = o.shape === 'ell' ? o.g : o.g[1]; c.fillStyle = 'rgba(255,240,235,.18)'; c.beginPath(); c.ellipse(x + dx - 6, y + dy - 6, 8, 4, -.5, 0, 7); c.fill(); }
+      if (o.punctured) { c.fillStyle = 'rgba(70,65,25,.8)'; const [x, y] = o.shape === 'tube' ? tubePts(o, t)[20] : o.shape === 'ell' ? o.g : o.g[1]; c.beginPath(); c.arc(x + (o.shape === 'tube' ? 0 : dx), y + (o.shape === 'tube' ? 0 : dy), 5, 0, 7); c.fill(); }
+      c.restore();
+    }
+  },
+};
+
+/* ====================== STAGE 4: GROSS DEFLESHING ==================== */
+/* A tissue grid laid over a lateral skeleton. Strokes thin the tissue. Where
+   the tissue is already gone and bone is underneath, the blade nicks bone. */
+const G = 6, GW = Math.ceil(W / G), GH = Math.ceil(H / G);
+const TOOLS4 = {
+  knife: { label: 'Boning knife', r: 20, amt: .035, nick: .05, tip: 'Takes muscle off fast. Wide and heavy, so it slips into bone easily.' },
+  scalpel: { label: 'Scalpel', r: 10, amt: .014, nick: .01, tip: 'Slow and precise. Use it near bone and in tight spots.' },
+  spoon: { label: 'Eye spoon', r: 0, tip: 'Hold it on the orbit to scoop the eye out without touching bone.' },
+  hose: { label: 'Hose & syringe', r: 0, tip: 'Hold it at the foramen magnum (back of the skull) to flush the brain out with water.' },
+  wire: { label: 'Bent wire', r: 0, tip: 'Hold and wiggle at the foramen magnum to break up brain tissue. Faster. Too vigorous and you break the delicate bones behind the nose.' },
+};
+const stageDeflesh = {
+  key: 'deflesh', title: 'Gross defleshing', short: 'Deflesh',
+  mount(P) {
+    const D = DECOMP[S.decomp], A = S.animal;
+    stageHead(P, 3, 'Strip the bulk muscle off the skeleton. Leave a thin film; maceration finishes the job. Then take the eyes and brain.');
+    // build grid: bone group per cell, starting tissue per cell
+    const parts = A.art.skeleton(), muscle = A.art.muscle();
+    const groups = [...new Set(parts.map(p => p.group))];
+    const off = document.createElement('canvas'); off.width = W; off.height = H; const oc = off.getContext('2d');
+    const bone = new Int16Array(GW * GH).fill(-1), tis = new Float32Array(GW * GH), t0 = new Float32Array(GW * GH), nicked = new Uint8Array(GW * GH);
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+      const x = i * G + G / 2, y = j * G + G / 2, k = j * GW + i;
+      for (const [path, th] of muscle) if (oc.isPointInPath(path, x, y)) tis[k] = Math.max(tis[k], th * (.85 + Math.random() * .3));
+      for (const p of parts) if (oc.isPointInPath(p.path, x, y)) { bone[k] = groups.indexOf(p.group); break; }
+      if (bone[k] >= 0 && !tis[k]) tis[k] = .15;
+      t0[k] = tis[k];
+    }
+    const total0 = t0.reduce((a, b) => a + b, 0);
+    const img = document.createElement('canvas'); img.width = GW; img.height = GH; const ic = img.getContext('2d'); const id = ic.createImageData(GW, GH);
+    const st = { tool: 'knife', last: null, eyes: 0, brain: 0, nicks: [], coolDist: 0, splashT: 0, wireT: 0, remaining: 1, goo: [] };
+    const [ox, oy] = A.art.orbit, [fx, fy] = A.art.foramen;
+
+    const tools = el('div', { class: 'row' });
+    const renderTools = () => {
+      tools.innerHTML = '';
+      Object.entries(TOOLS4).forEach(([k, T], i) => tools.append(el('button', { class: 'btn' + (st.tool === k ? ' on' : ''), 'data-tip': T.tip, onclick: () => { st.tool = k; renderTools(); } }, `${i + 1} ${T.label}`)));
+    };
+    renderTools();
+    P.append(el('h3', {}, 'Tools'), tools,
+      el('p', {}, 'Deep red is bulk muscle. Pink film is thin enough. Where you see clean bone, stop: the blade will nick it.',
+        why('Nicks and gouges are permanent and show on the finished bone. Bacteria and beetles remove the last film without touching the bone, so there is no reason to scrape down to it.')));
+    const statEl = el('div'); P.append(statEl);
+    const keyH = e => { if (!statEl.isConnected) return removeEventListener('keydown', keyH); const k = Object.keys(TOOLS4)[+e.key - 1]; if (k) { st.tool = k; renderTools(); } };
+    addEventListener('keydown', keyH);
+
+    nextButton(P, 'Bulk is off →', () => st.remaining <= .5, async () => {
+      if (st.eyes < 1 || st.brain < 1) {
+        const go = await ask('Not finished in the head', `${st.eyes < 1 ? 'The eyes are still in. ' : ''}${st.brain < 1 ? 'The brain is still in the braincase.' : ''}`, [
+          { value: false, label: 'Go back and finish', primary: true }, { value: true, label: 'Leave it for maceration' }]);
+        if (!go) return;
+        if (st.eyes < 1) addMistake('eyes_left');
+        if (st.brain < 1) { addMistake('brain_left'); S.spec.brainLeft = true; S.spec.grease += .15; }
+      }
+      if (st.remaining > .35) log('A lot of tissue left on. Maceration will take longer and smell worse.', 'warn');
+      S.flags.tissueLeft = st.remaining;
+      // small bones that came out loose in the scraps go to the tray for stage 5
+      for (let i = 0; i < S.bones.sesamoids.n; i++) S.tray.push({ kind: 'sesamoid' });
+      for (let i = 0; i < 2; i++) S.tray.push({ kind: 'patella' });
+      if (S.bones.baculum) S.tray.push({ kind: 'baculum' });
+      for (let i = 0; i < Math.max(0, 4 - S.bones.caudal.lost); i++) S.tray.push({ kind: 'caudal' });
+      for (const [leg, v] of Object.entries(S.flags.feet || {})) if (v === 'skinout') S.tray.push({ kind: leg.startsWith('fore') ? 'claw_f' : 'claw_h' });
+      advance(3, D.stench + 15 * st.remaining);
+      goStage(4);
+    });
+
+    const scrape = (a, b) => {
+      const T = TOOLS4[st.tool], L = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(L / 3));
+      const speed = L / Math.max(1, b.t - a.t);
+      for (let s = 0; s <= n; s++) {
+        const x = a.x + (b.x - a.x) * s / n, y = a.y + (b.y - a.y) * s / n;
+        // knife on the eye: gouges the orbit rim
+        if (st.eyes < 1 && Math.hypot(x - ox, y - oy) < 14) { st.eyes = 1; addMistake('orbit_nick'); SND.nick(); }
+        const ri = Math.ceil(T.r / G), ci = Math.floor(x / G), cj = Math.floor(y / G);
+        for (let j = cj - ri; j <= cj + ri; j++) for (let i = ci - ri; i <= ci + ri; i++) {
+          if (i < 0 || j < 0 || i >= GW || j >= GH) continue;
+          const k = j * GW + i, d = Math.hypot(i * G + G / 2 - x, j * G + G / 2 - y);
+          if (d > T.r || !t0[k]) continue;
+          const before = tis[k];
+          tis[k] = Math.max(0, tis[k] - T.amt * D.deflesh * (1 - d / T.r) * (L / n) / 3);
+          // nick: blade core over bone that is already bare
+          if (bone[k] >= 0 && before < .04 && d < T.r * .6 && !nicked[k] && st.coolDist <= 0) {
+            if (Math.random() < T.nick * D.nickMul * Math.min(2, Math.max(.5, speed))) {
+              nicked[k] = 1; st.coolDist = 30;
+              st.nicks.push({ x: i * G + G / 2, y: j * G + G / 2, a: Math.random() * 3 });
+              S.spec.nicks++; addMistake('bone_nick', groups[bone[k]]); SND.nick();
+            }
+          }
+        }
+      }
+      st.coolDist -= L;
+      if (Math.random() < .25) SND.scrape();
+      if (Math.random() < .08) SND.burst({ dur: .15, f0: 700, f1: 200, q: 4, vol: .1 });
+    };
+
+    scene = {
+      smell: [440, 300],
+      down(p) { st.last = p; },
+      move(p) {
+        if (!pointer.down || !st.last) return;
+        if (st.tool === 'knife' || st.tool === 'scalpel') scrape(st.last, p);
+        if (st.tool === 'wire' && Math.hypot(p.x - fx, p.y - fy) < 22 && st.brain < 1) {
+          const d = Math.hypot(p.x - st.last.x, p.y - st.last.y);
+          st.brain = Math.min(1, st.brain + d * .0035 * (S.decomp === 'dried' ? .5 : 1));
+          st.wireT += d;
+          if (st.wireT > 60) { st.wireT = 0; if (!hasMistake('ethmoid_break') && Math.random() < .07) { addMistake('ethmoid_break'); SND.nick(); } }
+          if (Math.random() < .1) st.goo.push({ x: fx + 4, y: fy + 4, vy: 0 });
+        }
+        st.last = p;
+      },
+      up() { st.last = null; },
+      draw(c, t, dt) {
+        drawTray(c);
+        // skeleton
+        c.save();
+        for (const p of parts) { c.fillStyle = '#e4d9c0'; c.fill(p.path); c.strokeStyle = '#a3967a'; c.lineWidth = 1; c.stroke(p.path); }
+        c.fillStyle = '#2b2522'; c.beginPath(); c.arc(ox, oy, 13, 0, 7); c.fill();
+        if (st.eyes < 1) { c.fillStyle = '#1d1d22'; c.beginPath(); c.arc(ox, oy, 11 * (1 - st.eyes * .8), 0, 7); c.fill(); c.fillStyle = 'rgba(200,210,230,.5)'; c.beginPath(); c.arc(ox - 3, oy - 3, 3 * (1 - st.eyes), 0, 7); c.fill(); }
+        c.fillStyle = '#2b2522'; c.beginPath(); c.ellipse(fx, fy, 7, 9, .4, 0, 7); c.fill();
+        c.restore();
+        // tissue
+        const d = id.data;
+        let sum = 0;
+        for (let k = 0; k < tis.length; k++) {
+          const v = tis[k]; sum += v;
+          const o = k * 4;
+          if (v <= .003) { d[o + 3] = 0; continue; }
+          const u = Math.min(1, v / .45);
+          d[o] = 205 - 85 * u; d[o + 1] = 140 - 105 * u; d[o + 2] = 128 - 95 * u;
+          if (S.decomp === 'dried') { d[o] *= .75; d[o + 1] *= .7; d[o + 2] *= .6; }
+          if (S.decomp === 'bloated') { d[o + 1] += 12; }
+          d[o + 3] = (.3 + .67 * u) * 255;
+        }
+        st.remaining = sum / total0;
+        ic.putImageData(id, 0, 0);
+        c.save(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.filter = `blur(${2.5 * view.s}px)`; c.drawImage(img, 0, 0, GW * G, GH * G); c.filter = 'none';
+        c.restore();
+        // nicks
+        c.save(); c.strokeStyle = '#3a2a22'; c.lineWidth = 2;
+        for (const n of st.nicks) { c.beginPath(); c.moveTo(n.x - 4 * Math.cos(n.a), n.y - 4 * Math.sin(n.a)); c.lineTo(n.x + 4 * Math.cos(n.a), n.y + 4 * Math.sin(n.a)); c.stroke(); }
+        c.restore();
+        // eye spoon and brain flushing are hold actions
+        const at = (x, y, r) => pointer.down && Math.hypot(pointer.x - x, pointer.y - y) < r;
+        if (st.tool === 'spoon' && at(ox, oy, 16) && st.eyes < 1) {
+          st.eyes = Math.min(1, st.eyes + dt / 1.6); if (Math.random() < dt * 4) SND.squelch();
+          if (st.eyes >= 1) log('Eyes out (both sides).', 'ok');
+        }
+        if (st.tool === 'hose' && at(fx, fy, 20) && st.brain < 1) {
+          st.brain = Math.min(1, st.brain + dt * .2 * (S.decomp === 'dried' ? .4 : 1));
+          st.splashT += dt;
+          if (st.splashT > .6) { st.splashT = 0; expose(1.2, ['hands', 'eyes', 'air']); SND.slosh(); }
+          if (Math.random() < dt * 8) st.goo.push({ x: fx + 4, y: fy + 4, vy: 0 });
+          if (st.brain >= 1) log('Brain flushed out through the foramen magnum.', 'ok');
+        }
+        // goo dribbling from the foramen
+        c.fillStyle = 'rgba(205,170,165,.85)';
+        for (const g of st.goo) { g.vy += dt * 200; g.y += g.vy * dt; g.x += dt * 10; c.beginPath(); c.arc(g.x, g.y, 3, 0, 7); c.fill(); }
+        st.goo = st.goo.filter(g => g.y < 520);
+        // stats
+        if (!st._lt || t - st._lt > 250) {
+          st._lt = t; statEl.innerHTML = '';
+          const row = (a, b, cls) => statEl.append(el('div', { class: 'stat' }, el('span', { class: cls || '' }, a), el('b', {}, b)));
+          row('Bulk tissue remaining', Math.round(st.remaining * 100) + '%' + (st.remaining <= .35 ? ' ✓' : st.remaining <= .5 ? ' ok' : ''));
+          row('Bone nicks', String(S.spec.nicks));
+          row('Eyes', st.eyes >= 1 ? '✓ out' : Math.round(st.eyes * 100) + '%');
+          row('Brain', st.brain >= 1 ? '✓ flushed' : Math.round(st.brain * 100) + '%');
+          statEl.append(el('div', { class: 'gauge' }, 'Target: under 35% remaining. You can move on at 50%.'));
+        }
+      },
+      cursor(c) {
+        const T = TOOLS4[st.tool];
+        if (!pointer.inside && !pointer.down) return;
+        if (T.r) { c.strokeStyle = 'rgba(30,30,30,.4)'; c.lineWidth = 1; c.beginPath(); c.arc(pointer.x, pointer.y, T.r, 0, 7); c.stroke(); drawBlade(c, pointer); }
+        else { c.strokeStyle = '#2a2d2f'; c.lineWidth = 3; c.beginPath(); c.moveTo(pointer.x, pointer.y); c.lineTo(pointer.x + 30, pointer.y - 30); c.stroke(); c.fillStyle = '#9aa3a8'; c.beginPath(); c.arc(pointer.x, pointer.y, 4, 0, 7); c.fill(); }
+      },
+    };
+    setHint('Knife (1) for bulk, scalpel (2) near bone. Spoon (3) on the eye, hose (4) or wire (5) at the hole in the back of the skull.');
+  },
+};
+
+/* ==================== STAGE 5: INVENTORY & SMALL BONES =============== */
+/* Loose items from earlier stages (S.tray) plus look-alike scraps. Drag each
+   into a labeled bag or the waste bucket. Results are judged when you move on. */
+const BONE_FILL = '#e6dcc4', BONE_LINE = '#9a8c70';
+const TRAY_KINDS = {
+  hyoid: { group: 'hyoid', bag: 'hyoid', desc: 'A small U of thin rods, about 3 cm across. Came out of the throat.', svg: `<path d="M8 10 Q20 34 32 10" fill="none" stroke="${BONE_LINE}" stroke-width="6" stroke-linecap="round"/><path d="M8 10 Q20 34 32 10" fill="none" stroke="${BONE_FILL}" stroke-width="4" stroke-linecap="round"/>` },
+  sesamoid: { group: 'sesamoids', bag: 'sesamoids', desc: 'Pea-sized, smooth, hard. Doesn\'t give when pressed.', svg: `<ellipse cx="20" cy="20" rx="5" ry="6.5" fill="${BONE_FILL}" stroke="${BONE_LINE}"/>` },
+  patella: { group: 'patella', bag: 'patella', desc: 'Teardrop-shaped and dense, one face smooth and glassy.', svg: `<path d="M20 8 C30 12 28 30 20 32 C12 30 10 12 20 8Z" fill="${BONE_FILL}" stroke="${BONE_LINE}"/>` },
+  baculum: { group: 'baculum', bag: 'baculum', desc: 'A slender, slightly curved rod of bone, about 10 cm, hooked at one end.', svg: `<path d="M5 30 Q20 26 33 10 Q35 7 32 6" fill="none" stroke="${BONE_LINE}" stroke-width="5" stroke-linecap="round"/><path d="M5 30 Q20 26 33 10 Q35 7 32 6" fill="none" stroke="${BONE_FILL}" stroke-width="3" stroke-linecap="round"/>` },
+  caudal: { group: 'caudal', bag: 'caudal', desc: 'A spool-shaped bone the size of a rice grain, flared at both ends.', svg: `<path d="M13 16 L16 18 L24 18 L27 16 L27 24 L24 22 L16 22 L13 24Z" fill="${BONE_FILL}" stroke="${BONE_LINE}"/>` },
+  claw_f: { group: 'foreph', bag: 'feet', desc: 'A curved, pointed bone with a horn sheath on it. A claw core.', svg: `<path d="M10 28 Q14 10 32 8 Q22 14 18 30Z" fill="#d8ccb2" stroke="#4a4038"/>` },
+  claw_h: { group: 'hindph', bag: 'feet', desc: 'A curved, pointed bone with a horn sheath on it. A claw core.', svg: `<path d="M10 28 Q14 10 32 8 Q22 14 18 30Z" fill="#d8ccb2" stroke="#4a4038"/>` },
+  // decoys: tissue that looks like it might be bone
+  gristle: { decoy: true, desc: 'Pale and rubbery. It bends a little when pressed.', svg: `<path d="M10 20 Q14 10 24 13 Q32 18 28 26 Q18 32 10 20Z" fill="#e9dccb" stroke="#b7a38e"/>` },
+  cartilage: { decoy: true, desc: 'A translucent blue-white disc that flexes.', svg: `<ellipse cx="20" cy="20" rx="10" ry="8" fill="rgba(210,225,235,.9)" stroke="#9fb3c2"/>` },
+  fat: { decoy: true, desc: 'A soft yellow lump that smears.', svg: `<path d="M9 22 Q10 10 22 12 Q33 14 30 24 Q22 32 9 22Z" fill="#e5cf88" stroke="#b59c4f"/>` },
+  lymph: { decoy: true, desc: 'Bean-shaped, soft, grey-pink.', svg: `<ellipse cx="20" cy="20" rx="9" ry="6" fill="#b99a98" stroke="#7b5d5b"/>` },
+  tendon: { decoy: true, desc: 'Stringy silver fibres.', svg: `<path d="M6 14 Q20 22 34 14 M6 20 Q20 28 34 20 M6 26 Q20 32 34 26" fill="none" stroke="#d9dde0" stroke-width="2"/>` },
+  pebble: { decoy: true, desc: 'Grey, hard and cold, gritty on the surface. From the roadside.', svg: `<path d="M10 24 L12 13 L24 10 L32 18 L28 28 L16 30Z" fill="#8d9090" stroke="#5c6060"/>` },
+};
+const BAGS = [
+  { id: 'hyoid', label: 'Hyoid', x: 760, y: 60 }, { id: 'sesamoids', label: 'Sesamoids', x: 760, y: 170 },
+  { id: 'patella', label: 'Patellae', x: 760, y: 280 }, { id: 'caudal', label: 'Tail tip', x: 760, y: 390 },
+  { id: 'feet', label: 'Phalanges', x: 610, y: 420 }, { id: 'baculum', label: 'Baculum', x: 460, y: 420 },
+  { id: 'discard', label: 'Waste bucket', x: 80, y: 420, discard: true },
+];
+
+function checklist(container) {
+  container.innerHTML = '';
+  const box = el('div', { class: 'check' });
+  for (const b of Object.values(S.bones)) {
+    const cls = b.lost ? 'lost' : b.small && !b.bagged ? 'risk' : '';
+    box.append(el('div', { class: 'stat' }, el('span', { class: cls }, b.name), el('b', {}, `${b.have}/${b.n}${b.bagged ? ' · bagged' : ''}`)));
+  }
+  const teethHave = S.teeth.filter(t => t.state !== 'lost').length;
+  box.append(el('div', { class: 'stat' }, el('span', { class: teethHave < S.teeth.length ? 'lost' : '' }, 'Teeth'), el('b', {}, `${teethHave}/${S.teeth.length}`)));
+  container.append(box);
+}
+
+const stageInventory = {
+  key: 'inventory', title: 'Inventory & small bones', short: 'Count',
+  mount(P) {
+    stageHead(P, 4, 'The tray is a mess of scraps. Some of them are bones you can\'t replace. Bag and label the bones; bin the rest.');
+    P.append(el('p', {}, 'Hover or tap an item to feel it. Click a bag\'s blank tag to label it.',
+      why('Small elements are the first thing lost in amateur preps. The hyoid comes out with the throat, sesamoids hide behind joints, and the last tail vertebrae are tiny. A specimen missing them is incomplete forever.')));
+    // decoys mixed in with whatever earlier stages produced
+    const items = [...S.tray, ...['gristle', 'gristle', 'cartilage', 'fat', 'fat', 'lymph', 'tendon', 'pebble'].map(kind => ({ kind }))];
+    const r = rng(42 + items.length);
+    items.forEach((it, i) => { it.x = 110 + r() * 540; it.y = 80 + r() * 290; it.where = null; it.uid = i; });
+    const bags = BAGS.map(b => ({ ...b, labeled: b.discard, items: [] }));
+
+    const board = el('div', { style: `position:absolute;left:0;top:0;width:${W}px;height:${H}px;transform-origin:0 0` });
+    $('#overlay').append(board);
+    const fitBoard = () => { board.style.transform = `translate(${view.ox}px,${view.oy}px) scale(${view.s})`; };
+    const bagEls = {};
+    for (const b of bags) {
+      const tag = el('span', { class: 'tagl' + (b.labeled ? '' : ' blank') }, b.labeled ? b.label : `✎ ${b.label}?`);
+      if (!b.labeled) tag.addEventListener('click', () => { b.labeled = true; tag.className = 'tagl'; tag.textContent = b.label; tag.nextSibling.textContent = 'zip bag'; log(`Labeled the ${b.label.toLowerCase()} bag.`); });
+      const cnt = el('span', { class: 'cnt' }, '0 items');
+      const e = el('div', { class: 'bag' + (b.discard ? ' discard' : ''), style: `left:${b.x}px;top:${b.y}px` }, tag, el('span', {}, b.discard ? '' : b.labeled ? 'zip bag' : 'zip bag · click tag to write it'), cnt);
+      bagEls[b.id] = { e, cnt };
+      board.append(e);
+    }
+    const bagAt = (x, y) => bags.find(b => x >= b.x && x <= b.x + 112 && y >= b.y && y <= b.y + 92);
+    for (const it of items) {
+      const K = TRAY_KINDS[it.kind];
+      const e = el('div', { class: 'item', style: `left:${it.x}px;top:${it.y}px`, 'data-tip': K.desc, html: `<svg viewBox="0 0 40 40">${K.svg}</svg>` });
+      it.el = e; board.append(e);
+      e.addEventListener('pointerdown', ev => {
+        ev.preventDefault(); e.setPointerCapture(ev.pointerId); e.style.zIndex = 5;
+        const move = mv => {
+          const p = toLogical(mv); e.style.left = p.x + 'px'; e.style.top = p.y + 'px';
+          for (const b of bags) bagEls[b.id].e.classList.toggle('hot', b === bagAt(p.x, p.y));
+        };
+        const up = upEv => {
+          e.removeEventListener('pointermove', move); e.removeEventListener('pointerup', up);
+          const p = toLogical(upEv), b = bagAt(p.x, p.y);
+          for (const bb of bags) bagEls[bb.id].e.classList.remove('hot');
+          if (b) { it.where = b.id; b.items.push(it); e.remove(); bagEls[b.id].cnt.textContent = `${b.items.length} item${b.items.length === 1 ? '' : 's'}`; SND.burst({ dur: .1, f0: 1800, f1: 1200, q: 2, type: 'bandpass', vol: .08 }); }
+          else { it.x = p.x; it.y = p.y; }
+        };
+        e.addEventListener('pointermove', move); e.addEventListener('pointerup', up);
+      });
+    }
+    const left = el('div', { class: 'stat' }); P.append(left);
+    P.append(el('h3', {}, 'Skeleton checklist'));
+    const chk = el('div'); P.append(chk); checklist(chk);
+
+    nextButton(P, 'Tray is sorted →', () => true, async () => {
+      const remainingBones = items.filter(it => !it.where && !TRAY_KINDS[it.kind].decoy).length;
+      if (remainingBones || items.some(it => !it.where)) {
+        const ok = await ask('Clear the tray?', 'Anything still on the tray gets swept into the waste with the scraps.', [{ value: false, label: 'Keep sorting', primary: true }, { value: true, label: 'Sweep it' }]);
+        if (!ok) return;
+      }
+      // judge every item now
+      for (const it of items) {
+        const K = TRAY_KINDS[it.kind], b = bags.find(x => x.id === it.where);
+        if (K.decoy) { if (b && !b.discard) addMistake('tissue_bagged', it.kind); continue; }
+        if (!b) loseBones(K.group, 1, 'small_left');
+        else if (b.discard) loseBones(K.group, 1, 'small_discarded');
+        else if (b.id !== K.bag) addMistake('mislabeled', `${it.kind} in ${b.label.toLowerCase()}`);
+        else S.bones[K.group].bagged = true;
+      }
+      if (bags.some(b => !b.labeled && b.items.some(it => !TRAY_KINDS[it.kind].decoy))) addMistake('unlabeled');
+      S.tray = [];
+      advance(1.5);
+      goStage(5);
+    });
+
+    scene = {
+      smell: [400, 250],
+      draw(c, t) {
+        drawTray(c);
+        c.save(); c.fillStyle = 'rgba(120,50,42,.25)';
+        for (let i = 0; i < 14; i++) { c.beginPath(); c.ellipse(140 + (i * 97) % 520, 100 + (i * 61) % 260, 30, 14, i, 0, 7); c.fill(); }
+        c.restore();
+        fitBoard();
+        if (!scene._lt || t - scene._lt > 300) { scene._lt = t; left.innerHTML = `<span>Items still on the tray</span><b>${items.filter(i => !i.where).length}</b>`; }
+      },
+    };
+    setHint('Drag each item into a bag or the waste bucket. Bags need a label.');
+  },
+};
+
+/* ===================== STAGE 6: FINAL TISSUE REMOVAL ================= */
+/* METHODS: each has a unit (day or hour), a tick() that advances one unit and
+   may set M.pending to an event, and draw() for the vessel. Shared helpers
+   handle teeth and small bones that fall loose. */
+let M = null;
+const fToRate = (t, table) => { for (const [max, v] of table) if (t <= max) return v; return table[table.length - 1][1]; };
+
+function dropTooth() {
+  const cand = S.teeth.filter(t => t.state === 'seated' && t.canFall);
+  if (!cand.length) return;
+  const tooth = cand[Math.floor(Math.random() * cand.length)];
+  tooth.state = 'loose'; M.looseTeeth++;
+}
+/* Foot bones from feet macerated whole come loose as tissue goes. */
+function loosenFeet(frac) {
+  for (const [leg, v] of Object.entries(S.flags.feet || {})) {
+    if (v !== 'whole') continue;
+    const ids = leg.startsWith('fore') ? ['carpals', 'metacarpals', 'foreph'] : ['tarsals', 'metatarsals', 'hindph'];
+    for (const id of ids) {
+      const target = Math.floor(S.bones[id].n / 2 * frac), key = leg + id;
+      M.looseFeet[key] = Math.max(M.looseFeet[key] || 0, target);
+    }
+  }
+}
+/* What happens to everything loose when the water (or soil, or frass) is emptied. */
+function emptyVessel(keep, causeTeeth = 'teeth_dumped', causeSmall = 'small_dumped') {
+  const loose = S.teeth.filter(t => t.state === 'loose');
+  if (keep) { loose.forEach(t => t.state = 'collected'); if (loose.length) log(`Sieve caught ${loose.length} loose teeth.`, 'ok'); }
+  else if (loose.length) { loose.forEach(t => t.state = 'lost'); addMistake(causeTeeth, `${loose.length} teeth`); }
+  M.looseTeeth = 0;
+  for (const [key, k] of Object.entries(M.looseFeet)) {
+    const id = key.replace(/^(fore|hind)[LR]/, ''), got = k - (M.feetSaved[key] || 0);
+    if (got <= 0) continue;
+    if (keep) M.feetSaved[key] = k; else { loseBones(id, got, causeSmall); M.feetSaved[key] = k; }
+  }
+}
+
+const METHODS = {
+  beetles: {
+    label: 'Dermestid beetles', unit: 'day',
+    blurb: 'A colony of Dermestes larvae eats dried flesh and leaves bone untouched. Best for delicate bones.',
+    pros: 'Gentlest on bone, keeps small bones articulated, low smell.', cons: 'Needs dry flesh, a warm colony, feeding, and a freezer afterward.',
+    why: 'Dermestid larvae eat dry protein. They avoid wet, fatty tissue, which moulds and can crash the colony. They can\'t chew bone, which is why museums use them for small and fragile skeletons.',
+    init() { M.temp = 78; M.wet = DECOMP[S.decomp].wet; M.health = .85; M.hunger = .1; M.drying = false; },
+    tick() {
+      if (M.drying) { M.wet = Math.max(.05, M.wet - .1); if (M.wet <= .2) { M.drying = false; log('Flesh is leathery now. Into the tank.', 'ok'); } return 18; }
+      const tf = fToRate(M.temp, [[67, .25], [73, .6], [84, 1], [88, .7], [200, .4]]);
+      if (M.wet > .45) {
+        M.health -= .05 * M.wet;
+        if (!M.moldWarned) { M.moldWarned = true; addMistake('beetles_wet'); M.pending = { title: 'Mould in the tank', text: 'White fuzz is growing on the wet tissue and the larvae have moved away from it.', choices: [{ label: 'Lift it out and dry it', value: () => { M.drying = true; } }, { label: 'Leave it in', value: () => {} }] }; }
+      }
+      M.wet = Math.max(.05, M.wet - .03);
+      M.tissue -= .07 * M.health * tf * (1 - M.wet * .6);
+      M.hunger = M.tissue < .15 ? M.hunger + .12 : Math.max(0, M.hunger - .05);
+      if (M.temp > 86) M.health -= .03;
+      if (M.temp < 68) M.health -= .01;
+      if (M.tissue < .4 && Math.random() < .1) dropTooth();
+      if (!M.pending && M.hunger > .6 && !M.hungerAsked) {
+        M.hungerAsked = true;
+        M.pending = { title: 'Hungry larvae', text: 'The flesh is almost gone and larvae are chewing the cartilage that holds the small bones together.', choices: [
+          { label: 'Feed the colony scraps', note: 'Keeps them off the specimen.', value: () => { M.hunger = .1; M.hungerAsked = false; } },
+          { label: 'Ignore it', note: 'Small bones will come loose in the frass.', value: () => { M.health -= .1; S.flags.frassBones = true; } }] };
+      }
+      if (!M.pending && M.temp > 86 && Math.random() < .3) M.pending = { title: 'Larvae climbing the walls', text: 'Too warm: larvae are wandering out of the tank to find somewhere to pupate.', choices: [{ label: 'Turn the heat mat down to 79 °F', value: () => { M.temp = 79; } }, { label: 'Leave it', value: () => { M.health -= .08; } }] };
+      if (!M.pending && Math.random() < .015 && !M.mites) { M.mites = true; M.pending = { title: 'Mites', text: 'Tiny pale mites are swarming the tank. A sign of too much humidity.', choices: [{ label: 'Open the vents, add dry bedding', value: () => {} }, { label: 'Ignore them', value: () => { M.health -= .2; } }] }; }
+      if (M.health < .15 && !M.dead) {
+        M.dead = true; addMistake('colony_died');
+        M.pending = { title: 'The colony has crashed', text: 'Most of the larvae are dead. The specimen still has tissue on it.', choices: [
+          { label: 'Finish in warm water instead', value: () => switchMethod('warm') }, { label: 'Finish in cold water instead', value: () => switchMethod('cold') }] };
+      }
+      return 20;
+    },
+    finish: async () => {
+      const freeze = await ask('Before it leaves the beetle room', 'There may be eggs and small larvae deep in the foramina.', [
+        { value: true, label: 'Bag it and freeze it for a week', note: 'Kills every stage of the beetle.', primary: true }, { value: false, label: 'Bring it straight inside' }]);
+      if (freeze) { advance(24 * 7); log('A week in the freezer.', 'ok'); } else { addMistake('not_frozen'); S.spec.infest = true; }
+      const sift = await ask('The frass', 'The tank bedding is full of frass, cast skins, and maybe a tooth or two.', [
+        { value: true, label: 'Sift the frass through a sieve', primary: true }, { value: false, label: 'Tip it out' }]);
+      emptyVessel(sift, 'teeth_lost', 'small_left');
+      if (S.flags.frassBones && !sift) { loseBones('sesamoids', 2, 'small_left'); }
+    },
+    draw(c, t) {
+      c.save();
+      c.fillStyle = '#b8c3c7'; c.strokeStyle = '#7e8a8f'; c.lineWidth = 4; c.beginPath(); c.roundRect(170, 120, 560, 330, 10); c.fill(); c.stroke();
+      c.fillStyle = '#c9b48a'; c.fillRect(174, 360, 552, 86);
+      drawSpecimenPile(c, 450, 330, M.tissue, M.wet > .45 ? '#556b4e' : '#6a3a2a');
+      const n = Math.round(80 * M.health);
+      for (let i = 0; i < n; i++) {
+        const a = i * 2.39 + t / (900 + i * 13), rr = 40 + (i * 37) % 140;
+        c.fillStyle = i % 4 ? '#3a2a1f' : '#1a1512';
+        c.beginPath(); c.ellipse(450 + Math.cos(a) * rr, 330 + Math.sin(a) * rr * .4, 3, 1.6, a, 0, 7); c.fill();
+      }
+      if (M.drying) { c.fillStyle = 'rgba(255,240,200,.25)'; c.fillRect(170, 120, 560, 330); c.fillStyle = '#333'; c.font = '14px system-ui'; c.fillText('drying on a screened rack', 190, 145); }
+      c.restore();
+    },
+    stench: () => 15 + (M.wet > .45 ? 20 : 0),
+  },
+  cold: {
+    label: 'Cold-water maceration', unit: 'day',
+    blurb: 'Submerge in room-temperature water and let bacteria eat the tissue.',
+    pros: 'The cleanest, gentlest result. Cheap.', cons: 'Weeks. The worst smell of any method. Water needs changing.',
+    why: 'Bacteria digest the tissue and nothing else, so the bone is untouched. Cool water means slow bacteria: several weeks for a raccoon. Rotting water stains bone if left too long.',
+    init() { M.temp = 68; M.foul = .1; M.bac = 1; },
+    tick() { return waterTick(.022, M.temp); },
+    finish: () => waterFinish(),
+    draw: (c, t) => drawBucket(c, t),
+    stench: () => 50 + M.foul * 35,
+  },
+  warm: {
+    label: 'Warm-water maceration', unit: 'day',
+    blurb: 'The same as cold maceration with an aquarium heater keeping it at 85–95 °F.',
+    pros: 'Clean result in a couple of weeks.', cons: 'Smells just as bad. Too hot and the bacteria die and grease sets.',
+    why: 'Gut and soil bacteria work fastest around body temperature. Too cool and they slow; above about 40 °C (104 °F) they die off and fat starts to cook into the bone.',
+    init() { M.temp = 90; M.foul = .1; M.bac = 1; M.level = 1; },
+    tick() {
+      if (!M.heaterDead && Math.random() < .025) {
+        M.heaterDead = true; M.setTemp = M.temp; M.temp = 68;
+        M.pending = { title: 'Heater failed', text: 'The water is at room temperature. The heater\'s light is off.', choices: [{ label: 'Replace the heater', value: () => { M.heaterDead = false; M.temp = M.setTemp; } }, { label: 'Carry on cold', value: () => {} }] };
+      }
+      M.level -= .04;
+      if (!M.pending && M.level < .75 && !M.levelAsked) {
+        M.levelAsked = true;
+        M.pending = { title: 'Water level dropping', text: 'Evaporation has left the heater element half out of the water.', choices: [{ label: 'Top it up', value: () => { M.level = 1; M.levelAsked = false; } }, { label: 'Leave it', note: 'An exposed heater runs hot.', value: () => { M.temp += 14; } }] };
+      }
+      if (M.temp > 104) { S.spec.greaseCooked += .004; if (!hasMistake('heater_cooked')) addMistake('heater_cooked'); }
+      return waterTick(.065, M.temp);
+    },
+    finish: () => waterFinish(),
+    draw: (c, t) => drawBucket(c, t, true),
+    stench: () => 55 + M.foul * 35,
+  },
+  burial: {
+    label: 'Burial', unit: 'day',
+    blurb: 'Bury it and let soil organisms do the work.',
+    pros: 'Almost no effort, almost no smell.', cons: 'Months. Soil stains bone brown. Scavengers dig.',
+    why: 'Soil bacteria, fungi and invertebrates clean bone slowly. Tannins and iron in the soil dye it tan to brown, often permanently.',
+    async setup() {
+      M.protect = await ask('How do you bury it?', 'Raccoon-sized burials attract the next raccoon.', [
+        { value: true, label: 'In a mesh bag, under a weighted crate', note: 'Keeps scavengers out and small bones together.', primary: true },
+        { value: false, label: 'Straight into a hole' }]);
+    },
+    init() { M.temp = 70; },
+    tick() {
+      M.tissue -= .011;
+      S.spec.stain += M.protect ? .0018 : .0024;
+      if (M.tissue < .5 && Math.random() < .12) dropTooth();
+      loosenFeet(Math.max(0, 1 - M.tissue * 2));
+      if (!M.protect && Math.random() < .025) {
+        const pool = Object.values(S.bones).filter(b => b.small && b.have > 0);
+        const b = pool[Math.floor(Math.random() * pool.length)];
+        const k = 1 + Math.floor(Math.random() * 4);
+        M.pending = { title: 'Something dug it up', text: 'The hole has been opened overnight. Paw prints in the dirt.', choices: [{ label: 'Rebury it under a crate', value: () => { M.protect = true; loseBones(b.id, k, 'scavenged'); } }, { label: 'Just fill it in again', value: () => loseBones(b.id, k, 'scavenged') }] };
+      }
+      return 8;
+    },
+    finish: async () => {
+      const sieve = await ask('Digging up', 'Bones and teeth are mixed through the soil.', [{ value: true, label: 'Dig carefully and sieve the soil', primary: true }, { value: false, label: 'Pull up what you can see' }]);
+      emptyVessel(sieve || M.protect, 'teeth_lost', 'small_left');
+      if (S.spec.stain > .1) addMistake('burial_stain');
+    },
+    draw(c) {
+      c.save();
+      c.fillStyle = '#9fb7c6'; c.fillRect(40, 40, 820, 130);
+      c.fillStyle = '#5b4632'; c.fillRect(40, 170, 820, 350);
+      c.fillStyle = '#4a3828'; for (let i = 0; i < 60; i++) { c.beginPath(); c.arc(60 + (i * 137) % 800, 190 + (i * 71) % 320, 3 + i % 5, 0, 7); c.fill(); }
+      c.fillStyle = '#3b2b1e'; c.beginPath(); c.ellipse(450, 340, 170, 70, 0, 0, 7); c.fill();
+      drawSpecimenPile(c, 450, 340, M.tissue, '#4e3226', S.spec.stain);
+      if (M.protect) { c.strokeStyle = 'rgba(30,30,30,.6)'; c.setLineDash([3, 3]); c.beginPath(); c.ellipse(450, 340, 150, 60, 0, 0, 7); c.stroke(); c.setLineDash([]); c.fillStyle = '#6f6a62'; c.fillRect(350, 140, 200, 30); }
+      c.restore();
+    },
+    stench: () => 6,
+  },
+  simmer: {
+    label: 'Simmering', unit: 'hour',
+    blurb: 'A pot on a camp stove, held just below boiling.',
+    pros: 'Done in an afternoon.', cons: 'Boiling cracks bone, pops teeth and cooks grease in. It creeps toward a boil if you look away.',
+    why: 'Heat denatures collagen in the tissue so it slides off. The same heat shrinks and cracks bone, loosens teeth in their sockets and drives fat deep into the bone where degreasing can\'t easily reach it. A bare simmer limits the damage, a rolling boil maximises it.',
+    init() { M.temp = 185; },
+    tick() {
+      M.temp = Math.min(212, M.temp + Math.random() * 6);
+      const boil = M.temp >= 205;
+      M.tissue -= .09 * fToRate(M.temp, [[160, .25], [175, .6], [195, 1], [204, 1.15], [999, 1.3]]);
+      S.spec.greaseCooked += boil ? .05 : .012;
+      if (boil) {
+        if (!hasMistake('boiled')) addMistake('boiled');
+        if (Math.random() < .3) { S.spec.cracks++; log('A crack runs across a long bone.', 'bad'); }
+        for (let i = 0; i < 2; i++) { dropTooth(); }
+        const looseNow = S.teeth.filter(x => x.state === 'loose');
+        if (looseNow.length && Math.random() < .3) { looseNow[0].state = 'lost'; log('A tooth split in the boil.', 'bad'); }
+      } else if (M.tissue < .5 && Math.random() < .3) dropTooth();
+      loosenFeet(Math.max(0, 1 - M.tissue * 2));
+      if (boil && !M.boilAsked) {
+        M.boilAsked = true;
+        M.pending = { title: 'Rolling boil', text: 'The pot has crept up to a full boil. Bones are knocking against each other.', choices: [{ label: 'Turn it down to a bare simmer', value: () => { M.temp = 182; M.boilAsked = false; } }, { label: 'Leave it, it\'s faster', value: () => {} }] };
+      }
+      return 35;
+    },
+    finish: async () => {
+      const sieve = await ask('Draining the pot', 'The stock is cloudy and greasy. Teeth may be in the bottom.', [{ value: true, label: 'Pour through a sieve', primary: true }, { value: false, label: 'Tip it down the drain' }]);
+      emptyVessel(sieve);
+    },
+    draw(c, t) {
+      c.save();
+      c.fillStyle = '#3d4246'; c.fillRect(300, 470, 300, 30);
+      c.fillStyle = 'rgba(80,140,230,.8)'; for (let i = 0; i < 7; i++) { c.beginPath(); c.ellipse(330 + i * 40, 466, 10, 5 + Math.sin(t / 90 + i) * 2, 0, 0, 7); c.fill(); }
+      c.fillStyle = '#9aa1a6'; c.strokeStyle = '#5f666b'; c.lineWidth = 4; c.beginPath(); c.roundRect(250, 210, 400, 250, 14); c.fill(); c.stroke();
+      const water = `rgba(${200 - M.foul * 50},${180 - M.foul * 40},${120},.85)`;
+      c.fillStyle = water; c.fillRect(256, 230, 388, 224);
+      drawSpecimenPile(c, 450, 380, M.tissue, '#9a6a55');
+      const boil = M.temp >= 205, simmer = M.temp >= 175;
+      c.fillStyle = 'rgba(255,255,255,.6)';
+      for (let i = 0; i < (boil ? 40 : simmer ? 10 : 2); i++) { const x = 270 + ((i * 97 + t / (boil ? 3 : 9)) % 360), y = 440 - ((t / (boil ? 2 : 6) + i * 53) % 200); c.beginPath(); c.arc(x, y, boil ? 4 : 2, 0, 7); c.fill(); }
+      c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 6;
+      for (let i = 0; i < 4; i++) { c.beginPath(); for (let k = 0; k < 12; k++) { const y = 200 - k * 12 - (t / 30 % 12); c.lineTo(330 + i * 80 + Math.sin(t / 400 + k + i) * 10, y); } c.stroke(); }
+      c.restore();
+    },
+    stench: () => 35,
+  },
+};
+/* Cold and warm water share most of their logic. */
+function waterTick(base, temp) {
+  const D = DECOMP[S.decomp];
+  const warm = base > .03, tf = warm ? fToRate(temp, [[74, .5], [84, .8], [95, 1], [100, .85], [110, .4], [999, .15]]) : 1;
+  const rehyd = S.decomp === 'dried' && M.days < 6 ? .35 : 1;
+  M.bac = Math.min(1, M.bac + .1);
+  M.tissue -= base * D.macMul * rehyd * M.bac * tf;
+  M.foul += warm ? .13 : .09;
+  if (M.foul > 1.15) { S.spec.stain += .006; if (S.spec.stain > .04 && !hasMistake('rancid')) addMistake('rancid'); }
+  if (M.tissue < .6 && Math.random() < .3) dropTooth();
+  loosenFeet(Math.max(0, 1 - M.tissue * 2));
+  if (!M.pending && M.foul >= .75 && !M.foulAsked) {
+    M.foulAsked = true;
+    M.pending = { title: 'The water has turned', text: 'Opaque grey-brown, with a fatty scum and a smell you can taste.', choices: [
+      { label: 'Change it through a sieve, keep a cup as starter', note: 'Fresh water, same bacteria.', value: () => changeWater(true, true) },
+      { label: 'Change it through a sieve', note: 'Clean restart; the bacteria have to rebuild.', value: () => changeWater(true, false) },
+      { label: 'Dump it straight and refill', value: () => changeWater(false, false) },
+      { label: 'Leave it a while longer', note: 'Asks again in three days.', value: () => { M.snooze = 3; } }] };
+  } else if (M.snooze > 0 && --M.snooze === 0) M.foulAsked = false;
+  return null;
+}
+function changeWater(sieve, starter) {
+  emptyVessel(sieve);
+  M.foul = starter ? .2 : .05; M.bac = starter ? .9 : .4; M.foulAsked = false;
+  SND.slosh(); expose(1.5, ['hands', 'eyes']); log(sieve ? 'Water changed through a sieve.' : 'Water dumped and refilled.', sieve ? 'ok' : 'warn');
+}
+async function waterFinish() {
+  const sieve = await ask('Last pour', 'The bones are bare. One more pour to get them out.', [{ value: true, label: 'Pour through a sieve', primary: true }, { value: false, label: 'Dump it and fish the bones out' }]);
+  emptyVessel(sieve);
+}
+function switchMethod(id) {
+  log(`Switching to ${METHODS[id].label.toLowerCase()}.`, 'warn');
+  M.method = id; METHODS[id].init(); M.switched = true;
+  S.flags.macMethod = id;
+  stageMacerate.renderRun?.();
+}
+/* A heap of bones with a tissue coat that thins as M.tissue drops. */
+function drawSpecimenPile(c, x, y, tissue, tColor, stain = 0) {
+  c.save();
+  const bone = stain > .05 ? `rgb(${200 - stain * 300},${180 - stain * 330},${140 - stain * 340})` : '#e2d6bb';
+  const bits = [[0, 0, 60, 14, .2], [-50, 10, 40, 8, -.4], [50, 14, 46, 9, .5], [-20, -18, 30, 26, 0], [30, -10, 34, 7, 1.2], [-70, -6, 26, 6, 1], [70, -4, 28, 6, -1.1]];
+  for (const [dx, dy, rx, ry, a] of bits) { c.fillStyle = bone; c.strokeStyle = '#9a8c70'; c.beginPath(); c.ellipse(x + dx, y + dy, rx, ry, a, 0, 7); c.fill(); c.stroke(); }
+  c.globalAlpha = Math.max(0, Math.min(.9, tissue * .9));
+  c.fillStyle = tColor;
+  for (const [dx, dy, rx, ry, a] of bits) { c.beginPath(); c.ellipse(x + dx, y + dy, rx * .9, ry * 1.1, a, 0, 7); c.fill(); }
+  c.restore();
+}
+function drawBucket(c, t, heater) {
+  c.save();
+  c.fillStyle = '#d7dadb'; c.strokeStyle = '#8b9295'; c.lineWidth = 4;
+  c.beginPath(); c.moveTo(280, 130); c.lineTo(620, 130); c.lineTo(590, 480); c.lineTo(310, 480); c.closePath(); c.fill(); c.stroke();
+  const lvl = heater ? 140 + (1 - (M.level ?? 1)) * 200 : 140;
+  const f = Math.min(1.4, M.foul);
+  c.save(); c.beginPath(); c.moveTo(282, lvl); c.lineTo(618, lvl); c.lineTo(590, 478); c.lineTo(310, 478); c.closePath(); c.clip();
+  c.fillStyle = `rgb(${170 - f * 60},${175 - f * 75},${150 - f * 90})`; c.fillRect(270, lvl, 360, 360);
+  drawSpecimenPile(c, 450, 420, M.tissue, '#7a4a3a', S.spec.stain);
+  c.fillStyle = `rgba(${110 - f * 30},${100 - f * 40},${60},${Math.min(.85, f * .7)})`; c.fillRect(270, lvl, 360, 360);  // cloudiness over the pile
+  c.fillStyle = `rgba(230,215,160,${Math.min(.8, f * .6)})`; c.fillRect(282, lvl, 336, 6); // fat scum
+  c.fillStyle = 'rgba(255,255,255,.4)';
+  for (let i = 0; i < 6 * f; i++) { const x = 320 + (i * 71) % 260, y = 470 - ((t / 25 + i * 60) % (470 - lvl)); c.beginPath(); c.arc(x, y, 2, 0, 7); c.fill(); }
+  c.restore();
+  if (heater) { c.fillStyle = M.heaterDead ? '#555' : '#2d2f31'; c.fillRect(560, 160, 12, 220); c.fillStyle = M.heaterDead ? '#444' : '#e55'; c.beginPath(); c.arc(566, 170, 4, 0, 7); c.fill(); }
+  // loose teeth on the bottom
+  c.fillStyle = '#f2ecdc'; for (let i = 0; i < M.looseTeeth; i++) { c.beginPath(); c.ellipse(340 + i * 13 % 220, 470 - (i % 3) * 3, 3, 5, .4, 0, 7); c.fill(); }
+  c.restore();
+}
+
+const stageMacerate = {
+  key: 'macerate', title: 'Final tissue removal', short: 'Macerate',
+  mount(P) {
+    this.P = P;
+    stageHead(P, 5, 'Pick how the last of the soft tissue comes off. Every method trades time, smell, effort and risk.');
+    const D = DECOMP[S.decomp];
+    const suit = {
+      beetles: S.decomp === 'dried' ? 'Ideal for this dried carcass.' : 'This specimen is wet. It will need drying first.',
+      cold: S.decomp === 'dried' ? 'Dried tissue needs a week to rehydrate before rotting starts.' : S.decomp === 'bloated' ? 'Already well on its way; it will go quickly.' : '',
+      warm: '', burial: '', simmer: 'Tempting. Watch the temperature.',
+    };
+    const box = el('div', { class: 'opts' });
+    for (const [k, m] of Object.entries(METHODS)) {
+      box.append(el('button', { class: 'btn opt', onclick: async () => {
+        M = { method: k, days: 0, hours: 0, tissue: Math.min(1.6, Math.max(.6, (S.flags.tissueLeft ?? .3) / .3)), foul: 0, bac: 1, looseTeeth: 0, looseFeet: {}, feetSaved: {}, pending: null };
+        M.start = M.tissue;
+        if (m.setup) await m.setup();
+        m.init();
+        S.flags.macMethod = k;
+        log(`Method: ${m.label.toLowerCase()}.`);
+        this.renderRun();
+      } }, el('b', {}, m.label), why(m.why), el('small', {}, m.blurb), el('small', {}, '+ ' + m.pros), el('small', {}, '− ' + m.cons), suit[k] ? el('small', {}, el('i', {}, suit[k])) : null));
+    }
+    P.append(box);
+    scene = { smell: [450, 300], draw(c) { drawTray(c); drawSpecimenPile(c, 450, 300, (S.flags.tissueLeft ?? .3) / .3 * .8, '#7a2c26'); } };
+    setHint('Choose a method.');
+  },
+  renderRun() {
+    const P = this.P, m = METHODS[M.method];
+    P.innerHTML = '';
+    stageHead(P, 5, m.blurb);
+    P.append(el('h3', {}, m.label, why(m.why)));
+    const stats = el('div'); P.append(stats);
+    const controls = el('div'); P.append(controls);
+    const time = el('div', { class: 'row' }); P.append(el('h3', {}, 'Time'), time);
+    const finishRow = el('div', { class: 'row' }); P.append(finishRow);
+    const runFor = async (units) => {
+      for (let i = 0; i < units; i++) {
+        if (M.tissue <= .03 || M.done) break;
+        const floor = METHODS[M.method].stench();
+        METHODS[M.method].tick();
+        if (METHODS[M.method].unit === 'hour') { M.hours++; advance(1, floor); } else { M.days++; advance(24, floor); }
+        if (M.pending) break;
+      }
+      M.tissue = Math.max(0, M.tissue);
+      if (M.pending) { const ev = M.pending; M.pending = null; const act = await ask(ev.title, ev.text, ev.choices.map((ch, i) => ({ ...ch, primary: i === 0 }))); act(); }
+      if (M.tissue <= .03 && !M.cleanSaid) { M.cleanSaid = true; log('Bare bone. Time to pull it.', 'ok'); }
+      draw();
+    };
+    const finish = async () => {
+      if (M.tissue > .06) {
+        const ok = await ask('Tissue still on', `About ${Math.round(M.tissue / M.start * 100)}% of the soft tissue is still there.`, [{ value: false, label: 'Keep going', primary: true }, { value: true, label: 'Pull it anyway' }]);
+        if (!ok) return;
+        addMistake('residual'); S.spec.residual = M.tissue / M.start;
+      }
+      await METHODS[M.method].finish();
+      // any teeth still loose in the vessel at the end are gone
+      S.teeth.filter(t => t.state === 'loose').forEach(t => t.state = 'lost');
+      if (S.spec.greaseCooked > .15) addMistake('cooked_grease');
+      M.done = true;
+      goStage(6);
+    };
+    const draw = () => {
+      const unit = METHODS[M.method].unit;
+      stats.innerHTML = '';
+      const row = (a, b) => stats.append(el('div', { class: 'stat' }, el('span', {}, a), el('b', {}, b)));
+      row('Soft tissue left', Math.round(Math.max(0, M.tissue) / M.start * 100) + '%');
+      row(unit === 'hour' ? 'Hours on the stove' : 'Days in', String(unit === 'hour' ? M.hours : M.days));
+      if (M.method === 'cold' || M.method === 'warm') row('Water', M.foul < .35 ? 'clear-ish' : M.foul < .75 ? 'cloudy' : M.foul < 1.15 ? 'opaque, scummy' : 'rancid');
+      if (M.method === 'beetles') { row('Colony', M.dead ? 'dead' : M.health > .7 ? 'thriving' : M.health > .4 ? 'struggling' : 'failing'); row('Specimen', M.wet > .45 ? 'wet' : 'dry enough'); }
+      if (M.method !== 'burial') row('Temperature', `${Math.round(M.temp)} °F`);
+      row('Loose teeth in the vessel', String(S.teeth.filter(t => t.state === 'loose').length));
+      controls.innerHTML = '';
+      if (M.method === 'warm' || M.method === 'beetles' || M.method === 'simmer') {
+        const [lo, hi] = M.method === 'simmer' ? [150, 212] : M.method === 'warm' ? [65, 115] : [60, 95];
+        const lab = el('div', { class: 'gauge' }, `${M.method === 'simmer' ? 'Burner' : 'Heater'} setting: ${Math.round(M.temp)} °F`);
+        const sl = el('input', { type: 'range', min: lo, max: hi, value: Math.round(M.temp), 'aria-label': 'temperature' });
+        sl.addEventListener('input', () => { M.temp = +sl.value; lab.textContent = `${M.method === 'simmer' ? 'Burner' : 'Heater'} setting: ${M.temp} °F`; });
+        sl.addEventListener('change', draw);
+        controls.append(lab, sl);
+      }
+      if (M.method === 'cold' || M.method === 'warm') controls.append(el('div', { class: 'row' },
+        el('button', { class: 'btn', onclick: () => { changeWater(true, true); draw(); } }, 'Change water (sieve + starter)'),
+        el('button', { class: 'btn', onclick: () => { changeWater(false, false); draw(); } }, 'Dump & refill')));
+      if (M.method === 'beetles' && !M.dead) controls.append(el('div', { class: 'row' },
+        el('button', { class: 'btn', disabled: M.drying || M.wet <= .2, onclick: () => { M.drying = true; log('Specimen out on a screened rack to dry.'); draw(); } }, 'Dry it first'),
+        el('button', { class: 'btn', onclick: () => { M.hunger = .05; log('Fed the colony.'); draw(); } }, 'Feed colony')));
+      time.innerHTML = '';
+      const steps = unit === 'hour' ? [['+1 hour', 1], ['+3 hours', 3], ['Until something happens', 48]] : [['+1 day', 1], ['+1 week', 7], ['Until something happens', 400]];
+      for (const [label, n] of steps) time.append(el('button', { class: 'btn', disabled: M.tissue <= .03, onclick: () => runFor(n) }, label));
+      finishRow.innerHTML = '';
+      finishRow.append(el('button', { class: 'btn primary', onclick: finish }, M.tissue <= .03 ? 'Pull the clean bones →' : 'Pull the specimen now'));
+    };
+    draw();
+    scene = {
+      smell: [450, 300],
+      draw(c, t) { if (M.method !== 'burial') drawTray(c); METHODS[M.method].draw(c, t); },
+    };
+    setHint(METHODS[M.method].unit === 'hour' ? 'Skip ahead by the hour. Keep it below a boil.' : 'Skip ahead in days. Events will stop the clock.');
+  },
+};
+
+/* ===================== STAGES 7-11 (simpler stubs) =================== */
+/* These are playable but lighter: mostly choices and a time skip. Each
+   still writes to S.spec / S.mistakes so grading sees the consequences. */
+
+/* A clean-bone drawing used by the later stages. Colour follows S.spec. */
+function boneColor() {
+  const s = S.spec;
+  let r = 226, g = 214, b = 187;
+  const white = s.white || 0;
+  r += 22 * white; g += 30 * white; b += 50 * white;
+  r -= s.stain * 260; g -= s.stain * 300; b -= s.stain * 330;
+  return `rgb(${Math.round(Math.min(250, r))},${Math.round(Math.min(248, g))},${Math.round(Math.min(240, b))})`;
+}
+function drawCleanSkeleton(c, opts = {}) {
+  const parts = S.animal.art.skeleton();
+  c.save();
+  if (opts.y) c.translate(0, opts.y);
+  for (const p of parts) {
+    if (S.bones[p.group] && S.bones[p.group].have === 0) continue;
+    c.fillStyle = boneColor(); c.fill(p.path); c.strokeStyle = 'rgba(110,98,74,.8)'; c.lineWidth = 1; c.stroke(p.path);
+  }
+  const [ox, oy] = S.animal.art.orbit; c.fillStyle = '#2b2522'; c.beginPath(); c.arc(ox, oy, 13, 0, 7); c.fill();
+  if (opts.water) { c.fillStyle = opts.water; c.fillRect(40, 40, 820, 480); }
+  // cracks drawn where they happened (random but stable)
+  const r = rng(99); c.strokeStyle = '#3d3329'; c.lineWidth = 1.2;
+  for (let i = 0; i < S.spec.cracks; i++) { const x = 200 + r() * 450, y = 240 + r() * 200; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 6, y + 5); c.lineTo(x + 3, y + 12); c.stroke(); }
+  c.restore();
+}
+
+/* ------------------------------ STAGE 7: TEETH ----------------------- */
+const TOOTH_NAMES = { I: 'incisor', C: 'canine', P: 'premolar', M: 'molar' };
+const stageTeeth = {
+  key: 'teeth', title: 'Teeth', short: 'Teeth',
+  mount(P) {
+    stageHead(P, 6, 'Teeth that fell out during maceration are in a vial. Dry-fit each into its socket. Glue comes at the end.');
+    const loose = S.teeth.filter(t => t.state === 'collected');
+    const lost = S.teeth.filter(t => t.state === 'lost').length;
+    P.append(el('p', {}, `${loose.length} in the vial, ${lost} lost.`, why('Single-rooted teeth (incisors, canines, first premolars) drop out once the gum and ligament rot. Multi-rooted molars usually stay. Reseat them by matching crown shape and root to the socket.')));
+    let sel = null;
+    const chips = el('div', { class: 'row' }), jaws = el('div', { class: 'teeth' });
+    P.append(el('h3', {}, 'Vial'), chips, el('h3', {}, 'Upper jaw (R ← → L)'), jaws);
+    const sockets = S.teeth.map(t => ({ t, fill: t.state === 'seated' ? t : null }));
+    const render = () => {
+      chips.innerHTML = '';
+      for (const t of loose.filter(x => !x.placed)) chips.append(el('button', { class: 'tchip' + (sel === t ? ' sel' : ''), onclick: () => { sel = t; render(); } }, TOOTH_NAMES[t.type]));
+      if (!loose.some(x => !x.placed)) chips.append(el('span', { class: 'gauge' }, 'Vial empty.'));
+      jaws.innerHTML = '';
+      for (const jaw of ['U', 'L']) {
+        if (jaw === 'L') jaws.append(el('h3', {}, 'Lower jaw'));
+        const row = el('div', { class: 'jaw' });
+        for (const s of sockets.filter(x => x.t.jaw === jaw)) {
+          const cls = s.fill ? 'full' : s.t.state === 'lost' ? 'lost' : 'empty';
+          row.append(el('div', { class: 'sock ' + cls, 'data-tip': `${s.t.side === 'R' ? 'Right' : 'Left'} ${s.t.code === 'P1' ? 'first premolar' : TOOTH_NAMES[s.t.type]} socket`, onclick: () => {
+            if (!sel || s.fill) return;
+            s.fill = sel; sel.placed = s.t.id;
+            if (sel.type !== s.t.type) addMistake('tooth_wrong', `${TOOTH_NAMES[sel.type]} in a ${TOOTH_NAMES[s.t.type]} socket`);
+            else log(`Dry-fit a ${TOOTH_NAMES[sel.type]}.`, 'ok');
+            sel = null; render();
+          } }, s.t.type));
+        }
+        jaws.append(row);
+      }
+    };
+    render();
+    nextButton(P, 'Teeth sorted →', () => true, () => {
+      if (lost) addMistake('teeth_lost', `${lost} teeth`);
+      S.flags.teethPlaced = loose.filter(t => t.placed).length;
+      goStage(7);
+    });
+    scene = { draw(c) { drawTray(c); drawCleanSkeleton(c); } };
+    setHint('Pick a tooth from the vial, then click a dark (empty) socket.');
+  },
+};
+
+/* --------------------------- STAGE 8: DEGREASING --------------------- */
+const stageDegrease = {
+  key: 'degrease', title: 'Degreasing', short: 'Degrease',
+  mount(P) {
+    stageHead(P, 7, 'Bone is full of marrow fat. Soak it out in warm water with dish soap, changing the bath when it clouds.');
+    const g0 = S.spec.grease + S.spec.greaseCooked;
+    const st = { g: g0, cloud: 0, days: 0, since: 0, warm: true };
+    P.append(el('p', {}, 'Keep going until fresh water stays clear for a week.', why('Grease can\'t be seen on wet bone. Left in, it migrates to the surface over months, yellowing the bone, making it tacky and attracting dust and pests. Detergent emulsifies it; warmth keeps it liquid. Cooked-in grease comes out much more slowly.')));
+    const stats = el('div'); P.append(stats);
+    const ctrl = el('div', { class: 'row' }); P.append(ctrl);
+    const tick = n => {
+      for (let i = 0; i < n; i++) {
+        const pull = .03 * (1 - Math.min(1, st.cloud)) * (st.warm ? 1 : .4) / (1 + S.spec.greaseCooked * 3);
+        const d = Math.min(st.g, pull);
+        st.g -= d; st.cloud += d * 3 + .004; st.days++; st.since++;
+        advance(24, 10);
+        if (st.cloud > .8 && !st.warned) { st.warned = true; log('The bath is milky. Time for a change.', 'warn'); }
+      }
+      render();
+    };
+    const render = () => {
+      stats.innerHTML = '';
+      const row = (a, b) => stats.append(el('div', { class: 'stat' }, el('span', {}, a), el('b', {}, b)));
+      row('Days in the bath', String(st.days));
+      row('Bath', st.cloud < .12 ? 'clear' : st.cloud < .4 ? 'hazy' : st.cloud < .8 ? 'cloudy' : 'milky, saturated');
+      row('Days since last change', String(st.since));
+      row('Heater', st.warm ? 'on, ~110 °F' : 'off, room temp');
+      ctrl.innerHTML = '';
+      ctrl.append(
+        el('button', { class: 'btn', onclick: () => { st.cloud = 0; st.since = 0; st.warned = false; SND.slosh(); log('Fresh soapy water.'); render(); } }, 'Change the bath'),
+        el('button', { class: 'btn', onclick: () => { st.warm = !st.warm; render(); } }, st.warm ? 'Turn heater off' : 'Turn heater on'),
+        el('button', { class: 'btn', onclick: () => tick(1) }, '+1 day'),
+        el('button', { class: 'btn', onclick: () => tick(7) }, '+1 week'));
+      if (st.since >= 7 && st.cloud < .12) stats.append(el('p', {}, el('b', {}, 'The water stayed clear for a week. Degreasing is done.')));
+    };
+    render();
+    nextButton(P, 'Out of the bath →', () => true, async () => {
+      if (!(st.since >= 7 && st.cloud < .12)) {
+        const ok = await ask('Not done yet?', 'The water hasn\'t stayed clear for a full week. The bone looks clean, though.', [{ value: false, label: 'Keep soaking', primary: true }, { value: true, label: 'It looks fine, move on' }]);
+        if (!ok) return;
+      }
+      S.spec.greaseLeft = st.g;
+      if (st.g > .08) addMistake('grease_left');
+      goStage(8);
+    });
+    scene = {
+      draw(c) {
+        drawTray(c);
+        drawCleanSkeleton(c, { water: `rgba(235,230,205,${Math.min(.75, st.cloud * .8)})` });
+      },
+    };
+    setHint('Change the bath when it goes milky. Skip time with the buttons.');
+  },
+};
+
+/* --------------------------- STAGE 9: WHITENING ---------------------- */
+const stageWhiten = {
+  key: 'whiten', title: 'Whitening', short: 'Whiten',
+  mount(P) {
+    stageHead(P, 8, 'Optional. Lighten the bone, or leave its natural colour.');
+    const opts = [
+      { k: 'h3', label: '3% hydrogen peroxide soak, 2 days', note: 'Pharmacy strength. Gentle and slow.', days: 2, white: .35 },
+      { k: 'h12', label: '12% peroxide cream developer, 1 day', note: 'Salon product, painted on and wrapped. Fast. Gloves and glasses.', days: 1, white: .45 },
+      { k: 'h12long', label: '12% peroxide developer, 4 days', note: 'Whiter still?', days: 4, white: .5 },
+      { k: 'bleach', label: 'Household bleach, overnight', note: 'Cheap, fast, very white.', days: 1, white: .55 },
+      { k: 'none', label: 'Leave it natural', note: 'Many research collections never whiten.', days: 0, white: 0 },
+    ];
+    const box = el('div', { class: 'opts' }); P.append(box);
+    P.append(el('p', {}, why('Peroxide oxidises stains without attacking collagen, the protein that makes bone tough. Bleach (sodium hypochlorite) dissolves collagen: bone looks white at first, then turns chalky, flaky and brittle. Peroxide over un-degreased bone gives a blotchy result.'), ' Why it matters'));
+    for (const o of opts) box.append(el('button', { class: 'btn opt', onclick: () => {
+      S.spec.white = o.white; S.flags.whiten = o.k;
+      if (o.k === 'bleach') { S.spec.chalky = true; addMistake('bleach'); log('Brilliant white!', 'ok'); expose(2, ['air', 'eyes']); }
+      if (o.k === 'h12long') addMistake('peroxide_long');
+      if (o.k.startsWith('h') && (S.spec.greaseLeft || 0) > .08) log('Some patches stayed darker than others.', 'warn');
+      advance(o.days * 24, 4);
+      goStage(9);
+    } }, el('b', {}, o.label), el('small', {}, o.note)));
+    scene = { draw(c) { drawTray(c); drawCleanSkeleton(c); } };
+    setHint('Choose a whitening treatment.');
+  },
+};
+
+/* ---------------------------- STAGE 10: DRYING ----------------------- */
+const stageDry = {
+  key: 'dry', title: 'Drying', short: 'Dry',
+  mount(P) {
+    stageHead(P, 9, 'Wet bone needs to dry right through before anything else happens to it.');
+    P.append(el('p', {}, why('Bone dries from the outside in. If the surface dries and shrinks much faster than the core, it cracks, and enamel crazes. Slow, even air drying avoids that.'), ' Why it matters'));
+    const box = el('div', { class: 'opts' }); P.append(box);
+    const opts = [
+      { label: 'Air-dry on a rack in the shade, 5 days', days: 5 },
+      { label: 'In the sun, 3 days', days: 3, note: 'Fine, and lightens a little.' },
+      { label: 'Oven on low / hair dryer, 2 hours', hours: 2, heat: true, note: 'Done before dinner.' },
+    ];
+    for (const o of opts) box.append(el('button', { class: 'btn opt', onclick: () => {
+      if (o.heat) { addMistake('heat_dry'); S.spec.cracks += 2 + (S.spec.chalky ? 2 : 0); }
+      if (o.days === 3) S.spec.white = Math.max(S.spec.white || 0, .15);
+      advance(o.heat ? o.hours : o.days * 24, 2);
+      goStage(10);
+    } }, el('b', {}, o.label), o.note ? el('small', {}, o.note) : null));
+    scene = { draw(c) { drawTray(c); drawCleanSkeleton(c); } };
+    setHint('Choose how to dry it.');
+  },
+};
+
+/* --------------------------- STAGE 11: FINISHING --------------------- */
+const stageFinish = {
+  key: 'finish', title: 'Finishing', short: 'Finish',
+  mount(P) {
+    stageHead(P, 10, 'Glue the teeth, stabilise anything fragile, and decide how it will be stored.');
+    const ch = { glue: S.flags.teethPlaced ? null : 'none', cons: null, display: null };
+    const group = (title, tip, key, opts) => {
+      P.append(el('h3', {}, title, why(tip)));
+      const box = el('div', { class: 'opts' }); P.append(box);
+      const render = () => { box.innerHTML = ''; for (const [v, label, note] of opts) box.append(el('button', { class: 'btn opt' + (ch[key] === v ? ' on' : ''), onclick: () => { ch[key] = v; render(); } }, el('b', {}, label), note ? el('small', {}, note) : null)); };
+      render();
+    };
+    if (S.flags.teethPlaced) group('Teeth', 'Conservation adhesives like Paraloid B-72 can be undone with acetone. Superglue cannot, and it yellows.', 'glue', [
+      ['b72', 'Paraloid B-72', 'Reversible conservation adhesive.'], ['super', 'Superglue', 'Quick, strong, permanent.'], ['none', 'Leave them loose in a labeled vial', 'Perfectly acceptable for a research collection.']]);
+    const fragile = S.spec.cracks > 0 || S.spec.chalky;
+    group('Consolidant', 'A dilute acrylic resin soaks into fragile bone and holds it together. On sound bone it just leaves a plastic sheen.', 'cons', [
+      ['yes', 'Brush on thin B-72 in acetone', fragile ? 'Some bones are cracked or fragile.' : 'Nothing looks fragile.'], ['no', 'No consolidant']]);
+    group('Display', 'Disarticulated bones in a labeled box are the research standard: every element can be studied. Articulation is for exhibits.', 'display', [
+      ['box', 'Disarticulated, in a labeled box'], ['wire', 'Articulated on wire', 'Gaps from missing bones will show.']]);
+    nextButton(P, 'Accession and grade →', () => ch.glue && ch.cons && ch.display, () => {
+      if (ch.glue === 'super') addMistake('superglue');
+      if (ch.cons === 'yes') { if (fragile) S.spec.consolidated = true; else addMistake('consolidant_over'); }
+      S.spec.display = ch.display;
+      advance(ch.display === 'wire' ? 24 * 6 : 4);
+      showGrade();
+    });
+    scene = { draw(c) { drawTray(c); drawCleanSkeleton(c); } };
+    setHint('Make your finishing choices.');
+  },
+};
+
+const STAGES = [stagePPE, stageSkin, stageEvisc, stageDeflesh, stageInventory, stageMacerate, stageTeeth, stageDegrease, stageWhiten, stageDry, stageFinish];
+
+/* ============================== 6. GRADING =========================== */
+
+/* Turn everything that happened into a score out of 100 and a letter. */
+function computeGrade() {
+  let score = 100;
+  for (const e of S.mistakes) {
+    const m = MISTAKES[e.key];
+    if (m.q && !m.safety && !m.hide) score -= m.q * e.n;
+  }
+  score -= lostBonePenalty();
+  // TODO(human): caps for damage a museum would treat as disqualifying.
+  // Linear penalties alone let bleach + heat cracks + skipped degreasing still earn a C.
+  // Useful inputs: hasMistake(key), S.spec.chalky / .infest / .cracks / .consolidated,
+  // S.spec.greaseLeft, S.bones.cranium.have. Lower `score` here (e.g. Math.min(score, 60)).
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const letter = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 55 ? 'D' : 'F';
+  return { score, letter };
+}
+
+/* How the specimen looks six months after accession, given what's hidden in it. */
+function sixMonthsLater() {
+  const out = [];
+  if (hasMistake('grease_left') || hasMistake('brain_left')) out.push('Yellow, slightly tacky patches have bloomed at the joint ends and the base of the skull. Grease is working its way out.');
+  if (S.spec.chalky) out.push('The surface powders under a fingertip. A thin flake has come off the scapula.');
+  if (S.spec.infest) out.push('There is fine frass under the box. Something is eating the specimen next to it.');
+  if (S.spec.greaseCooked > .15 && !hasMistake('grease_left')) out.push('Faint amber shadows inside the long bones where cooked-in grease is surfacing.');
+  if (S.spec.cracks && !S.spec.consolidated) out.push('Two of the cracks have opened a little further.');
+  if (!out.length) out.push('Unchanged. Clean, stable, and dull in the best way.');
+  return out;
+}
+
+function showGrade() {
+  const g = computeGrade();
+  const box = $('#modalBox'); box.className = 'box card'; box.innerHTML = '';
+  const missing = Object.values(S.bones).reduce((a, b) => a + b.lost, 0), teethLost = S.teeth.filter(t => t.state === 'lost').length;
+  const days = Math.round((S.hours - 8) / 24);
+  box.append(el('div', { class: 'label-card' },
+    el('div', { style: 'display:flex;justify-content:space-between;gap:12px;align-items:flex-start' },
+      el('div', {},
+        el('div', {}, `Cat. no. CARC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`),
+        el('div', { style: 'font:italic 18px var(--serif);margin:4px 0' }, `${S.animal.taxon}`),
+        el('div', {}, `${S.animal.name} · ${S.sex} · ${missing ? `skeleton, ${missing} elements missing` : 'complete skeleton'}`),
+        el('div', {}, `Prep: ${METHODS[S.flags.macMethod]?.label.toLowerCase() || '—'}; ${S.spec.display === 'wire' ? 'articulated' : 'disarticulated, boxed'}`),
+        el('div', {}, `Teeth: ${S.teeth.length - teethLost}/${S.teeth.length} · ${days} days start to finish`),
+        S.saveHide ? el('div', {}, `Hide: ${Math.max(0, 100 - S.hide.damage)}% (side goal)`) : null),
+      el('div', { style: 'text-align:right' }, el('div', { class: 'big' }, g.letter), el('div', {}, `${g.score}/100`),
+        el('div', { style: `margin-top:6px;width:72px;height:22px;border-radius:4px;border:1px solid #9a8c70;background:${S.spec.chalky ? '#f4f2ec' : hasMistake('grease_left') ? '#d9c487' : boneColor()}`, title: 'Bone colour at six months' })))));
+  box.append(el('h3', { style: 'margin-top:14px' }, 'Six months later'));
+  for (const s of sixMonthsLater()) box.append(el('p', {}, s));
+
+  const list = (title, pred) => {
+    const ms = S.mistakes.filter(e => pred(MISTAKES[e.key]));
+    if (!ms.length) return;
+    box.append(el('h3', { style: 'margin-top:14px' }, title));
+    for (const e of ms) {
+      const m = MISTAKES[e.key];
+      const pen = m.q ? `−${(m.q * e.n).toFixed(1).replace('.0', '')}` : '';
+      box.append(el('div', { class: 'mist' + (m.hidden ? ' hidden-rev' : '') },
+        pen ? el('span', { class: 'pen' }, pen) : null,
+        el('b', {}, m.title + (e.n > 1 ? ` ×${e.n}` : '')),
+        el('div', { class: 'c' }, m.cause + (e.details.length ? ` (${e.details.slice(0, 4).join('; ')})` : '')),
+        el('div', { class: 'f' }, 'Preparator: ' + m.fix)));
+    }
+  };
+  list('Specimen', m => !m.safety && !m.hide);
+  const lostRows = Object.values(S.bones).filter(b => b.lost);
+  if (lostRows.length || teethLost) {
+    box.append(el('h3', { style: 'margin-top:14px' }, 'Missing elements'));
+    for (const b of lostRows) box.append(el('div', { class: 'stat' }, el('span', {}, b.name), el('b', {}, `−${b.lost} (−${(b.lost * (b.weight || (b.small ? .6 : 2))).toFixed(1).replace('.0', '')})`)));
+    if (teethLost) box.append(el('div', { class: 'stat' }, el('span', {}, 'Teeth'), el('b', {}, `−${teethLost} (−${(teethLost * 1.2).toFixed(1).replace('.0', '')})`)));
+  }
+  list('Your safety', m => m.safety);
+  box.append(el('p', {}, `Contamination exposure: ${Math.round(S.contam)}/100. ${S.contam > 50 ? 'See a doctor if you get a fever, and mention the raccoon.' : S.contam > 20 ? 'Wash up well.' : 'Clean work.'}`));
+  if (S.saveHide) list('Hide (side goal)', m => m.hide);
+  box.append(el('div', { class: 'row', style: 'margin-top:14px' },
+    el('button', { class: 'btn primary', onclick: () => { $('#modal').hidden = true; $('#log').innerHTML = ''; newGame(); goStage(0); } }, 'Prep another carcass')));
+  $('#modal').hidden = false;
+  log(`Graded ${g.letter} (${g.score}).`, 'ok');
+}
+
+/* ------------------------------ boot --------------------------------- */
+newGame();
+fit();
+goStage(0);
+log('A raccoon came in this morning. Gear up before you open the bag.');
+</script>
+</html>
