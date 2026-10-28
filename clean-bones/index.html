@@ -1,0 +1,1542 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clean Bones</title>
+<style>
+/* Layout: a lab-notebook bench. Header with clock and speed, specimen tray (SVG) left with meters above, notebook panel right. */
+:root {
+  --paper: #ece6d6;
+  --paper-2: #e3dcc9;
+  --card: #f6f2e7;
+  --ink: #2a2823;
+  --muted: #655e52;
+  --dim: #948b7b;
+  --line: #d2c8b2;
+  --line-2: #bfb49b;
+  --bone: #efe8d6;
+  --tea: #a57d4c;
+  --rust: #9b4a2c;
+  --green: #2f4b3c;
+  --green-2: #4d6c59;
+  --amber: #b98b2e;
+  --olive: #6f6a3a;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 14.5px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--green-2); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- header ---------- */
+.top {
+  display: flex; align-items: center; gap: 14px 18px; flex-wrap: wrap;
+  padding: 10px max(16px, env(safe-area-inset-left)); border-bottom: 1px solid var(--line-2); background: var(--paper-2);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.brand b { font: 700 23px/1 var(--serif); letter-spacing: -0.01em; }
+.brand em { font-style: italic; color: var(--muted); font-family: var(--serif); font-size: 14px; white-space: nowrap; }
+.clock { font: 500 13px var(--mono); color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; white-space: nowrap; }
+.seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 7px; overflow: hidden; background: var(--card); }
+.seg button { border: 0; background: none; padding: 5px 11px; font: 500 12.5px var(--mono); cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--green); color: #f3efe3; }
+.top-right { margin-left: auto; display: flex; gap: 6px; }
+.chip { border: 1px solid var(--line-2); background: var(--card); padding: 5px 11px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--muted); }
+.chip:hover { color: var(--ink); border-color: var(--muted); }
+.chip[aria-pressed="true"] { color: var(--ink); background: #fff8df; border-color: var(--amber); }
+
+/* ---------- main ---------- */
+main { display: grid; grid-template-columns: minmax(0, 1fr) 368px; min-height: 0; }
+.bench { display: grid; grid-template-rows: auto 1fr; min-height: 0; min-width: 0; }
+.meters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; gap: 4px 14px; padding: 10px 16px 8px; border-bottom: 1px solid var(--line); }
+.meter { min-width: 0; }
+.meter .lbl { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); letter-spacing: .02em; }
+.meter .lbl b { font: 500 11.5px var(--mono); color: var(--ink); }
+.track { height: 6px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin-top: 3px; }
+.track i { display: block; height: 100%; width: 0; background: var(--c, var(--green)); transition: width .25s; }
+.count { align-self: center; font: 500 12px var(--mono); color: var(--muted); white-space: nowrap; }
+.count b { color: var(--ink); }
+.stage { position: relative; min-height: 0; overflow: hidden; }
+#tray { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-select: none; }
+#tray.asm { touch-action: none; }
+.lamp { position: absolute; right: 12px; top: 10px; z-index: 2; }
+.tip {
+  position: absolute; z-index: 3; pointer-events: none; width: 214px; background: var(--card); border: 1px solid var(--line-2);
+  border-radius: 8px; padding: 9px 11px 10px; box-shadow: 0 6px 18px rgba(50,40,25,.16); font-size: 12px;
+}
+.tip h4 { margin: 0 0 2px; font: 700 14px/1.2 var(--serif); }
+.tip .sz { color: var(--dim); font-size: 11px; margin-bottom: 6px; }
+.tip .r { display: grid; grid-template-columns: 62px 1fr 34px; gap: 6px; align-items: center; margin: 2px 0; color: var(--muted); }
+.tip .r b { font: 500 11px var(--mono); color: var(--ink); text-align: right; }
+.tip .r .track { margin: 0; height: 5px; }
+.tip p { margin: 6px 0 0; color: var(--muted); font-style: italic; }
+.toast {
+  position: absolute; left: 14px; bottom: 14px; z-index: 3; background: var(--card); border: 1px solid var(--line-2); border-left: 3px solid var(--green);
+  border-radius: 6px; padding: 8px 12px; font-size: 13px; box-shadow: 0 6px 18px rgba(50,40,25,.14); cursor: pointer; max-width: 300px;
+}
+.toast small { display: block; color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+
+/* ---------- notebook panel ---------- */
+aside {
+  border-left: 1px solid var(--line-2); min-height: 0; overflow-y: auto; scrollbar-width: thin;
+  background: var(--card) repeating-linear-gradient(to bottom, transparent 0 27px, rgba(120,140,150,.13) 27px 28px);
+  display: flex; flex-direction: column;
+}
+.steps { display: flex; gap: 2px; padding: 12px 16px 0; list-style: none; margin: 0; flex-wrap: wrap; }
+.steps li { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; padding: 3px 6px; border-radius: 4px; }
+.steps li.done { color: var(--green-2); }
+.steps li.done::before { content: "✓ "; }
+.steps li.now { color: #f3efe3; background: var(--green); }
+#panel { padding: 12px 18px 8px; }
+#panel h2 { font: 700 23px/1.15 var(--serif); margin: 4px 0 6px; }
+#panel h3 { font: 600 10.5px/1 var(--sans); letter-spacing: .13em; text-transform: uppercase; color: var(--dim); margin: 18px 0 8px; }
+#panel p { margin: 0 0 10px; color: var(--muted); }
+#panel p b { color: var(--ink); font-weight: 600; }
+.tag { display: inline-block; font: 500 11.5px var(--mono); color: var(--muted); border: 1px dashed var(--line-2); padding: 2px 7px; border-radius: 4px; margin-bottom: 8px; }
+.obs { margin: 0 0 12px; padding-left: 18px; color: var(--muted); }
+.obs li { margin: 2px 0; }
+.btn {
+  border: 1px solid var(--line-2); background: #fbf8ef; border-radius: 7px; padding: 8px 12px; cursor: pointer; font-weight: 500; font-size: 13.5px;
+  display: inline-flex; align-items: center; gap: 6px; text-align: left;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--green); color: #f3efe3; border-color: var(--green); }
+.btn.primary:hover { background: #253d30; }
+.btn.on { background: #e7efe6; border-color: var(--green-2); color: var(--green); box-shadow: inset 0 0 0 1px var(--green-2); }
+.btn.warn { color: var(--rust); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.row .btn { flex: 1 1 auto; justify-content: center; }
+.cards { display: grid; gap: 8px; }
+.mcard {
+  display: block; width: 100%; text-align: left; border: 1px solid var(--line-2); background: #fbf8ef; border-radius: 9px; padding: 10px 12px 9px; cursor: pointer;
+}
+.mcard:hover { border-color: var(--green-2); background: #fffdf6; }
+.mcard.on { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: #eef3ea; }
+.mcard b { font: 700 16px/1.2 var(--serif); }
+.mcard .sub { display: block; color: var(--muted); font-size: 12.5px; margin: 1px 0 5px; font-style: italic; }
+.mcard ul { margin: 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--muted); }
+.mcard li::before { content: "+ "; color: var(--green-2); font-weight: 700; }
+.mcard li.c::before { content: "− "; color: var(--rust); }
+.gauge { display: grid; grid-template-columns: 96px 1fr 44px; gap: 8px; align-items: center; margin: 5px 0; font-size: 12.5px; color: var(--muted); }
+.gauge b { font: 500 12px var(--mono); color: var(--ink); text-align: right; }
+.gauge .track { margin: 0; }
+.slider { display: grid; grid-template-columns: 96px 1fr 50px; gap: 8px; align-items: center; margin: 6px 0; font-size: 12.5px; color: var(--muted); }
+.slider input { width: 100%; accent-color: var(--green); }
+.slider b { font: 500 12px var(--mono); color: var(--ink); text-align: right; }
+.status { font-size: 13px; color: var(--ink); background: #fbf6e4; border: 1px solid #e3d6ad; border-radius: 6px; padding: 7px 10px; margin: 10px 0; min-height: 36px; }
+.fine { font-size: 12px; color: var(--dim); }
+.log { margin-top: auto; padding: 8px 18px 18px; border-top: 1px solid var(--line); }
+.log h3 { font: 600 10.5px/1 var(--sans); letter-spacing: .13em; text-transform: uppercase; color: var(--dim); margin: 8px 0 6px; }
+.log ol { list-style: none; margin: 0; padding: 0; max-height: 190px; overflow-y: auto; scrollbar-width: thin; }
+.log li { font-size: 12.5px; color: var(--muted); padding: 3px 0; border-bottom: 1px dotted var(--line); display: grid; grid-template-columns: 58px 1fr; gap: 6px; }
+.log li time { font: 500 11px var(--mono); color: var(--dim); padding-top: 1px; }
+.log li.bad { color: var(--rust); }
+.log li.good { color: var(--green); }
+
+/* ---------- modal ---------- */
+.modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(42,40,35,.42); }
+.sheet {
+  width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; background: var(--card); border-radius: 10px; border: 1px solid var(--line-2);
+  box-shadow: 0 24px 60px rgba(30,25,15,.3); padding: 20px 22px 18px;
+}
+.sheet h2 { font: 700 26px/1.1 var(--serif); margin: 0 0 4px; }
+.sheet .kicker { font: 600 10.5px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.score { display: flex; align-items: baseline; gap: 12px; margin: 8px 0 12px; }
+.score .num { font: 700 48px/1 var(--serif); }
+.score .lab { font: italic 18px var(--serif); color: var(--green); }
+.findings { margin: 12px 0 0; padding: 0; list-style: none; }
+.findings li { padding: 8px 0 8px 12px; border-left: 3px solid var(--line-2); margin: 6px 0; font-size: 13px; color: var(--muted); }
+.findings li b { color: var(--ink); display: block; font-size: 13.5px; }
+.findings li.bad { border-color: var(--rust); }
+.findings li.good { border-color: var(--green-2); }
+.note { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 8px 0; background: #fbf8ef; }
+.note h4 { margin: 0 0 4px; font: 700 15px var(--serif); }
+.note p { margin: 0; font-size: 13px; color: var(--muted); }
+.note.locked { opacity: .55; }
+.note.locked p { font-style: italic; }
+
+@media (max-width: 880px) {
+  body { overflow: auto; grid-template-rows: auto auto; height: auto; }
+  main { grid-template-columns: 1fr; }
+  .bench { grid-template-rows: auto 62vh; }
+  .meters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  aside { border-left: 0; border-top: 1px solid var(--line-2); }
+  .brand em { display: none; }
+  .top-right { margin-left: 0; }
+}
+</style>
+
+<header class="top">
+  <div class="brand"><b>Clean Bones</b><em>an osteology prep bench</em></div>
+  <span class="clock" id="clock">Day 1 · 08:00</span>
+  <div class="seg" id="speed" aria-label="Time speed">
+    <button data-s="0" title="Pause (space)">❚❚</button><button data-s="1">1×</button><button data-s="5">5×</button><button data-s="20">20×</button>
+  </div>
+  <div class="top-right">
+    <button class="chip" id="notesBtn">Field notes</button>
+    <button class="chip" id="soundBtn" aria-pressed="false">Sound off</button>
+  </div>
+</header>
+
+<main>
+  <section class="bench">
+    <div class="meters" id="meters"></div>
+    <div class="stage" id="stage">
+      <svg id="tray" viewBox="0 0 960 560" preserveAspectRatio="xMidYMid meet" aria-label="Specimen tray"></svg>
+      <button class="chip lamp" id="lampBtn" aria-pressed="false" title="Inspection lamp (I)">Inspection lamp</button>
+      <div class="tip" id="tip" hidden></div>
+      <div class="toast" id="toast" hidden></div>
+    </div>
+  </section>
+  <aside>
+    <ol class="steps" id="steps"></ol>
+    <div id="panel"></div>
+    <div class="log"><h3>Bench log</h3><ol id="log"></ol></div>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet"></div></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   SPECIMENS — each specimen is plain data. A bone has a shape (built by
+   SHAPES), an anatomical pose [x, y, rotation] on the tray, a slot group
+   (bones in the same group can swap places in assembly), and starting
+   amounts of tissue / grease / stain / dirt (0–1).
+   crevice: how hard tissue is to reach. marrow: how hard grease is to pull.
+   fragile: how easily it is chewed or etched. cart: cartilage present.
+   ===================================================================== */
+const SIZE_W = { tiny: 0.5, small: 1, medium: 2, large: 4 };
+
+function bone(id, name, size, shape, pose, o = {}) {
+  return {
+    id, name, size, shape, pose, slot: id,
+    tissue: 0.7, grease: 0.45, stain: 0.4, dirt: 0.45,
+    crevice: 1, marrow: 1, fragile: 0.2, cart: 0,
+    loosens: size === 'tiny', note: '', ...o,
+  };
+}
+
+const SPECIMENS = {
+  rabbit: {
+    id: 'rabbit', name: 'Rabbit', latin: 'Oryctolagus cuniculus', acc: 'CB-0001',
+    blurb: 'Skull and partial skeleton of a domestic rabbit, roughly defleshed and left to dry on a board. Tissue is still stuck in every crevice, the long bones are heavy with marrow fat, and the whole lot is grubby.',
+    parDays: 34, moisture: 0.62, view: [960, 560],
+    bones: [
+      bone('cranium', 'Cranium', 'large', ['skull'], [182, 150, 0], { tissue: 0.88, grease: 0.72, stain: 0.55, crevice: 1.6, marrow: 1.4, fragile: 0.45, cart: 0.3, note: 'The maxilla is a lattice of thin bone, and the nasal turbinates are paper.' }),
+      bone('mand-l', 'Left mandible', 'medium', ['mandible'], [172, 254, 0], { slot: 'mand', tissue: 0.78, grease: 0.6, crevice: 1.2, marrow: 1.3 }),
+      bone('mand-r', 'Right mandible', 'medium', ['mandible'], [172, 330, 0], { slot: 'mand', tissue: 0.8, grease: 0.62, crevice: 1.2, marrow: 1.3 }),
+      bone('inc-ul', 'Left upper incisor', 'tiny', ['incisor', 26], [70, 196, 8], { slot: 'inc-u', tissue: 0.35, grease: 0.15, stain: 0.6, note: 'Rooted deep in the premaxilla. Slips out once the gum tissue goes.' }),
+      bone('inc-ur', 'Right upper incisor', 'tiny', ['incisor', 26], [56, 196, 8], { slot: 'inc-u', tissue: 0.35, grease: 0.15, stain: 0.6, note: 'Rooted deep in the premaxilla. Slips out once the gum tissue goes.' }),
+      bone('inc-ll', 'Left lower incisor', 'tiny', ['incisor', 30], [84, 268, 186], { slot: 'inc-l', tissue: 0.35, grease: 0.15, stain: 0.6, note: 'Long and curved. Falls out of the jaw when soaked.' }),
+      bone('inc-lr', 'Right lower incisor', 'tiny', ['incisor', 30], [84, 344, 186], { slot: 'inc-l', tissue: 0.35, grease: 0.15, stain: 0.6, note: 'Long and curved. Falls out of the jaw when soaked.' }),
+      bone('hyoid', 'Hyoid', 'tiny', ['hyoid'], [272, 292, 0], { tissue: 0.8, fragile: 0.6, cart: 0.4, note: 'Floats free in the throat muscles. The first bone to go missing.' }),
+      bone('atlas', 'Atlas (C1)', 'small', ['atlas', 30, 26], [318, 152, 0], { tissue: 0.8, crevice: 1.2 }),
+      bone('axis', 'Axis (C2)', 'small', ['vert', 30, 36], [356, 150, 0], { tissue: 0.8, crevice: 1.2 }),
+      bone('c3', 'Cervical vertebra C3', 'small', ['vert', 26, 30], [392, 152, 0], { tissue: 0.78, crevice: 1.2 }),
+      bone('t1', 'Thoracic vertebra T1', 'small', ['vert', 24, 46], [428, 146, 0], { tissue: 0.75, crevice: 1.2 }),
+      bone('t2', 'Thoracic vertebra T2', 'small', ['vert', 24, 44], [462, 147, 0], { tissue: 0.75, crevice: 1.2 }),
+      bone('l1', 'Lumbar vertebra L1', 'small', ['vert', 32, 38], [506, 152, 0], { tissue: 0.82, crevice: 1.2, grease: 0.5 }),
+      bone('l2', 'Lumbar vertebra L2', 'small', ['vert', 34, 38], [554, 152, 0], { tissue: 0.82, crevice: 1.2, grease: 0.5 }),
+      bone('rib1', 'Rib', 'small', ['rib', 74, 12, 5], [418, 196, 0], { slot: 'rib', tissue: 0.6, grease: 0.3, fragile: 0.45, cart: 0.6, note: 'Costal cartilage at the tip. Hungry beetles eat it.' }),
+      bone('rib2', 'Rib', 'small', ['rib', 86, 14, 5], [446, 196, 0], { slot: 'rib', tissue: 0.6, grease: 0.3, fragile: 0.45, cart: 0.6, note: 'Costal cartilage at the tip. Hungry beetles eat it.' }),
+      bone('rib3', 'Rib', 'small', ['rib', 94, 15, 5], [474, 196, 0], { slot: 'rib', tissue: 0.6, grease: 0.3, fragile: 0.45, cart: 0.6, note: 'Costal cartilage at the tip. Hungry beetles eat it.' }),
+      bone('rib4', 'Rib', 'small', ['rib', 96, 16, 5], [502, 198, 0], { slot: 'rib', tissue: 0.6, grease: 0.3, fragile: 0.45, cart: 0.6, note: 'Costal cartilage at the tip. Hungry beetles eat it.' }),
+      bone('scap', 'Scapula', 'medium', ['scapula'], [352, 246, -18], { tissue: 0.8, fragile: 0.55, cart: 0.4, note: 'The blade is thin enough to see light through. Cartilage along the top edge.' }),
+      bone('hum', 'Humerus', 'medium', ['long', 70, 10, 1.7, 1.5], [378, 338, 112], { tissue: 0.75, grease: 0.75, marrow: 1.6 }),
+      bone('rad', 'Radius', 'small', ['long', 60, 6, 1.5, 1.6], [336, 428, 82], { tissue: 0.7, grease: 0.55, marrow: 1.3 }),
+      bone('uln', 'Ulna', 'small', ['long', 74, 6, 2.0, 1.2], [358, 424, 86], { tissue: 0.7, grease: 0.55, marrow: 1.3 }),
+      bone('mc1', 'Metacarpal', 'tiny', ['long', 22, 4, 1.4, 1.4], [334, 486, 88], { slot: 'mc', tissue: 0.6, grease: 0.3, fragile: 0.4 }),
+      bone('mc2', 'Metacarpal', 'tiny', ['long', 22, 4, 1.4, 1.4], [350, 488, 88], { slot: 'mc', tissue: 0.6, grease: 0.3, fragile: 0.4 }),
+      bone('pf1', 'Phalanx (fore)', 'tiny', ['long', 12, 3.5, 1.4, 1.3], [335, 512, 88], { slot: 'pf', tissue: 0.6, grease: 0.25, fragile: 0.5, note: 'The size of a grain of rice.' }),
+      bone('pf2', 'Phalanx (fore)', 'tiny', ['long', 12, 3.5, 1.4, 1.3], [351, 514, 88], { slot: 'pf', tissue: 0.6, grease: 0.25, fragile: 0.5, note: 'The size of a grain of rice.' }),
+      bone('pelv', 'Pelvis (innominate)', 'medium', ['pelvis'], [662, 164, 12], { tissue: 0.85, grease: 0.6, crevice: 1.3, marrow: 1.2 }),
+      bone('fem', 'Femur', 'medium', ['long', 118, 11, 1.8, 1.6], [666, 262, 113], { tissue: 0.82, grease: 0.82, marrow: 1.7 }),
+      bone('pat', 'Patella', 'tiny', ['oval', 6, 4.5], [626, 330, 20], { tissue: 0.7, cart: 0.3, note: 'The kneecap. Sits in a tendon, so it comes free with the tissue.' }),
+      bone('tib', 'Tibia', 'medium', ['long', 124, 9, 1.9, 1.4], [700, 398, 50], { tissue: 0.78, grease: 0.75, marrow: 1.6 }),
+      bone('calc', 'Calcaneus', 'small', ['long', 30, 8, 1.4, 1.0], [772, 462, -8], { tissue: 0.7, grease: 0.4 }),
+      bone('mt1', 'Metatarsal', 'small', ['long', 44, 5, 1.4, 1.4], [826, 470, 4], { slot: 'mt', tissue: 0.6, grease: 0.35 }),
+      bone('mt2', 'Metatarsal', 'small', ['long', 44, 5, 1.4, 1.4], [826, 490, 4], { slot: 'mt', tissue: 0.6, grease: 0.35 }),
+      bone('ph1', 'Phalanx (hind)', 'tiny', ['long', 15, 4, 1.4, 1.3], [870, 472, 4], { slot: 'ph', tissue: 0.6, grease: 0.25, fragile: 0.5, note: 'Easy to pour away with the water.' }),
+      bone('ph2', 'Phalanx (hind)', 'tiny', ['long', 15, 4, 1.4, 1.3], [870, 492, 4], { slot: 'ph', tissue: 0.6, grease: 0.25, fragile: 0.5, note: 'Easy to pour away with the water.' }),
+    ],
+  },
+};
+
+/* =====================================================================
+   FIELD NOTES — unlocked after using each method.
+   ===================================================================== */
+const NOTES = {
+  dermestid: { t: 'Dermestid beetles', p: 'Larvae of the hide beetle (Dermestes maculatus) eat dried flesh and leave the bone behind, getting into crevices no tool can reach. Museums keep colonies in sealed tanks at roughly 25–30 °C. Specimens go in dry, because larvae avoid wet tissue and damp invites mold. A colony left with nothing else to eat will move on to cartilage and thin bone.' },
+  freezing: { t: 'Freezing after the colony', p: 'Every specimen that leaves a dermestid colony is frozen, typically for about a week at −20 °C or colder, to kill larvae and eggs hiding in the foramina and the marrow cavity. Skip it and the beetles hatch out in the collection, where skins, insects and other specimens are food.' },
+  superworm: { t: 'Superworms', p: 'Superworms are the larvae of the darkling beetle Zophobas morio, sold as reptile feeders. Some hobbyists use them as a rough, cheap substitute for dermestids. They eat quickly but chew hard and indiscriminately, scarring thin bone and dragging small bones into the bedding, and they leave tissue in tight crevices.' },
+  maceration: { t: 'Water maceration', p: 'Bacteria in still water break soft tissue down until it slips off the bone. Warm maceration, with the water held around 30–35 °C (often by an aquarium heater), takes days to a couple of weeks, and cold maceration takes weeks to months. It smells awful. Every water change is poured through a fine screen, because teeth, phalanges and the hyoid come loose and sink.' },
+  degrease: { t: 'Degreasing', p: 'Bone holds a lot of fat, especially in the marrow of long bones and the spongy bone of the skull. If it is left in, the fat oxidises over months into yellow, sticky, smelly patches that no whitening fixes. Preparators soak bones in warm water with dish detergent for weeks, changing the bath when it clouds. Clear ammonia or solvents such as acetone speed things up, with good ventilation.' },
+  peroxide: { t: 'Hydrogen peroxide', p: 'Peroxide whitens by oxidising the pigments in bone. Drugstore 3% works slowly and gently. Salon developer at 12% works fast, but left too long it etches the surface chalky and fragile, and it will burn skin and eyes. Peroxide does not remove grease, so whitening before degreasing just gives you white bone that yellows later.' },
+  sun: { t: 'Sun-bleaching', p: 'Ultraviolet light bleaches bone slowly. It is free and gentle, but it only works in daylight, depends on the weather, and gives uneven results. Bone left out for a very long time dries out and starts to show fine surface cracks.' },
+  bleach: { t: 'Why not chlorine bleach?', p: 'Household bleach (sodium hypochlorite) makes bone look brilliantly white at first. It also breaks down the collagen that holds the mineral together, so bleached bone turns chalky and brittle. It flakes, crumbles at thin edges and keeps degrading for years. Professional preparators do not use it.' },
+};
+
+/* =====================================================================
+   SHAPES — stylised vector bones, built in local coordinates around 0,0.
+   Each returns { d, detail? }. Holes use the even-odd fill rule.
+   ===================================================================== */
+const r1 = n => Math.round(n * 10) / 10;
+function smooth(pts) {
+  const n = pts.length; let d = `M${r1(pts[0][0])},${r1(pts[0][1])}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+    d += `C${r1(p1[0] + (p2[0] - p0[0]) / 6)},${r1(p1[1] + (p2[1] - p0[1]) / 6)} ${r1(p2[0] - (p3[0] - p1[0]) / 6)},${r1(p2[1] - (p3[1] - p1[1]) / 6)} ${r1(p2[0])},${r1(p2[1])}`;
+  }
+  return d + 'Z';
+}
+const ell = (cx, cy, rx, ry) => `M${cx - rx},${cy}a${rx},${ry} 0 1,0 ${2 * rx},0a${rx},${ry} 0 1,0 ${-2 * rx},0Z`;
+function curved(len, bend, w0, w1) {
+  // a tapering curved strip from (0,0) to (0,len), bowed sideways by `bend`
+  const L = [], R = [];
+  for (let i = 0; i <= 12; i++) {
+    const t = i / 12, x = 2 * (1 - t) * t * bend * 2, y = t * len;
+    const dx = 2 * (1 - 2 * t) * bend * 2, dy = len, m = Math.hypot(dx, dy);
+    const w = (w0 + (w1 - w0) * t) / 2, nx = dy / m * w, ny = -dx / m * w;
+    L.push([x + nx, y + ny - len / 2]); R.push([x - nx, y - ny - len / 2]);
+  }
+  return L.concat(R.reverse());
+}
+const SHAPES = {
+  long(len, w, hk = 1.5, tk = 1.4) {
+    const h = len / 2, s = w / 2, R = s * hk * 1.25, L = s * tk * 1.25;
+    return { d: smooth([
+      [-h + L * 1.2, -s], [0, -s * 0.85], [h - R * 1.2, -s],
+      [h - R * 0.4, -R * 0.95], [h + R * 0.35, -R * 0.85], [h + R * 0.75, -R * 0.35], [h + R * 0.45, 0], [h + R * 0.75, R * 0.35], [h + R * 0.35, R * 0.85], [h - R * 0.4, R * 0.95],
+      [h - R * 1.2, s], [0, s * 0.85], [-h + L * 1.2, s],
+      [-h + L * 0.4, L * 0.95], [-h - L * 0.35, L * 0.8], [-h - L * 0.75, L * 0.25], [-h - L * 0.75, -L * 0.25], [-h - L * 0.35, -L * 0.8], [-h + L * 0.4, -L * 0.95],
+    ]) };
+  },
+  vert(w, h) {
+    return { d: smooth([
+      [-w * 0.5, -h * 0.02], [-w * 0.2, -h * 0.12], [-w * 0.14, -h * 0.5], [-w * 0.04, -h * 0.92], [w * 0.12, -h * 0.9], [w * 0.16, -h * 0.5], [w * 0.22, -h * 0.12],
+      [w * 0.5, -h * 0.02], [w * 0.64, h * 0.14], [w * 0.5, h * 0.26], [w * 0.46, h * 0.5], [0, h * 0.56], [-w * 0.46, h * 0.5], [-w * 0.5, h * 0.26], [-w * 0.64, h * 0.14],
+    ]) + ell(0, h * 0.1, w * 0.13, h * 0.08) };
+  },
+  atlas(w, h) {
+    return { d: smooth([[-w / 2, 0], [-w * 0.32, -h * 0.42], [0, -h * 0.34], [w * 0.32, -h * 0.42], [w / 2, 0], [w * 0.32, h * 0.42], [0, h * 0.36], [-w * 0.32, h * 0.42]]) + ell(0, 0, w * 0.17, h * 0.2) };
+  },
+  rib(len, bend, w) { return { d: smooth(curved(len, bend, w, w * 0.65)) }; },
+  incisor(len) { return { d: smooth(curved(len, len * 0.22, 5.2, 3.6)) }; },
+  oval(rx, ry) { return { d: ell(0, 0, rx, ry) }; },
+  skull() {
+    return {
+      d: smooth([
+        [-90, -6], [-74, -18], [-48, -26], [-18, -34], [12, -40], [42, -41], [66, -32], [82, -14], [84, 6], [74, 20], [58, 30], [42, 28],
+        [26, 22], [-4, 24], [-34, 19], [-58, 15], [-78, 12], [-89, 4],
+      ]) + ell(16, -8, 17, 14) + ell(-30, -1, 10, 5.5) + ell(-49, -4, 5, 3),
+      detail: 'M-2,22 L34,22 M-2,18 L34,18 M44,-36 Q60,-8 70,18 M-70,-14 L-20,-28',
+    };
+  },
+  mandible() {
+    return {
+      d: smooth([[-72, -4], [-50, -1], [-20, 1], [10, 3], [30, 6], [46, 14], [57, 8], [59, -8], [55, -26], [49, -42], [42, -38], [38, -20], [28, -9], [4, -7], [-26, -9], [-56, -11], [-71, -10]]),
+      detail: 'M-12,-8 L22,-8 M-12,-5 L22,-5',
+    };
+  },
+  scapula() {
+    return { d: smooth([[-28, -42], [30, -46], [16, 0], [5, 38], [-1, 46], [-8, 39], [-14, 0]]), detail: 'M-3,-40 Q4,0 2,36' };
+  },
+  pelvis() {
+    return {
+      d: smooth([[-62, -10], [-45, -22], [-15, -16], [5, -10], [22, -12], [44, -16], [64, -8], [66, 10], [48, 22], [24, 22], [6, 14], [-20, 6], [-48, 6], [-64, 2]]) + ell(37, 5, 12, 6),
+      detail: 'M3,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0',
+    };
+  },
+  hyoid() {
+    return { d: smooth([[-15, -9], [-11, 4], [0, 8], [11, 4], [15, -9], [10, -9], [6, -1], [0, 2], [-6, -1], [-10, -9]]) };
+  },
+};
+const shapeOf = def => SHAPES[def.shape[0]](...def.shape.slice(1));
+
+/* =====================================================================
+   TEXTURES — painted once on canvas, used as SVG pattern fills so the
+   dirt, tissue and grease layers stay cheap to fade.
+   ===================================================================== */
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function paint(size, seed, draw) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), R = rng(seed);
+  // draw everything 9 times so the tile wraps without seams
+  const wrap = fn => { for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) { g.save(); g.translate(ox, oy); fn(); g.restore(); } };
+  draw(g, size, R, wrap);
+  return c.toDataURL();
+}
+function blobs(g, size, R, wrap, n, rmin, rmax, colors, aMax) {
+  for (let i = 0; i < n; i++) {
+    const x = R() * size, y = R() * size, r = rmin + R() * (rmax - rmin), col = colors[(R() * colors.length) | 0], a = aMax * (0.4 + R() * 0.6);
+    wrap(() => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); });
+  }
+}
+const TEX = {
+  tissue: s => paint(128, s, (g, z, R, w) => {
+    blobs(g, z, R, w, 46, 6, 22, ['92,40,26', '110,52,30', '72,32,22', '128,70,44'], 0.95);
+    g.lineCap = 'round';
+    for (let i = 0; i < 26; i++) { const x = R() * z, y = R() * z, a = R() * 6.3, l = 6 + R() * 14; w(() => { g.strokeStyle = `rgba(70,30,20,${0.35 + R() * 0.4})`; g.lineWidth = 1 + R() * 1.6; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * l * 0.5 + 3, y + Math.sin(a) * l * 0.5, x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }); }
+  }),
+  stain: s => paint(160, s, (g, z, R, w) => blobs(g, z, R, w, 22, 14, 40, ['140,96,48', '120,80,40', '156,118,62'], 0.75)),
+  grease: s => paint(128, s, (g, z, R, w) => {
+    blobs(g, z, R, w, 30, 10, 30, ['205,160,58', '190,140,50', '214,178,80'], 0.7);
+    blobs(g, z, R, w, 10, 3, 8, ['255,250,225'], 0.5);
+  }),
+  dirt: s => paint(96, s, (g, z, R, w) => {
+    for (let i = 0; i < 300; i++) { const x = R() * z, y = R() * z, r = 0.4 + R() * 1.4, col = R() < 0.7 ? '58,48,38' : '72,80,52'; w(() => { g.fillStyle = `rgba(${col},${0.35 + R() * 0.55})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }); }
+    blobs(g, z, R, w, 8, 8, 18, ['90,78,60'], 0.35);
+  }),
+  chalk: s => paint(64, s, (g, z, R, w) => {
+    for (let i = 0; i < 420; i++) { const x = R() * z, y = R() * z, r = 0.3 + R() * 1.1; w(() => { g.fillStyle = `rgba(255,255,252,${0.5 + R() * 0.5})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }); }
+  }),
+  crack: s => paint(96, s, (g, z, R, w) => {
+    g.lineCap = 'round';
+    for (let i = 0; i < 9; i++) {
+      let x = R() * z, y = R() * z; const pts = [[x, y]];
+      for (let k = 0; k < 6; k++) { x += (R() - 0.5) * 18; y += (R() - 0.3) * 16; pts.push([x, y]); }
+      w(() => { g.strokeStyle = 'rgba(58,44,32,.85)'; g.lineWidth = 0.6 + R() * 0.8; g.beginPath(); pts.forEach((p, j) => j ? g.lineTo(...p) : g.moveTo(...p)); g.stroke(); });
+    }
+  }),
+  frass: s => paint(120, s, (g, z, R, w) => {
+    g.fillStyle = '#4a3a2b'; g.fillRect(0, 0, z, z);
+    for (let i = 0; i < 900; i++) { const x = R() * z, y = R() * z; w(() => { g.fillStyle = `rgba(${R() < 0.5 ? '30,22,16' : '110,86,60'},${0.4 + R() * 0.5})`; g.fillRect(x, y, 1 + R() * 2, 1 + R() * 1.4); }); }
+  }),
+  bran: s => paint(120, s, (g, z, R, w) => {
+    g.fillStyle = '#b8955f'; g.fillRect(0, 0, z, z);
+    for (let i = 0; i < 260; i++) { const x = R() * z, y = R() * z, a = R() * 3.2, l = 2 + R() * 6; w(() => { g.save(); g.translate(x, y); g.rotate(a); g.fillStyle = `rgba(${R() < 0.5 ? '130,92,46' : '222,190,130'},${0.5 + R() * 0.5})`; g.fillRect(-l / 2, -1.2, l, 2.4); g.restore(); }); }
+  }),
+  frost: s => paint(140, s, (g, z, R, w) => {
+    for (let i = 0; i < 60; i++) {
+      const x = R() * z, y = R() * z, r = 3 + R() * 7;
+      w(() => { g.strokeStyle = `rgba(255,255,255,${0.4 + R() * 0.5})`; g.lineWidth = 0.7; for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3 + R(); g.beginPath(); g.moveTo(x - Math.cos(a) * r, y - Math.sin(a) * r); g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); g.stroke(); } });
+    }
+  }),
+};
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const HPS = 2;           // simulated hours per real second at 1×
+const START_HOUR = 8;
+let S;
+const store = {
+  load() { try { return JSON.parse(localStorage.getItem('cleanbones.v1')) || {}; } catch (e) { return {}; } },
+  save(d) { try { localStorage.setItem('cleanbones.v1', JSON.stringify(d)); } catch (e) {} },
+};
+const saved = store.load();
+const unlocked = new Set(saved.notes || []);
+
+function newRun(specId) {
+  const spec = SPECIMENS[specId];
+  const j = () => 0.9 + Math.random() * 0.2;
+  S = {
+    spec, stage: 'intake', method: null, proc: null, speed: S ? S.speed : 5,
+    hours: START_HOUR, moist: spec.moisture, odor: 0.12,
+    colony: { health: 0.85, hunger: 0, temp: 27, feed: 0 },
+    worms: { health: 0.9, temp: 25 },
+    mac: { warm: true, foul: 0.05, bact: 0.25, changes: 0 },
+    freezeH: 0, inColony: false,
+    deg: { warm: true, ammonia: false, sat: 0, hours: 0, changes: 0 },
+    whitenLog: {}, whiten: null,
+    dryH: 0, asm: null, asmReady: false,
+    cool: {}, flags: {}, log: [], result: null, reveal: false,
+    bones: spec.bones.map(def => ({
+      def, id: def.id,
+      tissue: Math.min(1, def.tissue * j()), grease: Math.min(1, def.grease * j()), stain: Math.min(1, def.stain * j()), dirt: Math.min(1, def.dirt * j()),
+      white: 0.22 + Math.random() * 0.06, integ: 1, chalk: 0, bleach: 0,
+      loose: false, secured: false, lost: false,
+    })),
+  };
+  logMsg(`Received ${spec.name.toLowerCase()} (${spec.acc}). ${spec.bones.length} bones on the tray.`);
+}
+
+const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+const present = () => S.bones.filter(b => !b.lost);
+function avg(key, list = present()) {
+  let W = 0, s = 0;
+  for (const b of list) { const w = SIZE_W[b.def.size]; W += w; s += w * (typeof key === 'function' ? key(b) : b[key]); }
+  return W ? s / W : 0;
+}
+// how white the surface looks right now: tissue, stain, grime and grease all hide it
+const looksWhite = b => clamp(b.white - 0.55 * b.tissue - 0.3 * b.stain - 0.18 * b.dirt - 0.12 * b.grease);
+function stats() {
+  const all = S.bones, p = present();
+  let IW = 0, I = 0;
+  for (const b of all) { const w = SIZE_W[b.def.size]; IW += w; if (!b.lost) I += w * b.integ; }
+  return {
+    tissue: avg('tissue', p), grease: avg('grease', p), stain: avg('stain', p), dirt: avg('dirt', p),
+    white: avg(looksWhite, p), integ: I / IW, present: p.length, total: all.length,
+    smell: clamp(S.odor + avg('tissue', p) * 0.35 * (0.4 + S.moist) + avg('grease', p) * 0.22),
+  };
+}
+const clockStr = h => `Day ${Math.floor(h / 24) + 1} · ${String(Math.floor(h % 24)).padStart(2, '0')}:${String(Math.floor((h % 1) * 60 / 15) * 15).padStart(2, '0')}`;
+const shortT = h => `D${Math.floor(h / 24) + 1} ${String(Math.floor(h % 24)).padStart(2, '0')}:00`;
+function logMsg(text, tone = '') { S.log.unshift({ t: S.hours, text, tone }); if (S.log.length > 80) S.log.pop(); logDirty = true; }
+function once(id, everyH, fn) { if (S.cool[id] != null && S.hours - S.cool[id] < everyH) return; S.cool[id] = S.hours; fn(); }
+let logDirty = true;
+
+/* =====================================================================
+   PROCESSES — every running treatment advances in small time steps (h, hours).
+   ===================================================================== */
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+function loosen(b, where) {
+  if (b.loose || b.lost) return;
+  b.loose = true;
+  const what = b.def.name.toLowerCase();
+  logMsg(where === 'water' ? `The ${what} came free and sank into the silt.` : `The ${what} dropped into the ${where}.`, 'bad');
+  sfx('tick');
+}
+
+const PROC = {
+  dry: {
+    label: 'Air-drying on the rack', vessel: 'rack',
+    tick(h) { S.moist = clamp(S.moist - 0.022 * h, 0.02); },
+    status: () => S.moist > 0.3 ? 'Tissue is drying to leather. The colony will not touch it while it is wet.' : 'Dry enough. Larvae will happily eat this now.',
+  },
+  dermestid: {
+    label: 'In the dermestid colony', vessel: 'colony',
+    tick(h) {
+      const C = S.colony, p = present();
+      const tempF = Math.exp(-(((C.temp - 27) / 5) ** 2));
+      const food = avg('tissue', p);
+      C.feed = clamp(C.feed - 0.015 * h);
+      C.health = clamp(C.health + ((0.35 + 0.65 * tempF) * (food > 0.03 || C.feed > 0.1 ? 1 : 0.6) - C.health) * 0.012 * h, 0.05);
+      if (S.moist > 0.35) C.health = clamp(C.health - 0.01 * h * (S.moist - 0.35) * 3, 0.05);
+      C.hunger = clamp(C.hunger + (clamp(1 - food * 6 - C.feed * 1.2) - C.hunger) * 0.05 * h);
+      S.moist = clamp(S.moist - 0.008 * h, 0.02);
+      S.inColony = true;
+      const act = C.health * (0.3 + 0.7 * tempF) * (1 - S.moist) ** 1.5 * (1 - 0.35 * C.feed);
+      for (const b of p) {
+        if (b.tissue > 0) b.tissue = clamp(b.tissue - 0.016 * act * h / b.def.crevice * (b.def.size === 'tiny' ? 1.3 : 1));
+        b.dirt = clamp(b.dirt + 0.0015 * act * h, 0, 0.75);
+        // a hungry colony moves on to cartilage and thin bone
+        if (C.hunger > 0.3 && b.tissue < 0.05) {
+          const bite = 0.006 * h * C.hunger * (b.def.cart + b.def.fragile * 0.6);
+          b.integ = clamp(b.integ - bite);
+          if (b.def.loosens && !b.loose && Math.random() < 0.0035 * h * C.hunger) loosen(b, 'frass');
+        }
+      }
+      if (S.moist > 0.35 && Math.random() < 0.03 * h) once('mold', 30, () => {
+        logMsg('A grey fuzz of mold has come up on the damp tissue. The larvae are avoiding it.', 'bad');
+        for (const b of p) if (b.tissue > 0.2) b.stain = clamp(b.stain + 0.08);
+        S.odor = clamp(S.odor + 0.06);
+      });
+      if (C.hunger > 0.5) once('hungry', 24, () => logMsg('The colony is roaming the tank. With the tissue gone, they are starting on cartilage.', 'bad'));
+      if (Math.abs(C.temp - 27) > 5) once('coldcol', 36, () => logMsg(C.temp < 27 ? 'The tank is cold. Larvae are sluggish and barely eating.' : 'The tank is too hot. The colony is stressed.', 'bad'));
+      if (Math.random() < 0.012 * h) rustle();
+    },
+    status() {
+      const C = S.colony;
+      if (S.moist > 0.35) return 'The tissue is still damp. Larvae avoid wet flesh, and mold is likely.';
+      if (C.hunger > 0.5) return 'Nothing left for them on the bones. They are eating cartilage now. Lift it out or feed the colony.';
+      if (avg('tissue') < 0.06) return 'Nearly clean. Watch the cartilage.';
+      return 'Larvae are working the tissue: crevices, foramina, the turbinates.';
+    },
+  },
+  superworm: {
+    label: 'In the superworm bin', vessel: 'bran',
+    tick(h) {
+      const W = S.worms, p = present();
+      const tempF = Math.exp(-(((W.temp - 26) / 6) ** 2));
+      W.health = clamp(W.health + ((0.35 + 0.65 * tempF) - W.health) * 0.01 * h, 0.05);
+      const food = avg('tissue', p);
+      const act = W.health * (0.3 + 0.7 * tempF) * (1 - 0.4 * S.moist);
+      const rough = 1 + 2 * clamp(1 - food * 5);         // they chew harder as food runs out
+      S.moist = clamp(S.moist - 0.01 * h, 0.02);
+      for (const b of p) {
+        const floor = (b.def.crevice - 1) * 0.12;          // can't reach deep crevices
+        if (b.tissue > floor) b.tissue = Math.max(floor, b.tissue - 0.03 * act * h / b.def.crevice ** 1.4);
+        b.dirt = clamp(b.dirt + 0.002 * act * h, 0, 0.8);
+        if (b.tissue < 0.45 && (b.def.size === 'tiny' || b.def.fragile > 0.4) && Math.random() < 0.006 * h * act * rough * (b.def.fragile + (b.def.size === 'tiny' ? 0.3 : 0))) {
+          b.integ = clamp(b.integ - (0.06 + Math.random() * 0.12));
+          once('chew-' + b.id, 12, () => logMsg(`Chew marks on the ${b.def.name.toLowerCase()}.`, 'bad'));
+        }
+        if (b.def.loosens && b.tissue < 0.35 && !b.loose && Math.random() < 0.004 * h * act * rough) loosen(b, 'bedding');
+      }
+      if (Math.random() < 0.02 * h) rustle();
+    },
+    status: () => avg('tissue') > 0.15 ? 'Worms are tearing through the soft tissue, roughly.' : 'Not much meat left. They are gnawing on the bone itself.',
+  },
+  macerate: {
+    label: 'Macerating', vessel: 'bucket',
+    tick(h) {
+      const M = S.mac, p = present(), tf = M.warm ? 1 : 0.33;
+      M.bact = clamp(M.bact + (1 - M.bact) * 0.025 * h);
+      const rate = 0.0095 * tf * M.bact;
+      for (const b of p) {
+        b.tissue = clamp(b.tissue - rate * h / Math.sqrt(b.def.crevice));
+        b.dirt = clamp(b.dirt - 0.004 * h);
+        b.grease = clamp(b.grease - 0.0008 * h * tf * b.grease);
+        if (M.foul > 0.7) b.stain = clamp(b.stain + 0.003 * h * (M.foul - 0.7) / 0.3);
+        if (b.def.loosens && b.tissue < 0.3) loosen(b, 'water');
+      }
+      M.foul = clamp(M.foul + (0.006 * tf + avg('tissue', p) * 0.004) * h);
+      S.odor = clamp(S.odor + 0.004 * tf * (0.4 + M.foul) * h);
+      S.moist = 1;
+      if (M.foul > 0.8) once('rancid', 48, () => logMsg('The water has gone rancid: a grey, greasy scum and a smell that clings to clothes. It is staining the bone.', 'bad'));
+    },
+    status() {
+      const M = S.mac;
+      if (M.bact < 0.6) return 'The bacterial culture is still building. The water is cloudy and it is slow going.';
+      if (M.foul > 0.75) return 'Foul, opaque water. The bone is taking up brown stain.';
+      if (avg('tissue') < 0.04) return 'The tissue is gone. Leaving it longer only adds stain and smell.';
+      return `Tissue is slipping off. Water ${S.mac.warm ? 'held at 32 °C' : 'at cellar temperature, 14 °C'}.`;
+    },
+  },
+  freeze: {
+    label: 'Freezing at −20 °C', vessel: 'freezer',
+    tick(h) {
+      S.freezeH += h;
+      if (S.freezeH >= 168) {
+        S.freezeH = 168; stopProc();
+        logMsg('A full week at −20 °C. Any larvae or eggs are dead.', 'good');
+        unlock('freezing');
+      }
+    },
+    status: () => S.freezeH < 168 ? 'Bagged and frozen. Larvae and eggs in the foramina die over about a week.' : 'Freeze complete.',
+  },
+  degrease: {
+    label: 'Degreasing', vessel: 'soap',
+    tick(h) {
+      const D = S.deg, p = present();
+      const k = (D.warm ? 0.016 : 0.007) * (D.ammonia ? 1.6 : 1) * (1 - D.sat);
+      for (const b of p) {
+        b.grease = clamp(b.grease - k * h * b.grease / b.def.marrow);
+        b.dirt = clamp(b.dirt - 0.006 * h);
+        b.tissue = clamp(b.tissue - 0.0012 * h * (D.warm ? 1 : 0.5));
+      }
+      D.sat = clamp(D.sat + 0.006 * h * avg('grease', p) * (D.warm ? 1.2 : 1));
+      D.hours += h;
+      S.odor = clamp(S.odor + (D.ammonia ? 0.002 : -0.002) * h);
+      if (D.sat > 0.7) once('cloudy', 60, () => logMsg('The bath is milky and opaque, with a skin of fat on top. It has stopped pulling grease.', 'bad'));
+    },
+    status() {
+      const D = S.deg;
+      if (D.sat > 0.6) return 'The solution is saturated with fat. Change it.';
+      if (avg('grease') < 0.1) return 'Little grease left. The bone looks dry and matte.';
+      return 'Fat is seeping out of the marrow cavities as orange beads.';
+    },
+  },
+  per3: { label: '3% hydrogen peroxide', vessel: 'peroxide', tick: h => peroxide(h, 0.012, false), status: () => 'Fine bubbles on the bone. Gentle and slow.' },
+  per12: { label: '12% hydrogen peroxide', vessel: 'peroxide', tick: h => peroxide(h, 0.04, true), status: () => avg('chalk') > 0.12 ? 'The surface is turning powdery and dry. That is the bone being etched.' : 'Vigorous fizzing. This works fast.' },
+  bleach: {
+    label: 'Household bleach', vessel: 'bleach',
+    tick(h) {
+      for (const b of present()) {
+        b.white = clamp(b.white + 0.09 * h * (1 - b.white));
+        b.stain = clamp(b.stain - 0.08 * h * b.stain);
+        b.tissue = clamp(b.tissue - 0.01 * h);
+        b.bleach = clamp(b.bleach + 0.03 * h * (0.6 + b.def.fragile));   // hidden until grading
+      }
+      S.odor = clamp(S.odor + 0.002 * h);
+      S.whitenLog.bleach = (S.whitenLog.bleach || 0) + h;
+    },
+    status: () => 'Startlingly white, and fast. The smell of a swimming pool.',
+  },
+  sun: {
+    label: 'Sun-bleaching', vessel: 'sun',
+    tick(h) {
+      const day = Math.max(0, Math.sin(((S.hours % 24) - 6) / 13 * Math.PI));
+      for (const b of present()) {
+        if (b.white < 0.86) b.white = clamp(b.white + 0.004 * h * day * (0.86 - b.white) / 0.6);
+        b.stain = clamp(b.stain - 0.0025 * h * day * b.stain);
+        b.grease = clamp(b.grease - 0.0005 * h * day * b.grease);
+        if (b.white > 0.8) b.integ = clamp(b.integ - 0.00015 * h * day);
+      }
+      S.whitenLog.sun = (S.whitenLog.sun || 0) + h;
+      if (Math.random() < 0.006 * h) once('rain', 48, () => {
+        logMsg('A shower blew through and spattered the tray with grit.', 'bad');
+        for (const b of present()) b.dirt = clamp(b.dirt + 0.05);
+      });
+    },
+    status: () => Math.sin(((S.hours % 24) - 6) / 13 * Math.PI) > 0 ? 'Laid out in full sun.' : 'Night. Nothing happens in the dark.',
+  },
+  finaldry: {
+    label: 'Final drying', vessel: 'rack',
+    tick(h) {
+      S.dryH += h;
+      if (S.dryH >= 24) { stopProc(); startAssembly(); }
+    },
+    status: () => 'Drying on clean paper before handling.',
+  },
+};
+function peroxide(h, k, strong) {
+  for (const b of present()) {
+    const gate = 1 - 0.7 * b.grease;   // grease blocks the oxidiser
+    b.white = clamp(b.white + k * h * (1 - b.white) * gate);
+    b.stain = clamp(b.stain - k * 0.9 * h * b.stain);
+    b.dirt = clamp(b.dirt - 0.004 * h);
+    b.tissue = clamp(b.tissue - 0.002 * h);
+    const etch = strong ? 0.0025 + (b.white > 0.85 ? 0.006 : 0) : (b.white > 0.88 ? 0.0012 : 0);
+    b.chalk = clamp(b.chalk + etch * h * (0.5 + b.def.fragile));
+    b.integ = clamp(b.integ - etch * h * 0.35);
+  }
+  const key = strong ? 'per12' : 'per3';
+  S.whitenLog[key] = (S.whitenLog[key] || 0) + h;
+  if (strong && avg('chalk') > 0.15) once('chalky', 72, () => logMsg('The thin edges have gone chalky. The surface leaves white dust on your glove.', 'bad'));
+  if (Math.random() < 0.05 * h) fizz();
+}
+
+function step(h) {
+  S.hours += h;
+  const P = PROC[S.proc];
+  P.tick(h);
+  if (!['macerate', 'degrease', 'bleach'].includes(S.proc)) S.odor = clamp(S.odor - 0.0015 * h);
+}
+function runProc(id) {
+  if (S.proc === id) return;
+  S.proc = id;
+  if (S.speed === 0) setSpeed(5);
+  logMsg(`${PROC[id].label}.`);
+  if (['macerate', 'degrease', 'per3', 'per12', 'bleach'].includes(id)) slosh();
+  panelDirty = true;
+}
+function stopProc() { S.proc = null; panelDirty = true; }
+// time spent on a manual task (straining, sifting) passes without the treatment running
+function spend(h) { S.hours += h; }
+
+/* =====================================================================
+   ACTIONS — every button in the notebook panel maps to one of these.
+   ===================================================================== */
+function gotoStage(st) { S.stage = st; S.proc = null; panelDirty = true; hideTip(); }
+function recover(sieve, where) {
+  const loose = present().filter(b => b.loose && !b.secured);
+  if (sieve) {
+    loose.forEach(b => b.secured = true);
+    if (loose.length) logMsg(`Recovered ${loose.length} small bone${loose.length > 1 ? 's' : ''} from the ${where}: ${loose.map(b => b.def.name.toLowerCase()).join(', ')}. Bagged and labelled.`, 'good');
+  } else {
+    let n = 0;
+    for (const b of loose) if (Math.random() < 0.8) { b.lost = true; n++; } else b.secured = true;
+    if (n) logMsg(`${n} small bone${n > 1 ? 's' : ''} went out with the ${where}.`, 'bad');
+  }
+}
+const ACT = {
+  toTissue() { gotoStage('choose'); },
+  pick(m) {
+    S.method = m; gotoStage('tissue');
+    logMsg({ dermestid: 'Chose the dermestid colony.', superworm: 'Chose the superworm bin.', macerate: 'Chose water maceration.' }[m]);
+  },
+  back() { S.method = null; gotoStage('choose'); },
+  run(id) { runProc(id); },
+  stop() { stopProc(); },
+  feed() { S.colony.feed = clamp(S.colony.feed + 0.6); logMsg('Added a scoop of dry dog food to the colony.'); },
+  liftColony(sift) {
+    if (sift) spend(3);
+    recover(!!+sift, S.method === 'dermestid' ? 'frass' : 'bedding');
+    unlock(S.method);
+    if (S.method === 'dermestid') {
+      if (S.inColony) { gotoStage('freeze'); logMsg('Lifted out of the colony. It has to be frozen before it goes anywhere near other specimens.'); }
+      else gotoStage('degrease');
+    } else {
+      logMsg('Lifted out of the bin and brushed off.');
+      gotoStage('degrease');
+    }
+  },
+  heat(v) { S.mac.warm = v === '1'; logMsg(S.mac.warm ? 'Aquarium heater on, set to 32 °C.' : 'Heater off. The bucket settles to cellar temperature.'); panelDirty = true; },
+  change(strain) {
+    if (strain === '1') spend(2);
+    recover(strain === '1', 'old water');
+    S.mac.foul = 0.05; S.mac.bact *= 0.65; S.mac.changes++;
+    S.odor = clamp(S.odor + 0.08);
+    logMsg(`Changed the water${strain === '1' ? ', pouring it through a fine sieve' : ''}.`);
+    slosh();
+  },
+  liftBucket(strain) {
+    if (strain === '1') spend(2);
+    recover(strain === '1', 'water');
+    unlock('maceration');
+    logMsg('Lifted the bones out of the bucket and rinsed them.');
+    gotoStage('degrease');
+    slosh();
+  },
+  thaw() {
+    if (S.freezeH < 168) {
+      S.flags.shortFreeze = true;
+      logMsg(S.freezeH < 1 ? 'Skipped the freezer.' : `Took it out of the freezer after ${Math.round(S.freezeH / 24 * 10) / 10} days.`, 'bad');
+    }
+    if (S.freezeH > 0) unlock('freezing');
+    gotoStage('degrease');
+  },
+  degWarm(v) { S.deg.warm = v === '1'; panelDirty = true; },
+  ammonia() { S.deg.ammonia = !S.deg.ammonia; logMsg(S.deg.ammonia ? 'Added a splash of clear ammonia.' : 'Left the ammonia out of the next bath.'); panelDirty = true; },
+  newBath() { S.deg.sat = 0; S.deg.changes++; logMsg('Fresh bath of warm water and dish soap.'); slosh(); },
+  doneDegrease() {
+    if (S.deg.hours < 24) { S.flags.skipDegrease = true; logMsg('Moved on without really degreasing.', 'bad'); }
+    else unlock('degrease');
+    gotoStage('whiten');
+  },
+  stopWhiten() {
+    const id = S.proc; stopProc();
+    if (id === 'per3' || id === 'per12') { unlock('peroxide'); logMsg('Rinsed off the peroxide.'); slosh(); }
+    if (id === 'sun') { unlock('sun'); logMsg('Brought the tray in from the sun.'); }
+    if (id === 'bleach') { logMsg('Rinsed off the bleach. Looks wonderful.'); slosh(); }
+  },
+  doneWhiten() { gotoStage('assemble'); S.dryH = 0; runProc('finaldry'); },
+  doneAsm() { finish(); },
+  restart() { closeModal(); newRun(S.spec.id); buildTray(); panelDirty = true; },
+  notes() { openNotes(); },
+};
+
+/* =====================================================================
+   NOTEBOOK PANEL — rebuilt on stage change; live values bound by data-*.
+   ===================================================================== */
+const STEPS = [['Intake', ['intake', 'choose']], ['Tissue', ['tissue', 'freeze']], ['Degrease', ['degrease']], ['Whiten', ['whiten']], ['Assemble', ['assemble']], ['Grade', ['graded']]];
+const gauge = (label, key, c = 'var(--green)') => `<div class="gauge"><span>${label}</span><div class="track"><i data-b="${key}" style="--c:${c}"></i></div><b data-t="${key}"></b></div>`;
+const btn = (label, act, arg = '', cls = '', extra = '') => `<button class="btn ${cls}" data-act="${act}" data-arg="${arg}" ${extra}>${label}</button>`;
+const runBtn = (label, id) => `<button class="btn" data-act="run" data-arg="${id}" data-on="${id}">${label}</button>`;
+const status = () => `<div class="status" data-t="status"></div>`;
+
+const PANELS = {
+  intake() {
+    const sp = S.spec, s = stats();
+    return `<h2>${sp.name}</h2><div class="tag">${sp.acc} · <i>${sp.latin}</i></div>
+      <p>${sp.blurb}</p>
+      <h3>On arrival</h3>
+      <ul class="obs">
+        <li>Dried tissue over ${Math.round(s.tissue * 100)}% of the surface, worst on the skull.</li>
+        <li>Grease in the marrow of the long bones and in the skull.</li>
+        <li>Tea-coloured staining and grime from the drying board.</li>
+        <li>Still a little damp: moisture ${Math.round(S.moist * 100)}%.</li>
+      </ul>
+      <p class="fine">Hover a bone to inspect it. The inspection lamp (<b>I</b>) maps tissue in red, grease in yellow and stain in brown.</p>
+      <div class="row">${btn('Choose a cleaning method →', 'toTissue', '', 'primary')}</div>`;
+  },
+  choose() {
+    const card = (m, title, sub, pros, cons) => `<button class="mcard" data-act="pick" data-arg="${m}"><b>${title}</b><span class="sub">${sub}</span><ul>${pros.map(p => `<li>${p}</li>`).join('')}${cons.map(c => `<li class="c">${c}</li>`).join('')}</ul></button>`;
+    return `<h2>Tissue removal</h2><p>Choose how the last of the flesh comes off. You can't switch methods partway through.</p>
+      <div class="cards">
+      ${card('dermestid', 'Dermestid beetles', 'The museum standard.', ['Precise: cleans crevices and tiny bones without harm'], ['The specimen must be dry first', 'Keep the colony warm and fed', 'Left too long, they eat cartilage', 'Has to be frozen afterwards'])}
+      ${card('superworm', 'Superworms', 'Cheap, quick and rough.', ['Fast on heavy tissue', 'They don’t mind damp'], ['Clumsy in crevices', 'Chew thin and tiny bones', 'Carry small bones into the bedding'])}
+      ${card('macerate', 'Water maceration', 'Bacteria in a bucket.', ['Reaches every crevice', 'Warm is fast, cold is slow and steady'], ['Smells terrible', 'Rancid water stains the bone', 'Teeth and phalanges sink and can be poured away'])}
+      </div>`;
+  },
+  tissue() { return { dermestid: PANELS.dermestid, superworm: PANELS.superworm, macerate: PANELS.macerate }[S.method](); },
+  dermestid() {
+    return `<h2>Dermestid colony</h2>
+      <p>The larvae only eat <b>dry</b> tissue. Dry the specimen on the rack first, then put it in the tank.</p>
+      ${gauge('Moisture', 'moist', 'var(--green-2)')}
+      <div class="row">${runBtn('Dry on the rack', 'dry')}${runBtn('Into the colony', 'dermestid')}</div>
+      <h3>Colony</h3>
+      ${gauge('Health', 'colHealth')}
+      ${gauge('Hunger', 'colHunger', 'var(--rust)')}
+      <div class="slider"><span>Tank temp</span><input type="range" min="16" max="36" step="1" data-in="colTemp" value="${S.colony.temp}"><b data-t="colTemp"></b></div>
+      <div class="row">${btn('Feed the colony', 'feed')}</div>
+      ${status()}
+      <h3>When it's clean</h3>
+      <div class="row">${btn('Lift out', 'liftColony', '0')}${btn('Lift out & sift the frass (+3 h)', 'liftColony', '1')}</div>
+      <p class="fine">Sifting recovers tiny bones that fell into the frass.</p>
+      <div class="row">${btn('← Different method', 'back')}</div>`;
+  },
+  superworm() {
+    return `<h2>Superworm bin</h2>
+      <p>A tub of bran and a few hundred <i>Zophobas</i> larvae. Fast and rough.</p>
+      <div class="row">${runBtn('Into the bin', 'superworm')}${btn('Pause', 'stop')}</div>
+      ${gauge('Worm health', 'wormHealth')}
+      <div class="slider"><span>Bin temp</span><input type="range" min="14" max="36" step="1" data-in="wormTemp" value="${S.worms.temp}"><b data-t="wormTemp"></b></div>
+      ${status()}
+      <h3>When it's clean</h3>
+      <div class="row">${btn('Lift out', 'liftColony', '0')}${btn('Lift out & sift the bedding (+3 h)', 'liftColony', '1')}</div>
+      <div class="row">${btn('← Different method', 'back')}</div>`;
+  },
+  macerate() {
+    return `<h2>Maceration bucket</h2>
+      <p>Bones in a lidded bucket of water. Bacteria do the rest.</p>
+      <div class="row">${runBtn('Soak', 'macerate')}${btn('Pause', 'stop')}</div>
+      <div class="row">
+        <button class="btn ${S.mac.warm ? 'on' : ''}" data-act="heat" data-arg="1">Warm · 32 °C</button>
+        <button class="btn ${S.mac.warm ? '' : 'on'}" data-act="heat" data-arg="0">Cold · 14 °C</button>
+      </div>
+      ${gauge('Bacteria', 'bact', 'var(--olive)')}
+      ${gauge('Foulness', 'foul', 'var(--tea)')}
+      ${status()}
+      <h3>Water</h3>
+      <div class="row">${btn('Change water: pour off', 'change', '0')}${btn('Change through a sieve (+2 h)', 'change', '1')}</div>
+      <p class="fine">Changes so far: <b data-t="changes"></b>. Each change also dilutes the bacteria.</p>
+      <h3>When it's clean</h3>
+      <div class="row">${btn('Lift out & pour off', 'liftBucket', '0')}${btn('Lift out & sieve (+2 h)', 'liftBucket', '1')}</div>
+      <div class="row">${btn('← Different method', 'back')}</div>`;
+  },
+  freeze() {
+    return `<h2>Freezer</h2>
+      <p>Everything that comes out of a dermestid colony carries larvae and eggs. Bag it, seal it and freeze it before it goes near anything else.</p>
+      ${gauge('Freeze', 'freeze', 'var(--green-2)')}
+      <div class="row">${runBtn('Freeze at −20 °C', 'freeze')}</div>
+      ${status()}
+      <div class="row">${btn('Continue to degreasing →', 'thaw', '', 'primary')}</div>
+      <p class="fine">You can move on early, but it's a gamble.</p>`;
+  },
+  degrease() {
+    return `<h2>Degreasing</h2>
+      <p>A long soak in warm water with dish soap. The fat comes out slowly, and the bath needs changing as it clouds.</p>
+      <div class="row">${runBtn('Soak', 'degrease')}${btn('Pause', 'stop')}</div>
+      <div class="row">
+        <button class="btn ${S.deg.warm ? 'on' : ''}" data-act="degWarm" data-arg="1">Warm bath</button>
+        <button class="btn ${S.deg.warm ? '' : 'on'}" data-act="degWarm" data-arg="0">Room temp</button>
+        <button class="btn ${S.deg.ammonia ? 'on' : ''}" data-act="ammonia">+ Clear ammonia</button>
+      </div>
+      ${gauge('Saturation', 'sat', 'var(--amber)')}
+      ${gauge('Soaked', 'degH', 'var(--green-2)')}
+      ${status()}
+      <div class="row">${btn('Fresh bath', 'newBath')}${btn('Finish degreasing →', 'doneDegrease', '', 'primary')}</div>
+      <p class="fine">Grease you leave in will yellow the bone later, however white you get it.</p>`;
+  },
+  whiten() {
+    const card = (id, title, sub) => `<button class="mcard" data-act="run" data-arg="${id}" data-on="${id}"><b>${title}</b><span class="sub">${sub}</span></button>`;
+    const used = Object.entries(S.whitenLog).map(([k, v]) => `${PROC[k].label}: ${Math.round(v)} h`).join(' · ');
+    return `<h2>Whitening</h2>
+      <p>Pick a treatment, watch the bone and rinse it off when it's right. You can combine treatments.</p>
+      <div class="cards">
+        ${card('per3', '3% hydrogen peroxide', 'Drugstore strength. Slow and gentle.')}
+        ${card('per12', '12% hydrogen peroxide', '"40 volume" salon developer. Fast. Gloves on.')}
+        ${card('sun', 'Sun-bleaching', 'Free and mild. Daylight only.')}
+        ${card('bleach', 'Household bleach', 'Fast and brilliantly white. The old-timers swear by it.')}
+      </div>
+      ${status()}
+      <div class="row">${btn('Rinse & stop', 'stopWhiten', '', '', 'data-dis="noproc"')}${btn('Finished whitening →', 'doneWhiten', '', 'primary')}</div>
+      <p class="fine">${used || 'Nothing applied yet.'}</p>`;
+  },
+  assemble() {
+    if (!S.asmReady) return `<h2>Drying</h2><p>The bones dry on clean paper for a day before they can be handled.</p>${gauge('Dry', 'dry', 'var(--green-2)')}`;
+    return `<h2>Lay it out</h2>
+      <p>Drag each bone from the drying tray to its place on the card. Pairs (mandibles, incisors, ribs, phalanges) can go in either matching slot.</p>
+      ${gauge('Placed', 'placed')}
+      <p class="fine">Dashed outlines that stay empty are bones you no longer have.</p>
+      <div class="row">${btn('Done: grade it →', 'doneAsm', '', 'primary')}</div>`;
+  },
+  graded() {
+    const r = S.result;
+    return `<h2>${r.label}</h2><div class="tag">${S.spec.acc} · score ${r.score}</div>
+      <p>The tray now shows the specimen as it will look after six months in a drawer. Grease yellows, and bleach damage shows.</p>
+      <div class="row">${btn('Show the report', 'report', '', 'primary')}${btn('Field notes', 'notes')}</div>
+      <div class="row">${btn('Prepare another rabbit', 'restart')}</div>`;
+  },
+};
+ACT.report = () => showReport();
+
+const BIND = {
+  status: () => S.proc ? PROC[S.proc].status() : 'Bench idle. Start a treatment to let time pass.',
+  moist: () => S.moist, colHealth: () => S.colony.health, colHunger: () => S.colony.hunger, colTemp: () => `${S.colony.temp} °C`,
+  wormHealth: () => S.worms.health, wormTemp: () => `${S.worms.temp} °C`,
+  bact: () => S.mac.bact, foul: () => S.mac.foul, changes: () => S.mac.changes,
+  freeze: () => S.freezeH / 168, sat: () => S.deg.sat, degH: () => [clamp(S.deg.hours / 336), `${Math.round(S.deg.hours / 24)} d`],
+  dry: () => clamp(S.dryH / 24),
+  placed: () => { const p = present().length, n = present().filter(b => S.asm && S.asm[b.id].slot).length; return [p ? n / p : 0, `${n}/${p}`]; },
+};
+let panelDirty = true;
+function renderPanel() {
+  panelDirty = false;
+  const idx = STEPS.findIndex(s => s[1].includes(S.stage));
+  document.getElementById('steps').innerHTML = STEPS.map((s, i) => `<li class="${i < idx ? 'done' : i === idx ? 'now' : ''}">${s[0]}</li>`).join('');
+  const P = PANELS[S.stage];
+  document.getElementById('panel').innerHTML = P();
+  bindPanel();
+}
+function bindPanel() {
+  const root = document.getElementById('panel');
+  root.querySelectorAll('[data-t],[data-b]').forEach(el => {
+    const key = el.dataset.t || el.dataset.b;
+    let v = BIND[key](); let txt = v, frac = v;
+    if (Array.isArray(v)) [frac, txt] = v;
+    else if (typeof v === 'number' && key !== 'changes') txt = `${Math.round(v * 100)}%`;
+    if (el.dataset.t && el.textContent !== String(txt)) el.textContent = txt;
+    if (el.dataset.b) el.style.width = `${clamp(frac) * 100}%`;
+  });
+  root.querySelectorAll('[data-on]').forEach(el => el.classList.toggle('on', S.proc === el.dataset.on));
+  root.querySelectorAll('[data-dis]').forEach(el => el.disabled = !S.proc);
+}
+document.getElementById('panel').addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  audioUnlock(); sfx('click');
+  ACT[el.dataset.act](el.dataset.arg);
+});
+document.getElementById('panel').addEventListener('input', e => {
+  const k = e.target.dataset.in; if (!k) return;
+  if (k === 'colTemp') S.colony.temp = +e.target.value;
+  if (k === 'wormTemp') S.worms.temp = +e.target.value;
+});
+
+/* ---------- meters ---------- */
+const METERS = [['tissue', 'Tissue', 'var(--rust)'], ['grease', 'Grease', 'var(--amber)'], ['white', 'Whiteness', '#cfc7b0'], ['integ', 'Integrity', 'var(--green)'], ['smell', 'Smell', 'var(--olive)']];
+document.getElementById('meters').innerHTML = METERS.map(([k, l, c]) => `<div class="meter"><div class="lbl">${l}<b data-m="${k}">0%</b></div><div class="track"><i data-mb="${k}" style="--c:${c}"></i></div></div>`).join('') + `<div class="count">bones <b id="boneCount"></b></div>`;
+function renderMeters() {
+  const s = stats();
+  for (const [k] of METERS) {
+    document.querySelector(`[data-m="${k}"]`).textContent = `${Math.round(s[k] * 100)}%`;
+    document.querySelector(`[data-mb="${k}"]`).style.width = `${s[k] * 100}%`;
+  }
+  document.getElementById('boneCount').textContent = `${s.present}/${s.total}`;
+  document.getElementById('clock').textContent = clockStr(S.hours);
+  if (logDirty) {
+    logDirty = false;
+    document.getElementById('log').innerHTML = S.log.map(l => `<li class="${l.tone}"><time>${shortT(l.t)}</time><span>${l.text}</span></li>`).join('');
+  }
+}
+
+/* =====================================================================
+   TRAY — the SVG specimen view. Each bone is a stack of paths: a base
+   colour, then stain, grease, dirt, tissue, chalk and crack overlays
+   whose opacity follows the bone's state.
+   ===================================================================== */
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('tray');
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const VAR = 3;  // texture variants so neighbouring bones don't look stamped
+let G = {};     // tray groups
+let boneEls = {};
+
+function buildDefs() {
+  const defs = el('defs', {}, svg);
+  const pat = (id, href, size, extra = {}) => { const p = el('pattern', { id, patternUnits: 'userSpaceOnUse', width: size, height: size, ...extra }, defs); el('image', { href, width: size, height: size }, p); };
+  for (let v = 0; v < VAR; v++) {
+    pat(`pT${v}`, TEX.tissue(11 + v), 128); pat(`pS${v}`, TEX.stain(21 + v), 160); pat(`pG${v}`, TEX.grease(31 + v), 128); pat(`pD${v}`, TEX.dirt(41 + v), 96);
+  }
+  pat('pC', TEX.chalk(51), 64); pat('pK', TEX.crack(61), 96);
+  pat('pFrass', TEX.frass(71), 120); pat('pBran', TEX.bran(81), 120); pat('pFrost', TEX.frost(91), 140);
+  const grid = el('pattern', { id: 'pGrid', patternUnits: 'userSpaceOnUse', width: 24, height: 24 }, defs);
+  el('rect', { width: 24, height: 24, fill: '#f1ece0' }, grid);
+  el('path', { d: 'M24,0 L0,0 0,24', fill: 'none', stroke: 'rgba(110,140,150,.22)', 'stroke-width': 1 }, grid);
+  const rack = el('pattern', { id: 'pRack', patternUnits: 'userSpaceOnUse', width: 18, height: 18 }, defs);
+  el('rect', { width: 18, height: 18, fill: '#e9e3d4' }, rack);
+  el('path', { d: 'M0,9 L18,9 M9,0 L9,18', stroke: 'rgba(80,80,80,.35)', 'stroke-width': 1.4 }, rack);
+  const sun = el('radialGradient', { id: 'gSun', cx: 0.85, cy: 0.05, r: 1.1 }, defs);
+  el('stop', { offset: 0, 'stop-color': '#fff3c4', 'stop-opacity': 0.9 }, sun);
+  el('stop', { offset: 1, 'stop-color': '#f2d79a', 'stop-opacity': 0 }, sun);
+  const vig = el('radialGradient', { id: 'gVig', cx: 0.5, cy: 0.5, r: 0.75 }, defs);
+  el('stop', { offset: 0.6, 'stop-color': '#000', 'stop-opacity': 0 }, vig);
+  el('stop', { offset: 1, 'stop-color': '#2a2016', 'stop-opacity': 0.28 }, vig);
+}
+
+function buildTray() {
+  svg.innerHTML = ''; G = {}; boneEls = {};
+  critters = []; bubbles = []; lastVessel = '';
+  svg.classList.toggle('asm', !!S.asmReady);
+  buildDefs();
+  const [W, H] = S.spec.view;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  G.vessel = el('rect', { x: -400, y: -400, width: W + 800, height: H + 1200, fill: 'url(#pGrid)' }, svg);
+  G.card = el('rect', { x: 26, y: 70, width: W - 52, height: H - 96, rx: 6, fill: '#f7f2e6', stroke: '#cfc4ab', 'stroke-width': 1 }, svg);
+  G.tag = el("g", { transform: `translate(${W - 222},${84})` }, svg);
+  el('rect', { width: 186, height: 52, rx: 4, fill: '#fbf7ea', stroke: '#b9ad92' }, G.tag);
+  el('circle', { cx: 12, cy: 26, r: 4, fill: 'none', stroke: '#b9ad92' }, G.tag);
+  el('text', { x: 24, y: 22, 'font-family': 'ui-monospace,Menlo,monospace', 'font-size': 11, fill: '#5b5447' }, G.tag).textContent = `${S.spec.acc} · ${S.spec.name.toUpperCase()}`;
+  el('text', { x: 24, y: 40, 'font-family': 'Georgia,serif', 'font-style': 'italic', 'font-size': 12.5, fill: '#2a2823' }, G.tag).textContent = S.spec.latin;
+  G.title = el('text', { x: 30, y: 46, 'font-family': 'Georgia,serif', 'font-size': 20, fill: '#2a2823' }, svg);
+  G.slots = el('g', {}, svg);
+  G.bones = el('g', {}, svg);
+  G.critters = el('g', {}, svg);
+  G.liquid = el('rect', { x: -400, y: -400, width: W + 800, height: H + 1200, fill: 'transparent', 'pointer-events': 'none' }, svg);
+  G.fx = el('g', { 'pointer-events': 'none' }, svg);
+  G.overlay = el('rect', { x: -400, y: -400, width: W + 800, height: H + 1200, fill: 'transparent', 'pointer-events': 'none' }, svg);
+  G.vig = el('rect', { x: -400, y: -400, width: W + 800, height: H + 1200, fill: 'url(#gVig)', 'pointer-events': 'none' }, svg);
+
+  S.bones.forEach((b, i) => {
+    const sh = shapeOf(b.def), v = i % VAR;
+    const g = el('g', { class: 'bone', 'data-id': b.id, cursor: 'pointer' }, G.bones);
+    const P = (fill, extra = {}) => el('path', { d: sh.d, 'fill-rule': 'evenodd', fill, ...extra }, g);
+    const parts = {
+      g,
+      shadow: P('rgba(60,45,30,.22)', { transform: 'translate(2.5,3.5)' }),
+      base: P('#d8c9a4'),
+      stain: P(`url(#pS${v})`, { opacity: 0 }),
+      grease: P(`url(#pG${v})`, { opacity: 0 }),
+      dirt: P(`url(#pD${v})`, { opacity: 0 }),
+      tsolid: P('#6b3a26', { opacity: 0 }),
+      tissue: P(`url(#pT${v})`, { opacity: 0 }),
+      chalk: P('url(#pC)', { opacity: 0 }),
+      crack: P('url(#pK)', { opacity: 0 }),
+      detail: sh.detail ? el('path', { d: sh.detail, fill: 'none', stroke: 'rgba(80,62,40,.45)', 'stroke-width': 1, 'stroke-linecap': 'round' }, g) : null,
+      outline: P('none', { stroke: 'rgba(70,55,38,.55)', 'stroke-width': 0.9 }),
+      last: {},
+    };
+    boneEls[b.id] = parts;
+    const bb = parts.base.getBBox();
+    b.bw = bb.width; b.bh = bb.height;
+  });
+  if (S.asmReady) buildSlots();
+}
+
+const mix = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
+const rgb = c => `rgb(${c.map(x => Math.round(x)).join(',')})`;
+const C_TEA = [168, 136, 92], C_IVORY = [246, 242, 230], C_YEL = [214, 178, 92], C_GREY = [226, 224, 216];
+let hoverId = null, lampOn = false;
+
+function boneColor(b) {
+  let c = mix(C_TEA, C_IVORY, b.white);
+  const g = S.reveal ? Math.min(1, b.grease * 1.6) : b.grease * 0.5;   // after six months, grease shows
+  c = mix(c, C_YEL, g * 0.6);
+  if (S.reveal && b.bleach > 0) c = mix(c, C_GREY, b.bleach * 0.6);
+  return rgb(c);
+}
+function setA(p, key, node, attr, val) {
+  if (p.last[key] === val) return;
+  p.last[key] = val; node.setAttribute(attr, val);
+}
+function renderTray() {
+  for (const b of S.bones) {
+    const p = boneEls[b.id]; if (!p) continue;
+    const hidden = b.lost || (S.asm == null && b.loose && b.secured);   // recovered bones wait in a vial until assembly
+    setA(p, 'vis', p.g, 'display', hidden ? 'none' : 'inline');
+    if (hidden) continue;
+    let x, y, r;
+    if (S.asm) ({ x, y, rot: r } = S.asm[b.id]);
+    else { [x, y, r] = b.def.pose; if (b.loose) { y += 7; r += 9; } }
+    setA(p, 'tf', p.g, 'transform', `translate(${r1(x)},${r1(y)}) rotate(${r1(r)})`);
+    const diag = lampOn || hoverId === b.id;
+    const q = v => Math.round(v * 100) / 100;
+    setA(p, 'base', p.base, 'fill', boneColor(b));
+    setA(p, 'dg', p.g, 'class', diag ? 'bone diag' : 'bone');
+    if (diag) {
+      setA(p, 'sf', p.stain, 'fill', '#7a4a22'); setA(p, 'gf', p.grease, 'fill', '#f0c020'); setA(p, 'tf2', p.tissue, 'fill', '#c62a1d');
+      setA(p, 'so', p.stain, 'opacity', q(clamp(b.stain * 0.85))); setA(p, 'go', p.grease, 'opacity', q(clamp(b.grease * 0.75)));
+      setA(p, 'to', p.tissue, 'opacity', q(b.tissue > 0.01 ? clamp(0.2 + b.tissue) : 0)); setA(p, 'tso', p.tsolid, 'opacity', 0);
+    } else {
+      const v = S.bones.indexOf(b) % VAR;
+      setA(p, 'sf', p.stain, 'fill', `url(#pS${v})`); setA(p, 'gf', p.grease, 'fill', `url(#pG${v})`); setA(p, 'tf2', p.tissue, 'fill', `url(#pT${v})`);
+      setA(p, 'so', p.stain, 'opacity', q(clamp(b.stain * 0.9)));
+      setA(p, 'go', p.grease, 'opacity', q(clamp(b.grease * (S.reveal ? 1 : 0.7))));
+      setA(p, 'to', p.tissue, 'opacity', q(clamp(b.tissue * 1.25)));
+      setA(p, 'tso', p.tsolid, 'opacity', q(clamp((b.tissue - 0.25) * 0.9)));
+    }
+    setA(p, 'do', p.dirt, 'opacity', q(clamp(b.dirt * 0.9)));
+    const chalk = b.chalk + (S.reveal ? b.bleach : 0);
+    setA(p, 'co', p.chalk, 'opacity', q(clamp(chalk * 1.3)));
+    setA(p, 'ko', p.crack, 'opacity', q(clamp((1 - b.integ) * 2.2)));
+    setA(p, 'ol', p.outline, 'stroke-width', hoverId === b.id ? 2 : 0.9);
+  }
+  renderVessel();
+  if (S.asm) renderSlots();
+}
+
+/* ---------- vessels: what the bones are sitting in ---------- */
+function vesselKey() {
+  if (S.proc) return PROC[S.proc].vessel;
+  return 'tray';
+}
+let lastVessel = '';
+function renderVessel() {
+  const k = vesselKey();
+  const day = Math.max(0, Math.sin(((S.hours % 24) - 6) / 13 * Math.PI));
+  const V = {
+    tray: ['url(#pGrid)', 'transparent', 0, 'transparent', 0, 1],
+    rack: ['url(#pRack)', 'transparent', 0, 'transparent', 0, 0.35],
+    colony: ['url(#pFrass)', 'transparent', 0, 'transparent', 0, 0],
+    bran: ['url(#pBran)', 'transparent', 0, 'transparent', 0, 0],
+    bucket: ['#33443a', rgb(mix([120, 150, 140], [110, 92, 52], S.mac.foul)), 0.22 + S.mac.foul * 0.38, 'transparent', 0, 0],
+    freezer: ['#dde6ea', '#cfe2ee', 0.25, 'url(#pFrost)', 0.75, 0],
+    soap: ['#cfccbf', '#f4f2e8', 0.28 + S.deg.sat * 0.3, 'transparent', 0, 0],
+    peroxide: ['#d9dbd3', '#eef5f3', 0.18, 'transparent', 0, 0],
+    bleach: ['#d9ddcd', '#e8f2c9', 0.22, 'transparent', 0, 0],
+    sun: ['#e9dcbf', '#14203a', 0.32 * (1 - day), 'url(#gSun)', 0.85 * day, 0],
+  }[k];
+  if (k !== lastVessel) { lastVessel = k; G.vessel.setAttribute('fill', V[0]); G.overlay.setAttribute('fill', V[3]); G.card.setAttribute('opacity', V[5]); G.tag.setAttribute('opacity', k === 'tray' || k === 'rack' ? 1 : 0.85); }
+  G.liquid.setAttribute('fill', V[1]); G.liquid.setAttribute('opacity', r1(V[2] * 100) / 100);
+  G.overlay.setAttribute('opacity', r1(V[4] * 100) / 100);
+  G.title.textContent = S.proc ? PROC[S.proc].label : S.stage === 'graded' ? 'Six months later' : S.stage === 'assemble' && S.asmReady ? 'Lay out on the card' : '';
+  G.title.setAttribute('fill', ['colony', 'bucket'].includes(k) ? '#efe8d6' : '#2a2823');
+}
+
+/* ---------- critters and bubbles (visual only, real time) ---------- */
+let critters = [], bubbles = [];
+function animate(dt) {
+  const k = S.proc && S.speed > 0 ? vesselKey() : (S.proc ? vesselKey() : '');
+  const sp = S.speed === 0 ? 0 : 0.6 + Math.log2(1 + S.speed) * 0.35;
+  // beetles and larvae, or superworms
+  let want = 0, kind = '';
+  if (k === 'colony') { kind = 'beetle'; want = Math.round(10 + 50 * S.colony.health); }
+  if (k === 'bran') { kind = 'worm'; want = 16; }
+  if (critters.length && critters[0].kind !== kind) { critters.forEach(c => c.node.remove()); critters = []; }
+  while (critters.length < want) critters.push(newCritter(kind));
+  while (critters.length > want) critters.pop().node.remove();
+  for (const c of critters) {
+    const dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy);
+    if (d < 3 || Math.random() < dt * 0.15) retarget(c);
+    const turn = Math.atan2(dy, dx) - c.a;
+    c.a += Math.atan2(Math.sin(turn), Math.cos(turn)) * Math.min(1, dt * 4) + (Math.random() - 0.5) * dt * 6 * (S.colony.hunger + 0.3);
+    const v = c.v * sp * (d < 8 ? 0.3 : 1);
+    c.x += Math.cos(c.a) * v * dt; c.y += Math.sin(c.a) * v * dt; c.t += dt * sp;
+    if (c.kind === 'worm') {
+      const pts = []; for (let i = 0; i < 6; i++) { const back = i * 4.2, wob = Math.sin(c.t * 7 - i * 1.1) * 2.2; pts.push([c.x - Math.cos(c.a) * back - Math.sin(c.a) * wob, c.y - Math.sin(c.a) * back + Math.cos(c.a) * wob]); }
+      const d2 = 'M' + pts.map(p => `${r1(p[0])},${r1(p[1])}`).join('L');
+      c.node.firstChild.setAttribute('d', d2); c.node.lastChild.setAttribute('d', d2);
+    } else c.node.setAttribute('transform', `translate(${r1(c.x)},${r1(c.y)}) rotate(${r1(c.a * 57.3)})`);
+  }
+  // bubbles
+  let bw = 0;
+  if (k === 'bucket') bw = 14; if (k === 'soap') bw = 22; if (k === 'peroxide') bw = S.proc === 'per12' ? 50 : 22; if (k === 'bleach') bw = 18;
+  if (S.speed === 0) bw = Math.min(bw, bubbles.length);
+  while (bubbles.length < bw) bubbles.push(newBubble(k));
+  while (bubbles.length > bw) bubbles.pop().node.remove();
+  for (const u of bubbles) {
+    u.life -= dt * sp; u.y -= u.vy * dt * sp; u.x += Math.sin(u.life * 3 + u.ph) * 0.2;
+    if (u.life <= 0) Object.assign(u, spawnBubble(u.kind));
+    u.node.setAttribute('cx', r1(u.x)); u.node.setAttribute('cy', r1(u.y));
+    u.node.setAttribute('opacity', r1(clamp(u.life * 2) * u.op * 100) / 100);
+  }
+}
+function newCritter(kind) {
+  let node;
+  if (kind === 'worm') {
+    node = el('g', { 'pointer-events': 'none' }, G.critters);
+    el('path', { fill: 'none', stroke: '#b4864a', 'stroke-width': 4.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, node);
+    el('path', { fill: 'none', stroke: '#6e4d26', 'stroke-width': 4.4, 'stroke-dasharray': '0.8 3.4', 'stroke-linecap': 'butt' }, node);
+  } else {
+    const larva = Math.random() < 0.7;
+    node = el('ellipse', { rx: larva ? 3.4 : 2.6, ry: larva ? 1.3 : 1.7, fill: larva ? '#7a5634' : '#241812', stroke: larva ? 'rgba(180,140,90,.6)' : 'none', 'stroke-width': 0.5, 'stroke-dasharray': '0.6 0.6', 'pointer-events': 'none' }, G.critters);
+  }
+  const c = { kind, node, x: 0, y: 0, a: Math.random() * 6.3, v: kind === 'worm' ? 14 : 9 + Math.random() * 8, t: Math.random() * 9, tx: 0, ty: 0 };
+  retarget(c); c.x = c.tx + (Math.random() - 0.5) * 60; c.y = c.ty + (Math.random() - 0.5) * 60;
+  return c;
+}
+function retarget(c) {
+  const p = present();
+  const hungry = c.kind === 'beetle' ? S.colony.hunger : 0;
+  const weights = p.map(b => (b.tissue + 0.02 + hungry * (b.def.cart + b.def.fragile) * 0.3) * SIZE_W[b.def.size]);
+  let r = Math.random() * weights.reduce((a, b) => a + b, 0), b = p[0];
+  for (let i = 0; i < p.length; i++) { r -= weights[i]; if (r <= 0) { b = p[i]; break; } }
+  if (!b) return;
+  const [x, y, rot] = b.def.pose, a = rot / 57.3, u = (Math.random() - 0.5) * (b.bw || 20) * 0.8, v = (Math.random() - 0.5) * (b.bh || 10) * 0.6;
+  c.tx = x + u * Math.cos(a) - v * Math.sin(a); c.ty = y + u * Math.sin(a) + v * Math.cos(a);
+}
+function spawnBubble(kind) {
+  const [W, H] = S.spec.view;
+  if (kind === 'peroxide' || kind === 'bleach') {
+    const b = pick(present()); const [x, y] = b.def.pose;
+    return { x: x + (Math.random() - 0.5) * (b.bw || 20) * 0.8, y: y + (Math.random() - 0.5) * (b.bh || 10) * 0.6, vy: 6 + Math.random() * 10, life: 0.5 + Math.random() * 1.2, r: 0.8 + Math.random() * 1.6, op: 0.9, ph: Math.random() * 6 };
+  }
+  if (kind === 'soap') return { x: Math.random() * W, y: 60 + Math.random() * 40, vy: -2 + Math.random() * 4, life: 1.5 + Math.random() * 3, r: 3 + Math.random() * 7, op: 0.55, ph: Math.random() * 6 };
+  return { x: Math.random() * W, y: H - Math.random() * H * 0.4, vy: 30 + Math.random() * 40, life: 2 + Math.random() * 4, r: 1 + Math.random() * 2.5, op: 0.5, ph: Math.random() * 6 };
+}
+function newBubble(kind) {
+  const u = { kind, ...spawnBubble(kind) };
+  u.node = el('circle', { r: r1(u.r), fill: kind === 'soap' ? 'rgba(255,255,250,.55)' : 'none', stroke: 'rgba(255,255,255,.85)', 'stroke-width': 0.7 }, G.fx);
+  return u;
+}
+
+/* ---------- hover inspection ---------- */
+const tip = document.getElementById('tip'), stage = document.getElementById('stage');
+function hideTip() { tip.hidden = true; hoverId = null; }
+function showTip(b, e) {
+  const sr = stage.getBoundingClientRect();
+  const row = (l, v, c) => `<div class="r"><span>${l}</span><div class="track"><i style="width:${Math.round(v * 100)}%;--c:${c}"></i></div><b>${Math.round(v * 100)}</b></div>`;
+  const notes = [];
+  if (b.loose && !S.asm) notes.push(b.secured ? 'Recovered and bagged.' : 'Loose: no longer attached.');
+  if (b.def.cart && b.integ < 0.97) notes.push('Cartilage has been eaten away.');
+  if (b.chalk > 0.1) notes.push('Surface is chalky.');
+  if (b.def.note) notes.push(b.def.note);
+  tip.innerHTML = `<h4>${b.def.name}</h4><div class="sz">${b.def.size} bone</div>
+    ${row('Tissue', b.tissue, 'var(--rust)')}${row('Grease', b.grease, 'var(--amber)')}${row('Stain', b.stain, 'var(--tea)')}${row('Whiteness', looksWhite(b), '#cfc7b0')}${row('Integrity', S.reveal ? b.integ : b.integ, 'var(--green)')}
+    ${notes.length ? `<p>${notes.join(' ')}</p>` : ''}`;
+  tip.hidden = false;
+  let x = e.clientX - sr.left + 16, y = e.clientY - sr.top + 12;
+  if (x + 224 > sr.width) x = e.clientX - sr.left - 230;
+  if (y + tip.offsetHeight > sr.height) y = Math.max(4, sr.height - tip.offsetHeight - 4);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+svg.addEventListener('pointermove', e => {
+  if (drag) return dragMove(e);
+  const g = e.target.closest && e.target.closest('.bone');
+  if (!g || e.pointerType === 'touch' && S.asmReady) { if (hoverId) hideTip(); return; }
+  const b = S.bones.find(x => x.id === g.dataset.id);
+  hoverId = b.id; showTip(b, e);
+});
+svg.addEventListener('pointerleave', () => { if (!drag) hideTip(); });
+
+/* =====================================================================
+   ASSEMBLY — drag bones from the drying tray onto anatomical slots.
+   ===================================================================== */
+function startAssembly() {
+  const [W, H] = S.spec.view, H2 = H + 230;
+  S.spec.viewAsm = [W, H2];
+  S.asm = {};
+  for (const b of S.bones) {
+    S.asm[b.id] = { x: 60 + Math.random() * (W - 120), y: H + 30 + Math.random() * 170, rot: (Math.random() - 0.5) * 140, slot: null };
+  }
+  S.asmReady = true;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H2}`);
+  svg.classList.add('asm');
+  buildSlots();
+  logMsg('Dry. Lay the bones out on the card.');
+  panelDirty = true;
+}
+function buildSlots() {
+  G.slots.innerHTML = '';
+  const [W, H] = S.spec.view;
+  const tray = el('g', {}, G.slots);
+  el('rect', { x: 26, y: H + 8, width: W - 52, height: 208, rx: 6, fill: '#e4dccb', stroke: '#c4b89d', 'stroke-dasharray': '5 4' }, tray);
+  el('text', { x: 38, y: H + 28, 'font-family': 'system-ui,sans-serif', 'font-size': 11, 'letter-spacing': 1.5, fill: '#8a8070' }, tray).textContent = 'DRYING TRAY';
+  for (const def of S.spec.bones) {
+    const [x, y, r] = def.pose;
+    el('path', { d: shapeOf(def).d, 'fill-rule': 'evenodd', transform: `translate(${x},${y}) rotate(${r})`, fill: 'rgba(120,110,90,.06)', stroke: '#a89c82', 'stroke-width': 1, 'stroke-dasharray': '3 3', 'data-slot': def.id }, G.slots);
+  }
+}
+function renderSlots() {
+  const filled = new Set(Object.values(S.asm).map(a => a.slot).filter(Boolean));
+  G.slots.querySelectorAll('[data-slot]').forEach(p => {
+    const empty = !filled.has(p.dataset.slot);
+    p.setAttribute('opacity', empty ? 1 : 0);
+    p.setAttribute('stroke', S.reveal && empty ? '#9b4a2c' : '#a89c82');
+  });
+}
+let drag = null;
+function svgPt(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+svg.addEventListener('pointerdown', e => {
+  audioUnlock();
+  if (S.stage !== 'assemble' || !S.asmReady) return;
+  const g = e.target.closest('.bone'); if (!g) return;
+  const id = g.dataset.id, a = S.asm[id], p = svgPt(e);
+  drag = { id, dx: p.x - a.x, dy: p.y - a.y };
+  a.slot = null;
+  G.bones.appendChild(g);
+  svg.setPointerCapture(e.pointerId);
+  hideTip();
+  e.preventDefault();
+});
+function dragMove(e) {
+  const a = S.asm[drag.id], p = svgPt(e);
+  a.x = p.x - drag.dx; a.y = p.y - drag.dy;
+}
+svg.addEventListener('pointerup', () => {
+  if (!drag) return;
+  const b = S.bones.find(x => x.id === drag.id), a = S.asm[drag.id];
+  const taken = new Set(Object.entries(S.asm).filter(([id, v]) => id !== b.id && v.slot).map(([, v]) => v.slot));
+  let best = null, bd = 38;
+  for (const def of S.spec.bones) {
+    if (def.slot !== b.def.slot || taken.has(def.id)) continue;
+    const d = Math.hypot(def.pose[0] - a.x, def.pose[1] - a.y);
+    if (d < bd) { bd = d; best = def; }
+  }
+  if (best) { a.x = best.pose[0]; a.y = best.pose[1]; a.rot = best.pose[2]; a.slot = best.id; sfx('tick'); }
+  drag = null;
+});
+
+/* =====================================================================
+   GRADING
+   ===================================================================== */
+
+// Combine the five 0–1 grades and the penalty flags into one 0–100 score.
+// scores: { clean, white, intact, smell, time, assembly }   (assembly is 0–1, or null if skipped)
+// flags:  { infestRisk (0–1), bleached (bool), skippedDegrease (bool) }
+function overallScore(scores, flags) {
+  const { clean, white, intact, smell, time, assembly } = scores;
+  // a curator cares about completeness and condition first, speed last
+  const W = { intact: 0.32, clean: 0.24, white: 0.22, smell: 0.14, time: 0.08 };
+  const mean = W.intact * intact + W.clean * clean + W.white * white + W.smell * smell + W.time * time;
+  // the weakest of the three that matter most drags the whole specimen down
+  const weakest = Math.min(intact, clean, white);
+  let score = 100 * (0.7 * mean + 0.3 * weakest);
+  if (assembly == null) score -= 4; else score += 4 * assembly - 2;
+  if (flags.skippedDegrease) score -= 10;
+  if (flags.infestRisk > 0) score -= 25 * flags.infestRisk;
+  // damage that keeps getting worse puts a hard ceiling on the grade
+  if (flags.bleached) score = Math.min(score, 50);
+  if (flags.infestRisk > 0.6) score = Math.min(score, 40);
+  return Math.round(clamp(score, 0, 100));
+}
+
+function labelFor(score) {
+  if (score >= 90) return 'Museum quality';
+  if (score >= 75) return 'Teaching collection';
+  if (score >= 55) return 'A decent shelf specimen';
+  if (score >= 35) return 'Needs reprocessing';
+  return 'Back to the bucket';
+}
+
+function finish() {
+  stopProc();
+  // reveal: bleach damage surfaces, grease shows through
+  let bleached = false;
+  for (const b of S.bones) if (b.bleach > 0.03) { bleached = true; b.integ = clamp(b.integ - b.bleach * 0.7); }
+  S.reveal = true;
+  const p = present();
+  const s = stats();
+  const trueWhite = avg(b => clamp(b.white * (1 - 0.65 * b.grease) - 0.3 * b.stain - 0.15 * b.dirt - 0.6 * b.tissue), p);
+  const presentFrac = p.length / S.bones.length;
+  const days = (S.hours - START_HOUR) / 24, par = S.spec.parDays;
+  const placed = p.filter(b => S.asm && S.asm[b.id].slot).length;
+  const scores = {
+    clean: clamp(1 - (s.tissue * 1.6 + s.dirt * 0.35 + s.stain * 0.2)),
+    white: trueWhite,
+    intact: presentFrac ** 1.2 * avg('integ', p),
+    smell: clamp(1 - (S.odor * 0.5 + s.tissue * 1.5 + s.grease * 0.8)),
+    time: days <= par ? 1 : clamp(1 - (days - par) / (par * 1.5)),
+    assembly: S.asm ? placed / Math.max(1, p.length) : null,
+  };
+  const flags = {
+    infestRisk: S.inColony ? clamp(1 - S.freezeH / 168) : 0,
+    bleached,
+    skippedDegrease: !!S.flags.skipDegrease,
+  };
+  const score = clamp(overallScore(scores, flags), 0, 100);
+  S.result = { score, label: labelFor(score), scores, flags, days, findings: findings(scores, flags, s) };
+  if (bleached) unlock('bleach', true);
+  logMsg(`Graded: ${score} (${S.result.label}).`, score >= 75 ? 'good' : score < 45 ? 'bad' : '');
+  gotoStage('graded');
+  showReport();
+}
+
+function findings(sc, fl, s) {
+  const F = [], lost = S.bones.filter(b => b.lost);
+  if (fl.bleached) F.push(['bad', 'Chlorine damage', 'It looked perfect coming out of the bleach. Six months on, the thin edges flake and the surface powders under a fingertip. Hypochlorite broke down the collagen that holds bone together. Peroxide whitens without doing that.']);
+  if (fl.infestRisk > 0.05) F.push(['bad', 'Infestation', fl.infestRisk > 0.6 ? 'Three weeks after it went into the drawer, larval skins and frass turned up beside it, and in the bird skins next to it. It was never frozen.' : 'It was frozen for less than a week. A few eggs survived, and larvae turned up in the drawer.']);
+  if (fl.skippedDegrease || s.grease > 0.3) F.push(['bad', 'Greasy, yellowing bone', `About ${Math.round(s.grease * 100)}% of the grease is still in the bone. It is already showing as yellow, tacky patches on the skull and the ends of the long bones, and no amount of whitening will fix it.`]);
+  else if (s.grease < 0.12) F.push(['good', 'Well degreased', 'The bone is dry and matte. It will stay this colour.']);
+  if (lost.length) F.push(['bad', `${lost.length} bone${lost.length > 1 ? 's' : ''} missing`, `Lost: ${lost.map(b => b.def.name.toLowerCase()).join(', ')}. Empty slots are outlined in rust.`]);
+  else F.push(['good', 'Complete', 'Every bone that arrived on the tray is still here.']);
+  if (s.tissue > 0.06) F.push(['bad', 'Tissue left', 'Dried tissue is still lodged in the crevices, mostly around the skull and in the vertebrae.']);
+  const chalk = avg('chalk');
+  if (chalk > 0.12) F.push(['bad', 'Chalky surface', 'Strong peroxide left on too long has etched the surface. Thin edges are fragile.']);
+  const eaten = S.bones.filter(b => !b.lost && b.def.cart && b.integ < 0.92);
+  if (eaten.length && S.method === 'dermestid') F.push(['bad', 'Cartilage eaten', `The colony ran out of tissue and started on the ${eaten.slice(0, 3).map(b => b.def.name.toLowerCase()).join(', ')}.`]);
+  const chewed = S.bones.filter(b => !b.lost && b.integ < 0.9 && !b.def.cart);
+  if (chewed.length && S.method === 'superworm') F.push(['bad', 'Chew damage', `Gnawed edges on the ${chewed.slice(0, 3).map(b => b.def.name.toLowerCase()).join(', ')}.`]);
+  if (sc.white > 0.7 && !fl.bleached) F.push(['good', 'Good colour', 'An even, natural ivory white.']);
+  if (s.stain > 0.25) F.push(['bad', 'Staining', 'Brown tea-stain patches remain. Fouled maceration water and oxidised grease both leave them.']);
+  return F;
+}
+
+function showReport() {
+  const r = S.result, sc = r.scores;
+  const bar = (l, v, c) => `<div class="gauge"><span>${l}</span><div class="track"><i style="width:${Math.round(v * 100)}%;--c:${c}"></i></div><b>${Math.round(v * 100)}</b></div>`;
+  openModal(`<div class="kicker">${S.spec.acc} · ${S.spec.name} · ${r.days.toFixed(1)} days</div>
+    <div class="score"><span class="num">${r.score}</span><span class="lab">${r.label}</span></div>
+    ${bar('Cleanliness', sc.clean, 'var(--rust)')}${bar('Whiteness', sc.white, '#cfc7b0')}${bar('Intactness', sc.intact, 'var(--green)')}${bar('Smell', sc.smell, 'var(--olive)')}${bar('Time', sc.time, 'var(--green-2)')}
+    ${sc.assembly != null ? bar('Layout', sc.assembly, 'var(--tea)') : ''}
+    <ul class="findings">${r.findings.map(([c, t, d]) => `<li class="${c}"><b>${t}</b>${d}</li>`).join('')}</ul>
+    <div class="row" style="margin-top:14px"><button class="btn primary" data-close>Look at the specimen</button><button class="btn" data-m="restart">Prepare another</button></div>`);
+}
+
+/* =====================================================================
+   FIELD NOTES, MODAL, TOAST
+   ===================================================================== */
+const modal = document.getElementById('modal'), sheet = document.getElementById('sheet');
+function openModal(html) { sheet.innerHTML = html; modal.hidden = false; }
+function closeModal() { modal.hidden = true; }
+modal.addEventListener('click', e => {
+  if (e.target === modal || e.target.closest('[data-close]')) closeModal();
+  const m = e.target.closest('[data-m]'); if (m) ACT[m.dataset.m]();
+});
+function openNotes() {
+  openModal(`<div class="kicker">Field notes</div><h2>How it works for real</h2>
+    ${Object.entries(NOTES).map(([k, n]) => unlocked.has(k) ? `<div class="note"><h4>${n.t}</h4><p>${n.p}</p></div>` : `<div class="note locked"><h4>${n.t}</h4><p>Use this method to unlock.</p></div>`).join('')}
+    <div class="row"><button class="btn" data-close>Close</button></div>`);
+}
+const toast = document.getElementById('toast');
+let toastTimer;
+function unlock(k, quiet) {
+  if (unlocked.has(k)) return;
+  unlocked.add(k); store.save({ ...store.load(), notes: [...unlocked] });
+  if (quiet) return;
+  toast.innerHTML = `<small>Field note unlocked</small>${NOTES[k].t}`; toast.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.hidden = true, 6000);
+}
+toast.addEventListener('click', () => { toast.hidden = true; openNotes(); });
+document.getElementById('notesBtn').addEventListener('click', openNotes);
+
+/* =====================================================================
+   SOUND — synthesised, muted by default.
+   ===================================================================== */
+const AU = { ctx: null, on: false, noise: null };
+function audioUnlock() { if (AU.on && AU.ctx && AU.ctx.state === 'suspended') AU.ctx.resume(); }
+function noiseSrc() {
+  const c = AU.ctx;
+  if (!AU.noise) { AU.noise = c.createBuffer(1, c.sampleRate, c.sampleRate); const d = AU.noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const s = c.createBufferSource(); s.buffer = AU.noise; return s;
+}
+function env(node, t0, a, peak, d) { const g = AU.ctx.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d); node.connect(g); g.connect(AU.ctx.destination); return g; }
+function slosh() {
+  if (!AU.on || !AU.ctx) return;
+  const c = AU.ctx, t = c.currentTime, s = noiseSrc(), f = c.createBiquadFilter();
+  f.type = 'lowpass'; f.Q.value = 4; f.frequency.setValueAtTime(260, t); f.frequency.linearRampToValueAtTime(900, t + 0.35); f.frequency.linearRampToValueAtTime(220, t + 0.9);
+  s.connect(f); env(f, t, 0.12, 0.35, 0.9); s.start(t); s.stop(t + 1.1);
+}
+function rustle() {
+  if (!AU.on || !AU.ctx) return;
+  const c = AU.ctx, t = c.currentTime;
+  for (let i = 0; i < 5; i++) { const s = noiseSrc(), f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2500 + Math.random() * 3000; f.Q.value = 3; s.connect(f); const t0 = t + i * (0.03 + Math.random() * 0.06); env(f, t0, 0.003, 0.08, 0.03); s.start(t0); s.stop(t0 + 0.06); }
+}
+function fizz() {
+  if (!AU.on || !AU.ctx) return;
+  const c = AU.ctx, t = c.currentTime, s = noiseSrc(), f = c.createBiquadFilter();
+  f.type = 'highpass'; f.frequency.value = 6000; s.connect(f); env(f, t, 0.05, 0.05, 0.6); s.start(t); s.stop(t + 0.8);
+}
+function sfx(kind) {
+  if (!AU.on || !AU.ctx) return;
+  const c = AU.ctx, t = c.currentTime, o = c.createOscillator();
+  o.frequency.value = kind === 'tick' ? 1400 : 700; o.type = 'triangle';
+  env(o, t, 0.003, kind === 'tick' ? 0.06 : 0.04, 0.05); o.start(t); o.stop(t + 0.1);
+}
+const soundBtn = document.getElementById('soundBtn');
+soundBtn.addEventListener('click', () => {
+  AU.on = !AU.on;
+  if (AU.on && !AU.ctx) AU.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  audioUnlock();
+  soundBtn.setAttribute('aria-pressed', AU.on); soundBtn.textContent = AU.on ? 'Sound on' : 'Sound off';
+  store.save({ ...store.load(), sound: AU.on });
+  slosh();
+});
+
+/* =====================================================================
+   CONTROLS + LOOP
+   ===================================================================== */
+const speedEl = document.getElementById('speed');
+function setSpeed(v) {
+  S.speed = v;
+  speedEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.s === v));
+}
+speedEl.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setSpeed(+b.dataset.s); });
+const lampBtn = document.getElementById('lampBtn');
+function setLamp(on) { lampOn = on; lampBtn.setAttribute('aria-pressed', on); }
+lampBtn.addEventListener('click', () => setLamp(!lampOn));
+addEventListener('keydown', e => {
+  if (e.target.matches('input')) return;
+  if (e.key === 'i' || e.key === 'I') setLamp(!lampOn);
+  if (e.key === ' ') { e.preventDefault(); setSpeed(S.speed ? 0 : 5); }
+  if (e.key === '1') setSpeed(1); if (e.key === '2') setSpeed(5); if (e.key === '3') setSpeed(20);
+  if (e.key === 'Escape') closeModal();
+});
+
+let last = performance.now(), acc = 1;
+function frame(t) {
+  const dt = Math.min(0.1, (t - last) / 1000); last = t;
+  if (S.proc && S.speed > 0) {
+    let hrs = dt * S.speed * HPS;
+    while (hrs > 0 && S.proc) { const h = Math.min(0.5, hrs); step(h); hrs -= h; }
+  }
+  if (drag || S.asm) renderTrayPositionsOnly();
+  animate(dt);
+  acc += dt;
+  if (acc > 1 / 15) {
+    acc = 0;
+    renderTray(); renderMeters();
+    if (panelDirty) renderPanel(); else bindPanel();
+  }
+  requestAnimationFrame(frame);
+}
+function renderTrayPositionsOnly() {
+  if (!drag) return;
+  const a = S.asm[drag.id], p = boneEls[drag.id];
+  setA(p, 'tf', p.g, 'transform', `translate(${r1(a.x)},${r1(a.y)}) rotate(${r1(a.rot)})`);
+}
+
+newRun('rabbit');
+buildTray();
+setSpeed(S.speed);
+renderPanel();
+requestAnimationFrame(frame);
+</script>
+</html>

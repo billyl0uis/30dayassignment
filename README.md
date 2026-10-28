@@ -9,3 +9,4 @@ Projects made for the 30-day assignment, one folder each.
 | [Silverbench](silverbench/) | A silversmithing bench simulator: cut, solder, rivet and finish sterling on a soldering board, with guided lessons and 3D views of hinges and clasps. |
 | [Foldline](foldline/) | A fold-forming simulator and design bench: fold a blank, hammer the edge, anneal and open it, and watch the form rise in 3D. Inspired by Greg Greenwood. |
 | [Goblet Works](goblet-works/) | A 3D glassblowing sandbox: gather, blow, pull a stem, paddle a foot and open the rim to make goblets, then keep them on a shelf. |
+| [Clean Bones](clean-bones/) | An osteology prep game: clean a rabbit skeleton with beetles, superworms or maceration, then degrease, whiten and lay it out for grading. |
