@@ -1,7 +1,7 @@
 import { getStroke } from 'perfect-freehand';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { dist, type Vec2 } from '../geom2d/polygon';
-import { selectPiece, useScene } from '../scene/store';
+import { useScene } from '../scene/store';
 import { cleanupStroke } from './stroke';
 
 const PAPER = '#ece5d8';
@@ -11,15 +11,18 @@ const CLOSE_RADIUS = 0.07; // click this close to the first pen point to close t
 /**
  * The sketchbook page. Brush: one continuous stroke, auto-closed on release.
  * Pen: click points; click the first point, double-click or press Enter to close.
- * Either way the new shape replaces the selected piece's drawing.
+ * Every finished shape is added to the scene as a new piece, and the page
+ * clears for the next one, keeping a faint trace of the last shape for scale.
  */
 export function DrawPad() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState(400);
   const tool = useScene((s) => s.tool);
-  const outline = useScene((s) => selectPiece(s).drawing?.outline ?? null);
-  const setDrawing = useScene((s) => s.setDrawing);
+  const addShape = useScene((s) => s.addShape);
+  const isEmpty = useScene((s) => s.pieces.length === 0);
+  const [last, setLast] = useState<Vec2[] | null>(null);
+  const [stroking, setStroking] = useState(false);
 
   const brush = useRef<number[][]>([]); // [x, y, pressure]
   const brushDown = useRef(false);
@@ -59,19 +62,15 @@ export function DrawPad() {
     g.stroke();
     g.setLineDash([]);
 
-    const drawing = brushDown.current || penPts.length > 0;
-    if (outline) {
+    if (last && !isEmpty) {
       g.beginPath();
-      outline.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+      last.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
       g.closePath();
-      g.globalAlpha = drawing ? 0.25 : 1;
-      g.fillStyle = 'rgba(70,120,140,0.14)';
-      g.fill();
-      g.strokeStyle = INK;
-      g.lineWidth = 2.2 * px;
-      g.lineJoin = 'round';
+      g.strokeStyle = 'rgba(31,27,23,0.22)';
+      g.lineWidth = 1.5 * px;
+      g.setLineDash([3 * px, 4 * px]);
       g.stroke();
-      g.globalAlpha = 1;
+      g.setLineDash([]);
     }
 
     if (brush.current.length > 1) {
@@ -108,7 +107,7 @@ export function DrawPad() {
         if (i === 0) g.stroke();
       });
     }
-  }, [size, outline, penPts]);
+  }, [size, last, isEmpty, penPts]);
 
   useLayoutEffect(paint, [paint]);
 
@@ -121,7 +120,10 @@ export function DrawPad() {
   const commit = (raw: Vec2[], kind: 'brush' | 'pen') => {
     const clean = cleanupStroke(raw, kind);
     setRejected(!clean);
-    if (clean) setDrawing(clean);
+    if (clean) {
+      addShape(clean);
+      setLast(clean);
+    }
   };
 
   const finishPen = useCallback(() => {
@@ -156,6 +158,7 @@ export function DrawPad() {
         /* pointer already gone; the stroke still works inside the page */
       }
       brushDown.current = true;
+      setStroking(true);
       brush.current = [[p[0], p[1], e.pointerType === 'pen' ? e.pressure : 0.5]];
       paint();
     } else if (penPts.length >= 3 && dist(p, penPts[0]) < CLOSE_RADIUS) {
@@ -183,6 +186,7 @@ export function DrawPad() {
   const onPointerUp = () => {
     if (!brushDown.current) return;
     brushDown.current = false;
+    setStroking(false);
     const raw = brush.current.map(([x, y]) => [x, y] as Vec2);
     brush.current = [];
     if (raw.length > 6) commit(raw, 'brush');
@@ -201,6 +205,13 @@ export function DrawPad() {
         onPointerCancel={onPointerUp}
         onDoubleClick={() => tool === 'pen' && finishPen()}
       />
+      {isEmpty && !stroking && penPts.length === 0 && (
+        <p className="pad-empty">
+          Draw a shape here.
+          <br />
+          It becomes glass on the right.
+        </p>
+      )}
       {rejected && <p className="pad-note">Too small to inflate. Draw a bigger loop.</p>}
     </div>
   );

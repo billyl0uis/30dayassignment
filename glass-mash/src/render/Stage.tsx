@@ -18,8 +18,8 @@ export function Stage() {
   const selectedId = useScene((s) => s.selectedId);
   const members = useStableMembers(pieces);
   const memberIds = new Set(members.map((m) => m.id));
-  const selectedInMash = memberIds.has(selectedId);
-  const empty = pieces.every((p) => !p.drawing);
+  const selectedInMash = !!selectedId && memberIds.has(selectedId);
+  const empty = pieces.length === 0;
 
   return (
     <>
@@ -56,7 +56,7 @@ export function Stage() {
         />
         <OrbitControls makeDefault target={[0, 0.75, 0]} enableDamping minDistance={1.6} maxDistance={14} />
       </Canvas>
-      {empty && <p className="stage-empty">Draw a closed shape on the page. It turns to glass here.</p>}
+      {empty && <p className="stage-empty">Your glass shows up here.</p>}
     </>
   );
 }
@@ -139,10 +139,10 @@ function Gizmo() {
   const [target, setTarget] = useState<Object3D | null>(null);
 
   useEffect(() => {
-    setTarget(scene.getObjectByName(selectedId) ?? null);
+    setTarget(selectedId ? (scene.getObjectByName(selectedId) ?? null) : null);
   }, [scene, selectedId]);
 
-  if (!target || !hasDrawing) return null;
+  if (!target || !hasDrawing || !selectedId) return null;
   const { checkpoint, setDragging, setTransform } = useScene.getState();
   return (
     <TransformControls

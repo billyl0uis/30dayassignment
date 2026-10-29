@@ -11,22 +11,17 @@ npm run dev
 
 Then open http://localhost:5180.
 
-## Step 1 (this build)
+## Using it
 
-- Drawing page with a **brush** (one loop, closes itself) and a **pen** (click points; click the first point, double-click or press Enter to close).
-- Scribbles that cross themselves are merged into one silhouette.
-- **Inflate** mode with Inflation and Detail sliders, updating live.
-- Glass material: tint swatches or a custom colour, colour depth, frost, refraction, transparent or opaque.
-- Black, white and gallery backgrounds; turntable spin.
-- Undo / redo (⌘Z, ⇧⌘Z). Shortcuts: B brush, P pen.
+1. **Draw a shape** on the page with the brush (one loop, let go) or the pen (click points, click the first point again or press Enter). It becomes glass on the right.
+2. **Draw another.** Every shape is added as a new piece, placed overlapping the last one so they melt together. The page keeps a faint trace of your last shape for scale.
+3. **Click a piece** in 3D to select it. The bar under the 3D view has everything for that piece:
+   - **Move / Turn / Size** (W / E / R) switch the handles
+   - **Melt in** fuses it with the others, **Cut out** uses it to carve a hole, **Keep apart** leaves it separate
+   - **Copy / Delete**
+4. The side panel holds **Inflation** (for the selected piece), **Gooeyness** (how much melted pieces slump together), **Glass** colour and frost, and the background.
 
-## Joining pieces (step 3)
-
-- **+ New** (N) starts a new piece; draw it on the page. **Duplicate** copies the selected one.
-- Every piece has a join mode: **Melt** fuses it into the mash, **Carve** cuts its shape out, **Overlap** keeps only where it overlaps, **Solo** keeps it separate.
-- **Melt** slider: 0 is a hard seam, higher slumps the pieces together like hot glass.
-- Click a piece (or its part of the mash) to select it. **Move / Turn / Size** (W / E / R) switch the handles.
-- The mash is one piece of glass and takes the first melted piece's colour.
+Undo / redo: ⌘Z, ⇧⌘Z. **Start over** removes every piece (undoable). Melted pieces are one piece of glass and share one colour.
 
 How it works: each piece becomes a distance field (how far every point is from its surface), the fields are combined with a smooth minimum, and the result is meshed again with surface nets. While you drag, the mash drops to draft quality, then sharpens when you let go.
 

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { starterOutline } from '../draw/stroke';
 import type { Vec2 } from '../geom2d/polygon';
 import { defaultParams } from '../modes/registry';
 import type { Drawing, ModeId, ParamValues } from '../modes/types';
@@ -50,14 +49,14 @@ interface Snapshot {
 
 interface SceneState {
   pieces: Piece[];
-  selectedId: string;
+  selectedId: string | null; // null before anything is drawn
   tool: Tool;
   background: Background;
   turntable: boolean;
   gizmo: Gizmo;
   dragging: boolean; // a gizmo drag is in progress; the mash drops to draft quality
   blend: number; // smooth-blend radius for the mash, in drawing units
-  mashDetail: number; // grid cells across the mash's longest side
+  mashDetail: number; // grid cells across the mash's longest side (not shown in the UI)
   past: Snapshot[];
   future: Snapshot[];
 
@@ -65,18 +64,18 @@ interface SceneState {
   checkpoint(): void;
   undo(): void;
   redo(): void;
-  select(id: string): void;
-  addPiece(): void;
+  select(id: string | null): void;
+  /** Every finished drawing becomes a new piece, placed to overlap the last one. */
+  addShape(outline: Vec2[]): void;
   duplicatePiece(): void;
   deletePiece(): void;
-  setDrawing(outline: Vec2[] | null): void;
+  clearAll(): void;
   setMode(mode: ModeId): void;
   setParam(key: string, value: number): void;
   setGlass(patch: Partial<GlassParams>, id?: string): void;
   setJoin(join: JoinMode): void;
   setTransform(id: string, t: Transform): void;
   setBlend(v: number): void;
-  setMashDetail(v: number): void;
   setGizmo(g: Gizmo): void;
   setDragging(d: boolean): void;
   setTool(tool: Tool): void;
@@ -113,18 +112,16 @@ function besides(t: Transform): Transform {
   return { ...t, position: [x + 0.55, y + 0.25, z + 0.15] };
 }
 
-const first = makePiece(starterOutline(), 'Piece 1');
-
 export const useScene = create<SceneState>()((set, get) => {
   const updateSelected = (fn: (p: Piece) => Piece) =>
     set((s) => ({ pieces: s.pieces.map((p) => (p.id === s.selectedId ? fn(p) : p)) }));
   /** After undo/redo the selected piece may no longer exist. */
   const keepSelection = (pieces: Piece[]) =>
-    pieces.some((p) => p.id === get().selectedId) ? get().selectedId : pieces[pieces.length - 1].id;
+    pieces.some((p) => p.id === get().selectedId) ? get().selectedId : (pieces[pieces.length - 1]?.id ?? null);
 
   return {
-    pieces: [first],
-    selectedId: first.id,
+    pieces: [],
+    selectedId: null,
     tool: 'brush',
     background: 'gallery',
     turntable: false,
@@ -154,30 +151,32 @@ export const useScene = create<SceneState>()((set, get) => {
       set({ ...next, selectedId: keepSelection(next.pieces), past: [...past, { pieces, blend }], future: future.slice(1) });
     },
     select: (selectedId) => set({ selectedId }),
-    addPiece() {
+    addShape(outline) {
       get().checkpoint();
       const { pieces, selectedId } = get();
-      const from = pieces.find((p) => p.id === selectedId) ?? pieces[0];
-      const piece = makePiece(null, nextName(pieces), besides(from.transform));
+      const from = pieces.find((p) => p.id === selectedId);
+      const piece = makePiece(outline, nextName(pieces), from ? besides(from.transform) : IDENTITY);
       set({ pieces: [...pieces, piece], selectedId: piece.id });
     },
     duplicatePiece() {
-      get().checkpoint();
       const { pieces, selectedId } = get();
-      const from = pieces.find((p) => p.id === selectedId)!;
+      const from = pieces.find((p) => p.id === selectedId);
+      if (!from) return;
+      get().checkpoint();
       const piece: Piece = { ...from, id: crypto.randomUUID(), name: nextName(pieces), transform: besides(from.transform) };
       set({ pieces: [...pieces, piece], selectedId: piece.id });
     },
     deletePiece() {
       const { pieces, selectedId } = get();
-      if (pieces.length === 1) return get().setDrawing(null);
+      if (!selectedId) return;
       get().checkpoint();
       const rest = pieces.filter((p) => p.id !== selectedId);
-      set({ pieces: rest, selectedId: rest[rest.length - 1].id });
+      set({ pieces: rest, selectedId: rest[rest.length - 1]?.id ?? null });
     },
-    setDrawing(outline) {
+    clearAll() {
+      if (!get().pieces.length) return;
       get().checkpoint();
-      updateSelected((p) => ({ ...p, drawing: outline ? { outline } : null }));
+      set({ pieces: [], selectedId: null });
     },
     setMode(mode) {
       get().checkpoint();
@@ -198,7 +197,6 @@ export const useScene = create<SceneState>()((set, get) => {
       set((s) => ({ pieces: s.pieces.map((p) => (p.id === id ? { ...p, transform } : p)) }));
     },
     setBlend: (blend) => set({ blend }),
-    setMashDetail: (mashDetail) => set({ mashDetail }),
     setGizmo: (gizmo) => set({ gizmo }),
     setDragging: (dragging) => set({ dragging }),
     setTool: (tool) => set({ tool }),
@@ -207,7 +205,7 @@ export const useScene = create<SceneState>()((set, get) => {
   };
 });
 
-export const selectPiece = (s: SceneState) => s.pieces.find((p) => p.id === s.selectedId) ?? s.pieces[0];
+export const selectPiece = (s: SceneState): Piece | null => s.pieces.find((p) => p.id === s.selectedId) ?? null;
 
 const JOIN_ORDER: Record<JoinMode, number> = { solo: -1, melt: 0, intersect: 1, carve: 2 };
 

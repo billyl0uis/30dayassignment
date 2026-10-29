@@ -41,13 +41,3 @@ export function cleanupStroke(raw: Vec2[], kind: StrokeKind): Vec2[] | null {
   if (area < 0) out.reverse();
   return out;
 }
-
-/** A two-rooted molar, so the 3D view isn't empty on first load. */
-export function starterOutline(): Vec2[] {
-  const tooth: Vec2[] = [
-    [-0.5, 0.0], [-0.55, 0.35], [-0.4, 0.58], [-0.2, 0.46], [0, 0.6], [0.2, 0.46], [0.4, 0.58],
-    [0.55, 0.35], [0.5, 0.0], [0.38, -0.25], [0.33, -0.72], [0.2, -0.8], [0.12, -0.45], [0, -0.28],
-    [-0.12, -0.45], [-0.2, -0.8], [-0.33, -0.72], [-0.38, -0.25],
-  ];
-  return cleanupStroke(tooth, 'brush')!;
-}

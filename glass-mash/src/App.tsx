@@ -1,17 +1,18 @@
 import { useEffect } from 'react';
 import { DrawPad } from './draw/DrawPad';
 import { Stage } from './render/Stage';
-import { selectPiece, useScene } from './scene/store';
+import { useScene } from './scene/store';
 import { Inspector } from './ui/Inspector';
+import { PieceBar } from './ui/PieceBar';
 
 const HINTS = {
-  brush: 'Draw one loop. It closes itself when you let go.',
-  pen: 'Click points. Click the first point, double-click or press Enter to close. Esc cancels.',
+  brush: 'Draw one loop and let go. Each new shape lands on the last one and melts into it.',
+  pen: 'Click points; click the first point again (or press Enter) to finish. Esc cancels.',
 };
 
 export default function App() {
-  const { tool, setTool, undo, redo, past, future, setDrawing, setGizmo, addPiece } = useScene();
-  const piece = useScene(selectPiece);
+  const { tool, setTool, undo, redo, past, future, clearAll, setGizmo } = useScene();
+  const hasPieces = useScene((s) => s.pieces.length > 0);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -23,14 +24,13 @@ export default function App() {
         else undo();
       } else if (!mod && e.key === 'b') setTool('brush');
       else if (!mod && e.key === 'p') setTool('pen');
-      else if (!mod && e.key === 'n') addPiece();
       else if (!mod && e.key === 'w') setGizmo('translate');
       else if (!mod && e.key === 'e') setGizmo('rotate');
       else if (!mod && e.key === 'r') setGizmo('scale');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo, setTool, setGizmo, addPiece]);
+  }, [undo, redo, setTool, setGizmo]);
 
   return (
     <div className="app">
@@ -55,21 +55,18 @@ export default function App() {
             <button onClick={redo} disabled={!future.length} title="Redo (⇧⌘Z)">
               Redo
             </button>
-            <button onClick={() => setDrawing(null)} title="Clear the page">
-              Clear
+            <button onClick={clearAll} disabled={!hasPieces} title="Remove every piece (you can undo this)">
+              Start over
             </button>
           </div>
         </div>
-        <p className="pad-label">
-          Drawing <strong>{piece.name}</strong>
-          {!piece.drawing && ' — draw it here'}
-        </p>
         <DrawPad />
         <p className="hint">{HINTS[tool]}</p>
       </section>
       <main className="stage">
         <Stage />
         <Inspector />
+        <PieceBar />
       </main>
     </div>
   );
