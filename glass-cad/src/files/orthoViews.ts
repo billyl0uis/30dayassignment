@@ -1,32 +1,24 @@
-// Front, side and top views for the shop sheet, drawn off screen: flat light-gray
-// shading with crease edges in dark line, all three at the same scale so they can
-// be measured against each other.
+// Line drawings of the standard views for the shop sheet and image export: flat
+// light-gray shading with crease edges in dark line, every view at the same scale
+// so they can be measured against each other.
 
 import * as THREE from 'three';
 import type { Body } from '../engine/evaluate';
+import { frameFor, sharedSize, VIEWS, type ViewFrame } from '../viewport/views';
 
-export interface OrthoView {
-  name: 'Front' | 'Side' | 'Top';
+export interface OrthoView extends ViewFrame {
+  name: string;
+  measured: boolean;
+  /** A square PNG covering [u0, u0 + size] across and [v0, v0 + size] up, in mm. */
   url: string;
-  /** The image covers [u0, u0 + size] across and [v0, v0 + size] up, in mm. */
-  u0: number;
-  v0: number;
-  size: number;
-  /** The piece's extent in this view, in mm. */
-  uMin: number;
-  uMax: number;
-  vMin: number;
-  vMax: number;
 }
 
-const PX = 720;
+const PX = 900;
 
 export function renderOrthoViews(bodies: Body[]): OrthoView[] {
   const box = new THREE.Box3();
   bodies.forEach((b) => box.union(b.bounds));
-  const c = box.getCenter(new THREE.Vector3());
-  const s = box.getSize(new THREE.Vector3());
-  const size = Math.max(s.x, s.y, s.z) * 1.3 || 10;
+  const size = sharedSize(box);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#ffffff');
@@ -51,36 +43,12 @@ export function renderOrthoViews(bodies: Body[]): OrthoView[] {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setSize(PX, PX, false);
-  const camera = new THREE.OrthographicCamera(-size / 2, size / 2, size / 2, -size / 2, 0.1, size * 20);
-
-  // Each view: where the camera sits, which way is up, and how world axes map to the image (u right, v up).
-  const views = [
-    { name: 'Front' as const, dir: new THREE.Vector3(0, 0, 1), up: new THREE.Vector3(0, 1, 0), u: (p: THREE.Vector3) => p.x, v: (p: THREE.Vector3) => p.y },
-    { name: 'Side' as const, dir: new THREE.Vector3(1, 0, 0), up: new THREE.Vector3(0, 1, 0), u: (p: THREE.Vector3) => -p.z, v: (p: THREE.Vector3) => p.y },
-    { name: 'Top' as const, dir: new THREE.Vector3(0, 1, 0), up: new THREE.Vector3(0, 0, -1), u: (p: THREE.Vector3) => p.x, v: (p: THREE.Vector3) => -p.z },
-  ];
-
-  const out = views.map((view) => {
-    camera.position.copy(c).addScaledVector(view.dir, size * 5);
-    camera.up.copy(view.up);
-    camera.lookAt(c);
-    camera.updateMatrixWorld();
-    sun.position.copy(camera.position).add(new THREE.Vector3(size, size * 2, size * 0.5));
+  const out = VIEWS.map((view) => {
+    const frame = frameFor(view, box, size);
+    const camera = orthoCameraFor(view, frame, 1);
+    sun.position.copy(camera.position).addScaledVector(frame.up, size).addScaledVector(frame.right, -size * 0.5);
     renderer.render(scene, camera);
-    const corners = [box.min, box.max].flatMap((a) => [box.min, box.max].flatMap((b) => [box.min, box.max].map((z) => new THREE.Vector3(a.x, b.y, z.z))));
-    const us = corners.map(view.u);
-    const vs = corners.map(view.v);
-    return {
-      name: view.name,
-      url: renderer.domElement.toDataURL('image/png'),
-      u0: view.u(c) - size / 2,
-      v0: view.v(c) - size / 2,
-      size,
-      uMin: Math.min(...us),
-      uMax: Math.max(...us),
-      vMin: Math.min(...vs),
-      vMax: Math.max(...vs),
-    };
+    return { ...frame, name: view.name, measured: view.measured, url: renderer.domElement.toDataURL('image/png') };
   });
 
   renderer.dispose();
@@ -89,4 +57,21 @@ export function renderOrthoViews(bodies: Body[]): OrthoView[] {
   fill.dispose();
   ink.dispose();
   return out;
+}
+
+/**
+ * An orthographic camera that shows exactly the frame's square window when the image
+ * is `aspect` wide per unit of height (wider images show extra on the sides).
+ */
+export function orthoCameraFor(view: { dir: THREE.Vector3; up: THREE.Vector3 }, frame: ViewFrame, aspect: number): THREE.OrthographicCamera {
+  const h = frame.size / 2;
+  const w = aspect >= 1 ? h * aspect : h;
+  const v = aspect >= 1 ? h : h / aspect;
+  const camera = new THREE.OrthographicCamera(-w, w, v, -v, 1, frame.size * 40);
+  camera.position.copy(frame.center).addScaledVector(view.dir, frame.size * 10);
+  camera.up.copy(view.up);
+  camera.lookAt(frame.center);
+  camera.updateMatrixWorld();
+  camera.updateProjectionMatrix();
+  return camera;
 }

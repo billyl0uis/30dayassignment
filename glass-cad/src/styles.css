@@ -903,7 +903,7 @@ output.num {
 }
 .sheet-views {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 18px;
   margin-top: 18px;
 }
@@ -1024,4 +1024,64 @@ output.num {
   border: 1px solid #5a2620;
   border-radius: 6px;
   cursor: pointer;
+}
+
+/* Camera views */
+.camera-bar {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  flex-wrap: wrap;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 4px;
+  background: rgba(23, 24, 27, 0.85);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.camera-bar .segmented button:hover {
+  color: var(--text);
+}
+
+/* Save views dialog */
+.export-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 11, 12, 0.6);
+  padding: 16px;
+}
+.export-dialog {
+  width: min(380px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.export-dialog h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.export-dialog fieldset {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin: 0;
+  padding: 6px 4px;
+}
+.export-dialog legend {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 4px;
+}
+.export-dialog .hint {
+  margin-left: auto;
 }

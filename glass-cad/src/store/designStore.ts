@@ -11,6 +11,7 @@ import * as parts from './partsLibrary';
 import { customPresetFor } from '../presets/custom';
 import { randomDeform } from '../geometry/deform';
 import { encodePositions } from '../files/meshData';
+import type { ViewId } from '../viewport/views';
 
 const HISTORY_LIMIT = 200;
 const COALESCE_MS = 800; // slider drags within this window are one undo step
@@ -38,6 +39,10 @@ interface DesignState {
   lastAt: number;
   gizmo: GizmoMode;
   snap: boolean;
+  /** Flat (orthographic) camera instead of perspective. A viewing choice, not part of the design. */
+  flat: boolean;
+  /** The last view button pressed; `n` makes pressing the same one twice still count. */
+  viewRequest: { id: ViewId; n: number } | null;
   /** True while something is being dragged, so melts can rebuild at draft resolution. */
   dragging: boolean;
   library: library.LibraryEntry[];
@@ -86,6 +91,8 @@ interface DesignState {
   saveToMyParts(shape: CustomShape, name: string): void;
   deleteMyPart(id: string): void;
   setGizmo(mode: GizmoMode): void;
+  setFlat(flat: boolean): void;
+  showView(id: ViewId): void;
   setSnap(on: boolean): void;
   undo(): void;
   redo(): void;
@@ -119,6 +126,8 @@ export const useDesign = create<DesignState>((set, get) => {
     gizmo: 'translate',
     snap: true,
     dragging: false,
+    flat: false,
+    viewRequest: null,
     library: storage ? library.listDesigns(storage) : [],
     myParts: storage ? parts.listParts(storage) : [],
     editor: null,
@@ -360,6 +369,8 @@ export const useDesign = create<DesignState>((set, get) => {
     setScene: (patch) => get().apply((d) => ({ ...d, scene: { ...d.scene, ...patch } }), `scene:${Object.keys(patch).join(',')}`),
     setName: (name) => get().apply((d) => ({ ...d, name }), 'name'),
     setGizmo: (gizmo) => set({ gizmo }),
+    setFlat: (flat) => set({ flat }),
+    showView: (id) => set((s) => ({ viewRequest: { id, n: (s.viewRequest?.n ?? 0) + 1 } })),
     setSnap: (snap) => set({ snap }),
 
     undo() {

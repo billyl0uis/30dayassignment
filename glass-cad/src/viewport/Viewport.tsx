@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { downloadUrl, fileStem } from '../files/download';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Bounds, OrbitControls, TransformControls, useBounds } from '@react-three/drei';
+import { Bounds, TransformControls, useBounds } from '@react-three/drei';
+import { CameraRig, CaptureBridge, ViewSnapper, viewCameras } from './CameraRig';
+import { VIEWS } from './views';
+import { ViewsExport } from '../panels/ViewsExport';
 import type { TransformControls as TransformControlsImpl } from 'three-stdlib';
 import { beginDrag, endDrag, useDesign } from '../store/designStore';
 import { useEvaluation } from '../store/useEvaluation';
@@ -33,7 +36,7 @@ export function Viewport() {
   return (
     <>
       <Canvas
-        camera={{ position: [260, 210, 380], fov: 32, near: 1, far: 20000 }}
+        camera={viewCameras.persp}
         dpr={[1, 2]}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, preserveDrawingBuffer: true }}
         onPointerMissed={() => {
@@ -61,6 +64,7 @@ export function Viewport() {
             </mesh>
           ))}
           <FitWhenPartsChange count={opCount} />
+          <ViewSnapper bodies={bodies} />
         </Bounds>
         {ghosts.map((g) => (
           <Ghost key={`ghost:${g.key}`} body={g} />
@@ -79,15 +83,8 @@ export function Viewport() {
           fadeTo={bg.horizon}
         />
         <FloorShadows />
-        <OrbitControls
-          makeDefault
-          target={[0, 60, 0]}
-          minDistance={40}
-          maxDistance={4000}
-          maxPolarAngle={Math.PI * 0.495}
-          autoRotate={scene.turntable}
-          autoRotateSpeed={1.2}
-        />
+        <CameraRig turntable={scene.turntable} />
+        <CaptureBridge />
       </Canvas>
       {labels.map((l, i) => (
         <div key={l.key} ref={(el) => void (labelEls.current[i] = el)} className="dim-label">
@@ -95,6 +92,7 @@ export function Viewport() {
         </div>
       ))}
       <ViewToolbar />
+      <CameraBar />
     </>
   );
 }
@@ -223,9 +221,31 @@ function ViewToolbar() {
   );
 }
 
+/** Snap to the standard views, and switch between perspective and a flat (orthographic) camera. */
+function CameraBar() {
+  const flat = useDesign((s) => s.flat);
+  const { showView, setFlat } = useDesign.getState();
+  return (
+    <div className="camera-bar" role="toolbar" aria-label="Camera">
+      <div className="segmented">
+        {VIEWS.map((v, i) => (
+          <button key={v.id} onClick={() => showView(v.id)} title={`${v.name} view (${i + 1})`}>
+            {v.name}
+          </button>
+        ))}
+      </div>
+      <label className="snap-toggle" title="Flat (orthographic) view: no perspective, so sizes read true, like a drawing (5)">
+        <input type="checkbox" checked={flat} onChange={(e) => setFlat(e.target.checked)} />
+        Flat
+      </label>
+    </div>
+  );
+}
+
 /** Background, grid and turntable, plus saving the view as a picture. */
 function ViewMenu() {
   const [open, setOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const scene = useDesign((s) => s.design.scene);
   const setScene = useDesign((s) => s.setScene);
   return (
@@ -258,10 +278,20 @@ function ViewMenu() {
               void savePng();
             }}
           >
-            Save view as PNG
+            Save this view as PNG
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              setExporting(true);
+            }}
+          >
+            Save front, side, top and 3/4…
           </button>
         </div>
       )}
+      {exporting && <ViewsExport onClose={() => setExporting(false)} />}
     </div>
   );
 }

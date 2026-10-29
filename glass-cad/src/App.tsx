@@ -238,6 +238,10 @@ function useShortcuts() {
       if (mod && key === 'd' && selectedId) {
         e.preventDefault();
         duplicate(selectedId);
+      } else if (!mod && !e.altKey && ['1', '2', '3', '4'].includes(key)) {
+        useDesign.getState().showView((['front', 'side', 'top', 'iso'] as const)[Number(key) - 1]);
+      } else if (!mod && !e.altKey && key === '5') {
+        useDesign.getState().setFlat(!useDesign.getState().flat);
       } else if (!mod && !e.altKey && (key === 'w' || key === 'e' || key === 'r')) {
         setGizmo(key === 'w' ? 'translate' : key === 'e' ? 'rotate' : 'scale');
       } else if (mod && key === 'z') {

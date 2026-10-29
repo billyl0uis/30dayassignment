@@ -41,4 +41,4 @@ All six steps are in:
 
 Order matters in the tree the way it does at the bench: shell and melt need to come before a deform, and imported meshes can be cut and deformed but not shelled or melted.
 
-Keys: W / E / R move, rotate, scale · ⌘D duplicate · ⌘Z / ⇧⌘Z undo, redo · Delete removes the selection · ⇧-click to select several · click a part again to select its stack or array.
+Keys: 1 / 2 / 3 / 4 front, side, top, 3/4 view · 5 flat (orthographic) on or off · W / E / R move, rotate, scale · ⌘D duplicate · ⌘Z / ⇧⌘Z undo, redo · Delete removes the selection · ⇧-click to select several · click a part again to select its stack or array.

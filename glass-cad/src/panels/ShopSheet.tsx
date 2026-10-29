@@ -163,7 +163,7 @@ function ViewWithDims({ view: v, units }: { view: OrthoView; units: Units }) {
     <figure className="sheet-view">
       <svg viewBox={`${v.u0} ${y(v.v0 + v.size)} ${v.size} ${v.size}`} role="img" aria-label={`${v.name} view`}>
         <image href={v.url} x={v.u0} y={y(v.v0 + v.size)} width={v.size} height={v.size} />
-        <g className="dim" strokeWidth={v.size * 0.003}>
+        {v.measured && <g className="dim" strokeWidth={v.size * 0.003}>
           <line x1={v.uMin} x2={v.uMax} y1={y(bottom)} y2={y(bottom)} />
           <line x1={v.uMin} x2={v.uMin} y1={y(bottom) - tick} y2={y(bottom) + tick} />
           <line x1={v.uMax} x2={v.uMax} y1={y(bottom) - tick} y2={y(bottom) + tick} />
@@ -176,7 +176,7 @@ function ViewWithDims({ view: v, units }: { view: OrthoView; units: Units }) {
           <text x={right + tick * 1.5} y={y((v.vMin + v.vMax) / 2)} fontSize={font} dominantBaseline="middle">
             {up} {formatLength(v.vMax - v.vMin, units)}
           </text>
-        </g>
+        </g>}
       </svg>
       <figcaption>{v.name}</figcaption>
     </figure>
