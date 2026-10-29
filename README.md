@@ -12,3 +12,4 @@ Projects made for the 30-day assignment, one folder each.
 | [Clean Bones](clean-bones/) | An osteology prep game: clean a rabbit skeleton with beetles, superworms or maceration, then degrease, whiten and lay it out for grading. |
 | [Carcass](carcass/) | A specimen prep simulator that starts with a whole raccoon: skin, gut, deflesh, bag the small bones and macerate, with every mistake carried to a museum grade. |
 | [Vitrigraph Lab](vitrigraph-lab/) | A vitrigraph kiln learning game: load a pot with colored glass, heat it, pull cane by hand, then chop it to see the murrini cross-sections. A bonus module for Before The Heat. |
+| [Glass Blocks](glass-blocks/) | Build glass objects from shape presets that stack on a center axis, stretch, squash and taper them, and see them rendered as glass in 3D. [Play it online](https://billyl0uis.github.io/30dayassignment/glass-blocks/play/). |
