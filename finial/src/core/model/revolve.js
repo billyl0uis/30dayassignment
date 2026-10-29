@@ -43,3 +43,12 @@ export function clipBelow(poly, h) {
   }
   return out
 }
+
+// The part at or above height h: clipBelow turned over.
+export function clipAbove(poly, h) {
+  const flip = ([r, z]) => [r, -z]
+  return clipBelow(poly.map(flip), -h).map(flip)
+}
+
+// The part between two heights, for a band of colour (a foot, a lip wrap).
+export const clipBetween = (poly, low, high) => clipAbove(clipBelow(poly, high), low)

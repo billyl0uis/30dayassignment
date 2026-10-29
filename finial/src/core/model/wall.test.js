@@ -115,6 +115,22 @@ describe('buildSection on a curved form', () => {
   })
 })
 
+describe('buildSection under a top surface', () => {
+  // A flat disc lid, radius 40, its top 6 mm up: glass hangs 4 mm below.
+  const points = [{ r: 0, z: 6 }, { r: 40, z: 6, corner: true }, { r: 40, z: 0 }]
+  const section = buildSection(points, { wall: 4, under: true })
+
+  it('puts the glass below the drawn line', () => {
+    expect(section.inner[0]).toEqual([0, 2])
+    expect(section.outer[0]).toEqual([0, 6])
+  })
+
+  it('has the volume of the same piece the right way up', () => {
+    const upright = buildSection(points.map((p) => ({ ...p, z: 6 - p.z })), { wall: 4 })
+    expect(solidOfRevolution(section.glass).volume).toBeCloseTo(solidOfRevolution(upright.glass).volume, 9)
+  })
+})
+
 describe('clearOpening', () => {
   it('a neck narrower than the flared lip sets the opening', () => {
     // Belly r 50, neck r 25 at z 110, lip flaring back out to r 32.

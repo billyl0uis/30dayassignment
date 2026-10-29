@@ -25,9 +25,10 @@ Usable first version, round bodies only:
 - Closure panel for stopper, cork or hardware, with the stopper's taper, a to-scale stopper drawing, the dauber's reach, and a fit check for hardware against a neck as measured.
 - Capacity brimful and at a fill line (ml and US fl oz), and resizing the body to hit a target capacity while the neck and base keep their sizes.
 - Glass weight (density editable), heavy-base and thin-neck risk against limits you set, and the process template.
+- A views sheet: front, side, top and section on one landscape page at a standard scale, with dimensions and a sizes list, downloadable as SVG (true size) or PNG.
 - The design is remembered in this browser.
 
-Not yet: oval cross-sections (the flat oval preset is drawn round, and says so), zooming the profile to the neck, the stopper in 3D, decorative zones on screen, save/open files and the shop sheet with the stopper detail drawing. The first three need changes to the vessel core in Finial.
+Not yet: oval cross-sections (the flat oval preset is drawn round, and says so), zooming the profile to the neck, the stopper in 3D, decorative zones on screen, save/open files, and the stopper drawn in place on the views sheet (it has its own detail drawing in the app). The first three need changes to the vessel core in Finial.
 
 ## What's here
 
@@ -39,6 +40,7 @@ Not yet: oval cross-sections (the flat oval preset is drawn round, and says so),
 - `zones.js`: colour, cane/murrini and surface bands, with an empty hook for Before The Heat.
 - `process.js`: a starting process plan for body, neck and stopper, marked as a template.
 - `bottle.js`: the body plus the neck the closure asks for, as one profile for the core.
+- `sheet/views.js`: what each flat view is made of (the outline, the circles seen from above, the widest point and narrowest bore); `sheet/ViewsSheet.jsx` lays them out in third-angle projection.
 - `presets.js`: classic round flacon, flat oval, tall column, tiny sample bottle, as starting sketches.
 
 Lengths are mm and volumes ml throughout, as in the vessel core.

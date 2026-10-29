@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { DEFAULT_DENSITY_G_CM3, measure } from '@core/model/measure'
+import { DEFAULT_DENSITY_G_CM3, capacityTo, measure } from '@core/model/measure'
 import { clipBelow, solidOfRevolution } from '@core/model/revolve'
 import { formatLength, formatVolume, formatWeight } from '@core/model/units'
 import { buildSection } from '@core/model/wall'
@@ -8,10 +8,12 @@ import { ProfileEditor } from '@core/ui/ProfileEditor'
 import { UnitsSwitch } from '@core/ui/UnitsSwitch'
 import { useUnits } from '@core/ui/useUnits'
 import { bodyFrom, bottlePoints, neckShape } from './model/bottle.js'
-import { neckWall } from './model/closures.js'
+import { fillHeight, fillMl } from './model/capacity.js'
+import { CLOSURE_TYPES, neckWall } from './model/closures.js'
 import { PRESETS } from './model/presets.js'
 import { processTemplate } from './model/process.js'
 import { riskZones } from './model/risks.js'
+import { ViewsSheetView } from './sheet/ViewsSheetView.jsx'
 import { loadDesign, newDesign, saveDesign, unitsStore } from './stores.js'
 import { ClosurePanel } from './ui/ClosurePanel.jsx'
 import { Note, Panel, Readout } from './ui/fields.jsx'
@@ -22,6 +24,7 @@ export function FlaconApp() {
   const [design, setDesign] = useState(loadDesign)
   const [selected, setSelected] = useState(null)
   const [cutaway, setCutaway] = useState(true)
+  const [sheetOpen, setSheetOpen] = useState(false)
   useEffect(() => saveDesign(design), [design])
 
   const update = useCallback(
@@ -54,6 +57,27 @@ export function FlaconApp() {
   const dauberRoom = shoulderZ + design.neckLength - neck.boreDepth - floorZ
   const oval = design.section.aspect !== 1
 
+  // What the views sheet draws and lists, gathered when it's opened.
+  const sheet = () => {
+    const ml = design.fillPercent == null ? null : fillMl(m.capacityMl, design.fillPercent)
+    return {
+      name: PRESETS[design.preset]?.name ?? 'Perfume bottle',
+      units,
+      section,
+      m,
+      wall: design.wall,
+      floorZ,
+      fillPercent: design.fillPercent,
+      fillMl: ml,
+      fillZ: ml == null ? null : fillHeight((z) => capacityTo(section, z), floorZ, section.brim, ml),
+      closureName: CLOSURE_TYPES[design.closure.type].name,
+      stopper: design.closure.type === 'stopper',
+      oval,
+      placeholderNeck: neck.placeholder,
+      densityTodo: design.density == null,
+    }
+  }
+
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-2 sm:px-6">
@@ -73,8 +97,14 @@ export function FlaconApp() {
             </button>
           ))}
         </nav>
-        <UnitsSwitch units={units} onChange={unitsStore.set} />
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setSheetOpen(true)} className="rounded border border-line px-2.5 py-1 text-sm text-mute hover:text-ink">
+            Views sheet
+          </button>
+          <UnitsSwitch units={units} onChange={unitsStore.set} />
+        </div>
       </header>
+      {sheetOpen && <ViewsSheetView d={sheet()} onClose={() => setSheetOpen(false)} />}
 
       <main className="grid flex-1 gap-3 p-3 lg:min-h-0 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_22rem]">
         <section className="flex min-h-[26rem] flex-col rounded-lg border border-line bg-panel" aria-label="Bottle profile">
@@ -128,7 +158,7 @@ export function FlaconApp() {
           <ProcessPanel design={design} update={update} />
           <Panel title="Not in this version yet">
             <p className="text-xs text-faint">
-              Oval cross-sections, zooming the profile to the neck, the stopper in 3D, decorative zones on screen, save/open files and the shop sheet. These
+              Oval cross-sections, zooming the profile to the neck, the stopper in 3D, decorative zones on screen, save/open files and the full shop sheet (the views sheet is here). These
               wait on the vessel core or come next.
             </p>
           </Panel>

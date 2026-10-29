@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clipBelow, solidOfRevolution } from './revolve'
+import { clipAbove, clipBelow, clipBetween, solidOfRevolution } from './revolve'
 
 // Known answers, worked independently of the polygon formula.
 const { PI } = Math
@@ -93,5 +93,21 @@ describe('clipBelow', () => {
   it('cutting above the top changes nothing', () => {
     const poly = [[0, 0], [40, 0], [40, 100], [0, 100]]
     expect(solidOfRevolution(clipBelow(poly, 500)).volume).toBeCloseTo(solidOfRevolution(poly).volume, 6)
+  })
+})
+
+describe('clipAbove and clipBetween', () => {
+  const poly = [[0, 0], [40, 0], [40, 100], [0, 100]]
+  const slab = (h) => PI * 40 * 40 * h
+
+  it('above a line plus below it is the whole', () => {
+    const below = solidOfRevolution(clipBelow(poly, 30)).volume
+    const above = solidOfRevolution(clipAbove(poly, 30)).volume
+    expect(below + above).toBeCloseTo(slab(100), 6)
+    expect(above).toBeCloseTo(slab(70), 6)
+  })
+
+  it('a band between two heights', () => {
+    expect(solidOfRevolution(clipBetween(poly, 20, 35)).volume).toBeCloseTo(slab(15), 6)
   })
 })

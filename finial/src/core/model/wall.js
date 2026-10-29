@@ -78,7 +78,27 @@ export function removeLoops(pts) {
 //   glass        — the glass, as one closed polygon
 //   cavity       — the inside, closed across the top at the inner rim,
 //                  which is how high it fills before it spills
-export function buildSection(points, { wall }) {
+//
+// under: the drawn line is a top surface with the glass hanging below it
+// (a lid, a stopper's cap). Worked as the same piece upside down, so the
+// maths is the vessel's, then turned back over.
+export function buildSection(points, { wall, under = false }) {
+  if (under) {
+    const top = Math.max(...points.map((p) => p.z))
+    const flip = ([r, z]) => [r, top - z]
+    const s = buildSection(
+      points.map((p) => ({ ...p, z: top - p.z })),
+      { wall },
+    )
+    return {
+      ...s,
+      outer: s.outer.map(flip),
+      inner: s.inner.map(flip),
+      glass: s.glass.map(flip),
+      cavity: s.cavity.map(flip),
+      brim: top - s.brim,
+    }
+  }
   const sampled = sampleProfile(points)
   const outer = sampled.pts
   const thickness = thicknessAlong(points, sampled, wall)

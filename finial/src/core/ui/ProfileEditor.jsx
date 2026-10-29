@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { MM_PER_IN } from '../model/units'
+import { formatLength, MM_PER_IN } from '../model/units'
 import { SectionDrawing } from './SectionDrawing'
 
 // The drafting sheet: a grid in real units with the vessel in section.
@@ -9,15 +9,23 @@ import { SectionDrawing } from './SectionDrawing'
 // arrow keys nudge. Shift snaps to a coarser step.
 //
 // points[0] is the center of the base and stays on the axis.
+//
+// Also drawn, not edited: extras (more closed glass polygons, such as a
+// lid's flange and knob) and ghost (polygons in outline only, such as the
+// body a lid sits on).
 
 const ceilTo = (v, step) => Math.ceil(v / step) * step
 
-// The sheet's extent in mm, with room around the vessel.
-function frameFor(points) {
-  const maxR = Math.max(...points.map((p) => p.r))
-  const maxZ = Math.max(...points.map((p) => p.z))
-  const size = ceilTo(Math.max(maxZ * 1.15, maxR * 2.3, 100), 25)
-  return { w: size / 2, h: size }
+// The sheet's extent in mm, with room around the piece: w each side of
+// the axis, from low (0, or below it for a hanging flange) up to h.
+function frameFor(points, extras) {
+  const all = [...points.map((p) => [p.r, p.z]), ...extras.flat()]
+  const maxR = Math.max(...all.map((p) => p[0]))
+  const maxZ = Math.max(...all.map((p) => p[1]))
+  const minZ = Math.min(0, ...all.map((p) => p[1]))
+  const low = minZ < 0 ? -ceilTo(-minZ + 5, 5) : 0
+  const size = ceilTo(Math.max((maxZ - low) * 1.15, maxR * 2.3, 100), 25)
+  return { w: size / 2, h: low + size, low }
 }
 
 // Grid spacing: fine and bold lines, in the viewer's units.
@@ -32,7 +40,23 @@ const snapFor = (units, coarse) =>
 
 const snap = (v, step) => Math.round(v / step) * step
 
-export function ProfileEditor({ points, onChange, section, units, selected, onSelect, label = 'Profile' }) {
+// highlights: stretches of the outside wall to mark, as { from, to }
+// sample indexes along section.outer (a thickness warning, say).
+// lockLastR: the last point's distance from the axis is set elsewhere (a
+// lid's edge, fitted to the body), so it only moves up and down.
+export function ProfileEditor({
+  points,
+  onChange,
+  section,
+  units,
+  selected,
+  onSelect,
+  highlights = [],
+  extras = [],
+  ghost = [],
+  lockLastR = false,
+  label = 'Profile',
+}) {
   const svgRef = useRef(null)
   const [drag, setDrag] = useState(null)
   // The point last pressed. A press captures the pointer on the whole
@@ -42,14 +66,17 @@ export function ProfileEditor({ points, onChange, section, units, selected, onSe
   // Hold the sheet still while dragging (only growing), so the grid doesn't
   // slide under the pointer; fit it again on release.
   const frame = useMemo(() => {
-    const fit = frameFor(points)
-    return drag ? { w: Math.max(drag.frame.w, fit.w), h: Math.max(drag.frame.h, fit.h) } : fit
-  }, [points, drag])
+    const fit = frameFor(points, extras)
+    return drag
+      ? { w: Math.max(drag.frame.w, fit.w), h: Math.max(drag.frame.h, fit.h), low: Math.min(drag.frame.low, fit.low) }
+      : fit
+  }, [points, extras, drag])
 
-  const grid = gridFor(units, frame.h)
-  const pad = frame.h * 0.07
-  const handle = frame.h * 0.013
-  const font = frame.h * 0.026
+  const tall = frame.h - frame.low
+  const grid = gridFor(units, tall)
+  const pad = tall * 0.07
+  const handle = tall * 0.013
+  const font = tall * 0.026
 
   const toModel = (event) => {
     const svg = svgRef.current
@@ -61,7 +88,8 @@ export function ProfileEditor({ points, onChange, section, units, selected, onSe
   }
 
   const move = (index, r, z) => {
-    const next = points.map((p, i) => (i === index ? { ...p, r: index === 0 ? 0 : Math.max(0, r), z: Math.max(0, z) } : p))
+    const fixedR = index === 0 || (lockLastR && index === points.length - 1)
+    const next = points.map((p, i) => (i === index ? { ...p, r: fixedR ? p.r : Math.max(0, r), z: Math.max(0, z) } : p))
     onChange(next)
   }
 
@@ -109,13 +137,13 @@ export function ProfileEditor({ points, onChange, section, units, selected, onSe
   }
 
   const lines = []
-  for (let v = 0; v <= frame.h + 1e-6; v += grid.fine) lines.push({ v, axis: 'z', bold: Math.abs(v / grid.bold - Math.round(v / grid.bold)) < 1e-6 })
+  for (let v = Math.ceil(frame.low / grid.fine - 1e-6) * grid.fine; v <= frame.h + 1e-6; v += grid.fine) lines.push({ v, axis: 'z', bold: Math.abs(v / grid.bold - Math.round(v / grid.bold)) < 1e-6 })
   for (let v = grid.fine; v <= frame.w + 1e-6; v += grid.fine) lines.push({ v, axis: 'r', bold: Math.abs(v / grid.bold - Math.round(v / grid.bold)) < 1e-6 })
 
   return (
     <svg
       ref={svgRef}
-      viewBox={`${-frame.w - pad} ${-frame.h - pad * 0.5} ${2 * frame.w + pad * 1.5} ${frame.h + pad * 1.5}`}
+      viewBox={`${-frame.w - pad} ${-frame.h - pad * 0.5} ${2 * frame.w + pad * 1.5} ${tall + pad * 1.5}`}
       className="h-full w-full touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-accent"
       tabIndex={0}
       role="application"
@@ -145,33 +173,78 @@ export function ProfileEditor({ points, onChange, section, units, selected, onSe
             <line key={`z${v}`} x1={-frame.w} x2={frame.w} y1={-v} y2={-v} stroke="var(--grid)" strokeOpacity={bold ? 1 : 0.45} vectorEffect="non-scaling-stroke" />
           ) : (
             <g key={`r${v}`}>
-              <line x1={v} x2={v} y1={0} y2={-frame.h} stroke="var(--grid)" strokeOpacity={bold ? 1 : 0.45} vectorEffect="non-scaling-stroke" />
-              <line x1={-v} x2={-v} y1={0} y2={-frame.h} stroke="var(--grid)" strokeOpacity={bold ? 1 : 0.45} vectorEffect="non-scaling-stroke" />
+              <line x1={v} x2={v} y1={-frame.low} y2={-frame.h} stroke="var(--grid)" strokeOpacity={bold ? 1 : 0.45} vectorEffect="non-scaling-stroke" />
+              <line x1={-v} x2={-v} y1={-frame.low} y2={-frame.h} stroke="var(--grid)" strokeOpacity={bold ? 1 : 0.45} vectorEffect="non-scaling-stroke" />
             </g>
           ),
         )}
         {lines
-          .filter((l) => l.bold && l.v > 0)
+          .filter((l) => l.bold && (l.axis === 'z' ? l.v !== 0 : l.v > 0))
           .map(({ v, axis }) =>
             axis === 'z' ? (
               <text key={`tz${v}`} x={-frame.w - font * 0.4} y={-v + font * 0.35} fontSize={font} textAnchor="end" className="fill-faint font-mono">
                 {grid.label(v)}
               </text>
             ) : (
-              <text key={`tr${v}`} x={v} y={font * 1.4} fontSize={font} textAnchor="middle" className="fill-faint font-mono">
+              <text key={`tr${v}`} x={v} y={-frame.low + font * 1.4} fontSize={font} textAnchor="middle" className="fill-faint font-mono">
                 {grid.label(v)}
               </text>
             ),
           )}
-        <text x={frame.w} y={font * 1.4} fontSize={font} textAnchor="end" className="fill-faint font-mono">
+        <text x={-frame.w} y={-frame.low + font * 1.4} fontSize={font} textAnchor="start" className="fill-faint font-mono">
           {units}
         </text>
         {/* The axis and the table. */}
-        <line x1={0} x2={0} y1={pad * 0.3} y2={-frame.h} stroke="var(--axis)" strokeDasharray="6 4" vectorEffect="non-scaling-stroke" />
+        <line x1={0} x2={0} y1={-frame.low + pad * 0.3} y2={-frame.h} stroke="var(--axis)" strokeDasharray="6 4" vectorEffect="non-scaling-stroke" />
         <line x1={-frame.w} x2={frame.w} y1={0} y2={0} stroke="var(--axis)" vectorEffect="non-scaling-stroke" />
       </g>
 
+      {ghost.map((poly, k) => (
+        <g key={`ghost${k}`} pointerEvents="none">
+          {[1, -1].map((side) => (
+            <path
+              key={side}
+              d={`M${poly.map(([r, z]) => `${side * r},${-z}`).join('L')}Z`}
+              fill="var(--ghost-fill)"
+              stroke="var(--ghost-line)"
+              strokeDasharray="4 3"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </g>
+      ))}
+
+      {extras.map((poly, k) => (
+        <g key={`extra${k}`} pointerEvents="none">
+          {[1, -1].map((side) => (
+            <path
+              key={side}
+              d={`M${poly.map(([r, z]) => `${side * r},${-z}`).join('L')}Z`}
+              fill="var(--glass-fill)"
+              stroke="var(--glass-line)"
+              strokeOpacity={side > 0 ? 0.9 : 0.5}
+              fillOpacity={side > 0 ? 1 : 0.55}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </g>
+      ))}
+
       <SectionDrawing section={section} />
+
+      {highlights.map(({ from, to }) => (
+        <path
+          key={`${from}-${to}`}
+          d={`M${section.outer.slice(from, to + 1).map(([r, z]) => `${r},${-z}`).join('L')}`}
+          fill="none"
+          stroke="var(--caution)"
+          strokeWidth={6}
+          strokeLinecap="round"
+          strokeOpacity={0.75}
+          vectorEffect="non-scaling-stroke"
+          pointerEvents="none"
+        />
+      ))}
 
       {/* A wide invisible line over the outside wall, to click on. */}
       <path
@@ -201,10 +274,21 @@ export function ProfileEditor({ points, onChange, section, units, selected, onSe
             setDrag({ index: i, offset: { r: at.r - p.r, z: at.z - p.z }, frame })
           },
         }
-        return p.corner ? (
-          <rect key={i} x={p.r - size} y={-p.z - size} width={size * 2} height={size * 2} {...shared} />
+        const marker = p.corner ? (
+          <rect x={p.r - size} y={-p.z - size} width={size * 2} height={size * 2} {...shared} />
         ) : (
-          <circle key={i} cx={p.r} cy={-p.z} r={size} {...shared} />
+          <circle cx={p.r} cy={-p.z} r={size} {...shared} />
+        )
+        // A point with its own wall thickness says so beside it.
+        return (
+          <g key={i}>
+            {marker}
+            {p.wall != null && (
+              <text x={p.r + size * 1.8} y={-p.z + font * 0.35} fontSize={font * 0.9} className="pointer-events-none fill-accent font-mono">
+                {formatLength(p.wall, units)}
+              </text>
+            )}
+          </g>
         )
       })}
     </svg>

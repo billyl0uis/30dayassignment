@@ -17,6 +17,8 @@
   --axis: #6b5a4e;
   --glass-fill: rgb(159 214 208 / 0.28);
   --glass-line: #b9e6e1;
+  --ghost-fill: rgb(196 180 166 / 0.08);
+  --ghost-line: #7d6b5e;
   color-scheme: dark;
 }
 
@@ -42,4 +44,24 @@ body {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--font-sans);
+}
+
+/* The shop sheet prints alone, at true size (jar/sheet/ShopSheetView.jsx). */
+#print-sheet {
+  display: none;
+}
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+  #root {
+    display: none !important;
+  }
+  #print-sheet {
+    display: block;
+  }
+  #print-sheet svg {
+    display: block;
+  }
 }
