@@ -74,7 +74,10 @@ export const useStore = create((set, get) => {
     turntable: false,
     fastGlass: false,
     gizmo: 'translate',
-    capturing: false,
+    // null, 'png' (the current view) or 'views' (the design sheet).
+    capturing: null,
+    // The last design sheet: { sheet, images: { front, side, top, three } } as blobs.
+    views: null,
 
     commit,
     select: (id) => set({ selectedId: id }),
@@ -173,6 +176,7 @@ export const useStore = create((set, get) => {
     toggleTurntable: () => set((s) => ({ turntable: !s.turntable })),
     toggleFastGlass: () => set((s) => ({ fastGlass: !s.fastGlass })),
     setCapturing: (capturing) => set({ capturing }),
+    setViews: (views) => set({ views }),
   }
 })
 

@@ -56,7 +56,12 @@ export default function Toolbar() {
         <button onClick={s.newDesign} disabled={!s.parts.length} title="Start over (you can undo this)">New</button>
         <button onClick={() => file.current.click()}>Open</button>
         <button onClick={save} disabled={!s.parts.length}>Save</button>
-        <button className="primary" onClick={() => s.setCapturing(true)} disabled={!s.parts.length}>PNG</button>
+        <button onClick={() => s.setCapturing('views')} disabled={!s.parts.length || !!s.capturing} title="Front, side, top and 3/4 views on one sheet, with sizes">
+          Views
+        </button>
+        <button className="primary" onClick={() => s.setCapturing('png')} disabled={!s.parts.length || !!s.capturing} title="Save the view you're looking at">
+          PNG
+        </button>
         <input ref={file} type="file" accept=".json,application/json" hidden onChange={open} />
       </div>
     </header>

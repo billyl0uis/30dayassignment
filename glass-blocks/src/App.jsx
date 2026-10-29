@@ -5,12 +5,14 @@ import Toolbar from './ui/Toolbar.jsx'
 import PresetShelf from './ui/PresetShelf.jsx'
 import PartPanel from './ui/PartPanel.jsx'
 import StackList from './ui/StackList.jsx'
+import ViewsDialog from './ui/ViewsDialog.jsx'
 
 function useShortcuts() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.target.closest('input, textarea, select')) return
       const s = useStore.getState()
+      if (s.views) return // the views dialog handles its own keys
       const mod = e.metaKey || e.ctrlKey
       if (mod && e.key.toLowerCase() === 'z') {
         e.preventDefault()
@@ -52,6 +54,7 @@ export default function App() {
         <PartPanel />
         <StackList />
       </aside>
+      <ViewsDialog />
     </div>
   )
 }

@@ -19,7 +19,8 @@ Then open http://localhost:5181. After changing the code, run `npm run build` to
 - **Shape it:** select a part and drag its dots. Orange (top) sets height, blue (side) sets width, pink (high) tapers or flares. Or type in the panel: `3 1/2`, `3.5`, or `9cm` all work, whatever units are showing.
 - **Free placement:** switch a part from *On the axis* to *Free* to move, rotate or scale it with the gizmo.
 - **Glass:** per-part color, transparent or opaque, frost, iridescence. Colored transparent glass gets deeper where it's thicker, as real glass does.
-- Turntable, dark and light studio, inches or cm, PNG export. ⌘Z / ⇧⌘Z undo and redo, Delete removes, Esc deselects. Your design autosaves in the browser. *Save* and *Open* use a `.json` file.
+- **Views:** one sheet with the top, 3/4, front and right side views, laid out like a drafting sheet with height, width and depth dimensions and a scale bar for measuring a printout. Save the sheet or any single view.
+- Turntable, dark and light studio, inches or cm, PNG of the current view. ⌘Z / ⇧⌘Z undo and redo, Delete removes, Esc deselects. Your design autosaves in the browser. *Save* and *Open* use a `.json` file.
 
 ## How it's built
 

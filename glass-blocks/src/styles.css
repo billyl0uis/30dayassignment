@@ -187,6 +187,23 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--hot); outli
 .order { display: flex; gap: 2px; padding-right: 4px; }
 .order button { padding: 2px 7px; }
 
+/* Views dialog ----------------------------------------------------------- */
+
+.dialog-scrim {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px;
+  background: #0009; backdrop-filter: blur(3px);
+}
+.dialog {
+  background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 20px 60px #0007; display: flex; flex-direction: column; max-width: min(1100px, 100%); max-height: 100%;
+}
+.dialog header { display: flex; align-items: center; padding: 12px 12px 10px 18px; }
+.dialog header h2 { margin: 0; font-size: 17px; flex: 1; }
+.sheet-frame { overflow: auto; padding: 0 18px; min-height: 0; }
+.sheet-frame img { display: block; max-width: 100%; max-height: calc(100vh - 190px); margin: 0 auto; border-radius: 6px; box-shadow: 0 1px 3px #0003; }
+.dialog footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 18px 16px; }
+.dialog footer .muted { margin: 0 2px 0 6px; }
+
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto auto; grid-template-areas: 'bar' 'stage' 'shelf' 'side'; height: auto; min-height: 100%; }
   .stage { height: 62vh; }

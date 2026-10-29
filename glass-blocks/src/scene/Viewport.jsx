@@ -7,6 +7,8 @@ import { pieceHeight, stackLayout } from '../model/layout.js'
 import { CM_PER_IN } from '../model/units.js'
 import PartMesh from './PartMesh.jsx'
 import { download, stamp } from '../download.js'
+import { shootViews } from '../views/shoot.js'
+import { composeSheet } from '../views/sheet.js'
 
 const THEMES = {
   dark: { top: '#0a0b0e', horizon: '#636a79', floor: '#2b2f38', cell: '#2a2e38', section: '#3a404c' },
@@ -37,6 +39,7 @@ export default function Viewport() {
         <OrbitControls makeDefault target={[0, 7, 0]} minDistance={4} maxDistance={220} maxPolarAngle={Math.PI * 0.53} enableDamping />
         <FollowStack />
         <Capture />
+        <ViewsCapture />
       </Canvas>
     </div>
   )
@@ -128,7 +131,7 @@ function Turntable({ paused, children }) {
   useFrame((_, dt) => {
     if (on && !paused && ref.current) ref.current.rotation.y += dt * 0.45
   })
-  return <group ref={ref}>{children}</group>
+  return <group ref={ref} name="piece">{children}</group>
 }
 
 // When the stack gets taller or shorter, ease the orbit target to its middle.
@@ -172,17 +175,48 @@ function Capture() {
   const setCapturing = useStore((s) => s.setCapturing)
   const gl = useThree((s) => s.gl)
   useEffect(() => {
-    if (!capturing) return
+    if (capturing !== 'png') return
     // Two frames: one for React to hide the handles and grid, one to draw.
     let id = requestAnimationFrame(() => {
       id = requestAnimationFrame(() => {
         gl.domElement.toBlob((blob) => {
           if (blob) download(blob, `glass-blocks-${stamp()}.png`)
-          setCapturing(false)
+          setCapturing(null)
         }, 'image/png')
       })
     })
     return () => cancelAnimationFrame(id)
   }, [capturing, gl, setCapturing])
+  return null
+}
+
+// Shoots the front, side, top and 3/4 views square to the piece, whatever angle
+// you're orbiting at and wherever the turntable has spun it, then builds the sheet.
+function ViewsCapture() {
+  const capturing = useStore((s) => s.capturing)
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
+  const camera = useThree((s) => s.camera)
+  useEffect(() => {
+    if (capturing !== 'views') return
+    let id = requestAnimationFrame(() => {
+      id = requestAnimationFrame(async () => {
+        const s = useStore.getState()
+        const piece = scene.getObjectByName('piece')
+        const spin = piece.rotation.y
+        piece.rotation.y = 0
+        piece.updateMatrixWorld()
+        try {
+          const shot = shootViews(gl, scene, camera, piece)
+          piece.rotation.y = spin
+          s.setViews(await composeSheet(shot, { units: s.units }))
+        } finally {
+          piece.rotation.y = spin
+          s.setCapturing(null)
+        }
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [capturing, gl, scene, camera])
   return null
 }
