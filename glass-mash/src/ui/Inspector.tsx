@@ -1,5 +1,7 @@
 import { getMode, MODES } from '../modes/registry';
 import { mashMembers, selectPiece, useScene, type Background } from '../scene/store';
+import { useState } from 'react';
+import { captureViews, composeSheet, downloadCanvas } from '../render/capture';
 import { Slider } from './Slider';
 
 const SWATCHES: { name: string; hex: string }[] = [
@@ -48,6 +50,8 @@ export function Inspector() {
           {s.turntable ? 'Stop spinning' : 'Spin on turntable'}
         </button>
       </section>
+
+      {s.pieces.length > 0 && <PicturesSection />}
     </aside>
   );
 }
@@ -121,6 +125,54 @@ function GlassSection({ ownerId }: { ownerId: string }) {
         <Slider label="Colour depth" min={0} max={1} step={0.01} value={g.density} onChange={(v) => setGlass({ density: v })} />
         <Slider label="Refraction" min={0} max={3} step={0.01} value={g.thickness} onChange={(v) => setGlass({ thickness: v })} />
       </details>
+    </section>
+  );
+}
+
+// Sheet colours follow the stage background so the views sit on it seamlessly.
+const SHEET: Record<Background, { bg: string; ink: string }> = {
+  black: { bg: '#0a0a0b', ink: '#e8e4dc' },
+  white: { bg: '#f2f0eb', ink: '#2a2622' },
+  gallery: { bg: '#8c867e', ink: '#1d1a17' },
+};
+
+function PicturesSection() {
+  const [busy, setBusy] = useState(false);
+
+  async function save(kind: 'sheet' | 'each') {
+    setBusy(true);
+    const { selectedId, select, background } = useScene.getState();
+    select(null); // hides the handles and wireframes for the shot
+    try {
+      const shots = await captureViews();
+      if (!shots.length) return;
+      const stamp = new Date().toISOString().slice(0, 10);
+      if (kind === 'sheet') {
+        downloadCanvas(composeSheet(shots, SHEET[background].bg, SHEET[background].ink), `glass-mash-views-${stamp}.png`);
+      } else {
+        for (const shot of shots) {
+          downloadCanvas(shot.canvas, `glass-mash-${shot.id}-${stamp}.png`);
+          await new Promise((r) => setTimeout(r, 250)); // browsers drop downloads fired all at once
+        }
+      }
+    } finally {
+      select(selectedId);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section>
+      <h2>Pictures</h2>
+      <div className="seg">
+        <button disabled={busy} onClick={() => save('sheet')}>
+          Save sheet
+        </button>
+        <button disabled={busy} onClick={() => save('each')}>
+          Save each view
+        </button>
+      </div>
+      <p className="blurb">Front, side, top and 3/4. Front, side and top are flat, like a drawing, so they line up.</p>
     </section>
   );
 }

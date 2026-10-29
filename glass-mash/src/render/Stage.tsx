@@ -5,6 +5,7 @@ import type { Group, Object3D, PerspectiveCamera } from 'three';
 import { pieceGeometry } from '../scene/geometryCache';
 import { mashMembers, useScene, type Background, type JoinMode, type Piece } from '../scene/store';
 import { buildMash } from '../sdf/mash';
+import { makeCapturer, setCapturer } from './capture';
 import { GlassMaterial } from './GlassMaterial';
 
 const BG: Record<Background, string> = { black: '#0a0a0b', white: '#f2f0eb', gallery: '#8c867e' };
@@ -45,6 +46,7 @@ export function Stage() {
           {members.length > 0 && <MashMesh members={members} />}
         </Turntable>
         <Gizmo />
+        <ViewCapture />
         {background === 'gallery' && <Plinth />}
         <ContactShadows
           position={[0, 0.002, 0]}
@@ -171,7 +173,46 @@ function Turntable({ children }: { children: React.ReactNode }) {
   useFrame((_, dt) => {
     if (on && ref.current) ref.current.rotation.y += dt * 0.55;
   });
-  return <group ref={ref}>{children}</group>;
+  return (
+    <group ref={ref} name="turntable">
+      {children}
+    </group>
+  );
+}
+
+/**
+ * Lets the Save views buttons shoot the scene from fixed cameras. The
+ * turntable is squared up first so front really means front.
+ */
+function ViewCapture() {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    const { gl, scene } = get();
+    let spin = 0;
+    setCapturer(
+      makeCapturer(
+        gl,
+        scene,
+        () => {
+          const t = scene.getObjectByName('turntable');
+          if (t) {
+            spin = t.rotation.y;
+            t.rotation.y = 0;
+            t.updateMatrixWorld(true);
+          }
+          return t ?? null;
+        },
+        () => {
+          const t = scene.getObjectByName('turntable');
+          if (t) t.rotation.y = spin;
+          const { size } = get();
+          gl.setSize(size.width, size.height, false);
+        },
+      ),
+    );
+    return () => setCapturer(null);
+  }, [get]);
+  return null;
 }
 
 /** Slides the picture left so the piece isn't hidden behind the floating inspector. */
@@ -189,7 +230,7 @@ function FrameLeftOfInspector() {
 
 function Plinth() {
   return (
-    <mesh position={[0, -0.6, 0]} receiveShadow>
+    <mesh name="plinth" position={[0, -0.6, 0]} receiveShadow>
       <boxGeometry args={[2.6, 1.2, 2.6]} />
       <meshStandardMaterial color="#e9e5de" roughness={0.9} />
     </mesh>
