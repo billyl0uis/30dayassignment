@@ -33,6 +33,9 @@ export default function Toolbar() {
         <button onClick={() => exportTemplate(sec, metrics, s.units, PRESETS[s.preset]?.name ?? 'Vessel')} title="A 1:1 profile drawing to print">
           Profile template
         </button>
+        <button onClick={() => s.setView({ sheet: true })} disabled={s.sheet} title="Top, front, side and 3/4 views on one sheet, with sizes">
+          Views sheet
+        </button>
         <button className="primary" onClick={() => s.setView({ capturing: true })}>Save picture</button>
       </div>
     </header>

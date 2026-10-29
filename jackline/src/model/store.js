@@ -41,6 +41,7 @@ export const useStore = create((set, get) => ({
   cutaway: false,
   selected: null, // index of the selected profile point
   capturing: false,
+  sheet: false, // rendering the front/side/top views sheet
   past: [],
   future: [],
 

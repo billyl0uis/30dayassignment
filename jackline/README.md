@@ -13,6 +13,7 @@ Named after jacks, the glassblower's tool for shaping a vessel's profile.
 - **Measures:** capacity to the brim, glass weight, height, widest point, opening, and how far it can lean before tipping.
 - **Will it work?:** checks on the walls, cleaning, grip, pouring and stability.
 - **Profile template:** downloads a 1:1 SVG of the profile to print and work against at the bench.
+- **Views sheet:** downloads one PNG laid out like a design sheet: top, front and right side drawn flat at one shared scale (third-angle, so they line up), a 3/4 view, dimensions, a scale bar and a title block with the key numbers.
 
 Starting forms: tumbler, wine glass, mug, pitcher, bowl, bud vase, carafe, optic vase, handkerchief bowl, leaner, bottle.
 

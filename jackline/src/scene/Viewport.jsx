@@ -6,6 +6,7 @@ import { useStore } from '../model/store.js'
 import { useDerived } from '../model/derived.js'
 import { CM_PER_IN } from '../model/units.js'
 import { download, stamp } from '../download.js'
+import Sheet from './Sheet.jsx'
 import Vessel from './Vessel.jsx'
 
 const THEMES = {
@@ -24,6 +25,7 @@ export default function Viewport() {
         <OrbitControls makeDefault target={[0, 6, 0]} minDistance={8} maxDistance={160} maxPolarAngle={Math.PI * 0.53} enableDamping />
         <Follow />
         <Capture />
+        <Sheet />
       </Canvas>
     </div>
   )
@@ -78,7 +80,7 @@ function Studio() {
 
 function Scene({ theme }) {
   const units = useStore((s) => s.units)
-  const capturing = useStore((s) => s.capturing)
+  const capturing = useStore((s) => s.capturing || s.sheet)
   const t = THEMES[theme]
   return (
     <>
@@ -114,7 +116,11 @@ function Turntable({ children }) {
     if (on && !cut) ref.current.rotation.y += dt * 0.4
     else if (cut) ref.current.rotation.y *= 0.85
   })
-  return <group ref={ref}>{children}</group>
+  return (
+    <group ref={ref} name="turntable">
+      {children}
+    </group>
+  )
 }
 
 // Eases the orbit target to the middle of the piece and zooms to fit it when
