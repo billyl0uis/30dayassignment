@@ -11,6 +11,10 @@ npm run dev
 
 Then open http://localhost:5180.
 
+Play it online: https://billyl0uis.github.io/30dayassignment/glass-mash/play/
+
+`npm run build` writes the built copy to `play/`, which is committed so GitHub Pages can serve it. Rebuild and commit `play/` after changing the source.
+
 ## Using it
 
 1. **Draw a shape** on the page with the brush (one loop, let go) or the pen (click points, click the first point again or press Enter). It becomes glass on the right.
