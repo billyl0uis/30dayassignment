@@ -160,3 +160,24 @@ button:disabled { opacity: 0.35; cursor: default; }
   .stage { height: 80vh; }
   .inspector { position: absolute; top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-height: 45%; }
 }
+
+/* ---------- pieces list ---------- */
+.pieces { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 2px; max-height: 150px; overflow-y: auto; }
+.pieces button {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.pieces button:hover { border-color: var(--line); }
+.pieces button.on { border-color: var(--hot); background: rgb(236 106 44 / 0.12); }
+.pieces small { color: var(--muted); font-size: 11px; }
+.inspector .seg + .seg { margin-top: 6px; }
+.pad-label { margin: 0; font-size: 12px; color: var(--muted); }
+.pad-label strong { color: var(--text); font-weight: 600; }

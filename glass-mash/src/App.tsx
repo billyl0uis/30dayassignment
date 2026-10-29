@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { DrawPad } from './draw/DrawPad';
 import { Stage } from './render/Stage';
-import { useScene } from './scene/store';
+import { selectPiece, useScene } from './scene/store';
 import { Inspector } from './ui/Inspector';
 
 const HINTS = {
@@ -10,7 +10,8 @@ const HINTS = {
 };
 
 export default function App() {
-  const { tool, setTool, undo, redo, past, future, setDrawing } = useScene();
+  const { tool, setTool, undo, redo, past, future, setDrawing, setGizmo, addPiece } = useScene();
+  const piece = useScene(selectPiece);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -22,10 +23,14 @@ export default function App() {
         else undo();
       } else if (!mod && e.key === 'b') setTool('brush');
       else if (!mod && e.key === 'p') setTool('pen');
+      else if (!mod && e.key === 'n') addPiece();
+      else if (!mod && e.key === 'w') setGizmo('translate');
+      else if (!mod && e.key === 'e') setGizmo('rotate');
+      else if (!mod && e.key === 'r') setGizmo('scale');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo, setTool]);
+  }, [undo, redo, setTool, setGizmo, addPiece]);
 
   return (
     <div className="app">
@@ -55,6 +60,10 @@ export default function App() {
             </button>
           </div>
         </div>
+        <p className="pad-label">
+          Drawing <strong>{piece.name}</strong>
+          {!piece.drawing && ' — draw it here'}
+        </p>
         <DrawPad />
         <p className="hint">{HINTS[tool]}</p>
       </section>
