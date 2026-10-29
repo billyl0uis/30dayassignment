@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import { PRESETS } from './presets.js'
+import { NO_SCULPT } from '../geometry/sculpt.js'
 
 const KEY = 'jackline:v1'
 // What undo and saving cover. View settings (units, theme) are saved but not undone.
-const DOC = ['preset', 'points', 'wall', 'floor', 'handle', 'spout', 'color', 'frost']
+const DOC = ['preset', 'points', 'wall', 'floor', 'handle', 'spout', 'color', 'frost', 'sculpt']
 const pick = (s) => Object.fromEntries(DOC.map((k) => [k, s[k]]))
 
 export function fromPreset(id) {
@@ -17,13 +18,15 @@ export function fromPreset(id) {
     spout: !!p.spout,
     color: p.color ?? '#ffffff',
     frost: 0,
+    sculpt: { ...NO_SCULPT, ...p.sculpt },
   }
 }
 
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(KEY))
-    return d && Array.isArray(d.points) && d.points.length >= 3 ? d : null
+    if (!d || !Array.isArray(d.points) || d.points.length < 3) return null
+    return { ...d, sculpt: { ...NO_SCULPT, ...d.sculpt } }
   } catch {
     return null
   }

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { makeWarp, warpPositions } from './sculpt.js'
 
 // Turns a section (see profile.js) into meshes. The spout faces +x and the
 // handle -x, so the seam of the lathe hides at the back (-z).
@@ -86,6 +87,17 @@ export function spoutDeform(sec) {
   }
 }
 
+// Spout first (it's pulled on the round form), then the sculpt warp.
+export function shaper(sec, { spout, sculpt, levelRim = false }) {
+  const pull = spout ? spoutDeform(sec) : null
+  const warp = makeWarp(sculpt, sec.height, { levelRim })
+  if (!pull && !warp) return null
+  return (geo) => {
+    if (pull) pull(geo)
+    if (warp) warpPositions(geo, warp)
+  }
+}
+
 function handleGeometry(handle) {
   const curve = new THREE.CatmullRomCurve3(handle.points.map(([x, y]) => new THREE.Vector3(x, y, 0)), false, 'centripetal')
   const tube = new THREE.TubeGeometry(curve, 72, handle.radius, 14)
@@ -101,16 +113,56 @@ function handleGeometry(handle) {
 
 // The cut faces come back separately so they can be drawn solid, like the
 // hatched wall in a section drawing.
-export function glassGeometry(sec, { handle, spout, cut }) {
-  const deform = spout ? spoutDeform(sec) : null
+export function glassGeometry(sec, { handle, spout, sculpt, cut }) {
+  const deform = shaper(sec, { spout, sculpt })
   const parts = splitAtCorners(sec.section).map((run) => lathe(run, cut, deform))
-  if (handle) parts.push(...handleGeometry(handle))
+  if (handle) {
+    for (const g of handleGeometry(handle)) {
+      if (deform) {
+        deform(g)
+        g.computeVertexNormals()
+      }
+      parts.push(g)
+    }
+  }
   const body = mergeGeometries(parts, false)
   parts.forEach((g) => g.dispose())
   if (!cut) return { body, cut: null }
   const faces = caps(sec.section)
-  if (deform) faces.forEach(deform)
+  if (deform) faces.forEach((g) => (deform(g), g.computeVertexNormals()))
   const cutFaces = mergeGeometries(faces, false)
   faces.forEach((g) => g.dispose())
   return { body, cut: cutFaces }
+}
+
+// A plain closed mesh of a profile polygon, shaped like the real piece, for
+// measuring volume when sculpting has made it no longer round.
+export function measureMesh(poly, sec, opts) {
+  const geo = new THREE.LatheGeometry(poly.map(([r, y]) => new THREE.Vector2(Math.max(r, 0), y)), 64)
+  const deform = shaper(sec, opts)
+  if (deform) deform(geo)
+  return geo
+}
+
+// Volume and center of mass of a closed mesh: sum signed tetrahedra from the
+// origin to each triangle (the 3D version of the shoelace formula).
+export function meshMass(geo) {
+  const p = geo.attributes.position
+  const idx = geo.index
+  const n = idx ? idx.count : p.count
+  const at = (i) => (idx ? idx.getX(i) : i)
+  let vol = 0, cx = 0, cy = 0, cz = 0
+  for (let i = 0; i < n; i += 3) {
+    const a = at(i), b = at(i + 1), c = at(i + 2)
+    const ax = p.getX(a), ay = p.getY(a), az = p.getZ(a)
+    const bx = p.getX(b), by = p.getY(b), bz = p.getZ(b)
+    const qx = p.getX(c), qy = p.getY(c), qz = p.getZ(c)
+    const v = (ax * (by * qz - bz * qy) - ay * (bx * qz - bz * qx) + az * (bx * qy - by * qx)) / 6
+    vol += v
+    cx += (v * (ax + bx + qx)) / 4
+    cy += (v * (ay + by + qy)) / 4
+    cz += (v * (az + bz + qz)) / 4
+  }
+  if (Math.abs(vol) < 1e-9) return { volume: 0, com: [0, 0, 0] }
+  return { volume: Math.abs(vol), com: [cx / vol, cy / vol, cz / vol] }
 }

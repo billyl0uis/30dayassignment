@@ -1,5 +1,6 @@
 import { functionChecks } from '../model/checks.js'
 import { useDerived } from '../model/derived.js'
+import { NO_SCULPT, isSculpted } from '../geometry/sculpt.js'
 import { GLASS_COLORS } from '../model/presets.js'
 import { useStore } from '../model/store.js'
 import { fmtLen, fmtMass, fmtVol } from '../model/units.js'
@@ -57,6 +58,8 @@ export default function SidePanel() {
         </div>
       </section>
 
+      <Sculpt />
+
       <section className="panel">
         <h3>Glass</h3>
         <div className="swatches">
@@ -102,5 +105,41 @@ export default function SidePanel() {
         </ul>
       </section>
     </aside>
+  )
+}
+
+// Moves that break the round: each one is a glassblower's technique.
+function Sculpt() {
+  const sculpt = useStore((s) => s.sculpt)
+  const units = useStore((s) => s.units)
+  const live = useStore((s) => s.live)
+  const change = useStore((s) => s.change)
+  const set = (key) => (v) => live({ sculpt: { ...sculpt, [key]: v } })
+  return (
+    <section className="panel">
+      <div className="panel-head">
+        <h3>Sculpt</h3>
+        {isSculpted(sculpt) && <button onClick={() => change({ sculpt: { ...NO_SCULPT } })}>Make round</button>}
+      </div>
+      <Slider label="Optic ribs" value={sculpt.ribs} shown={sculpt.ribs ? sculpt.ribs : 'none'} min={0} max={16} step={1} onChange={set('ribs')} />
+      {sculpt.ribs > 0 && (
+        <div className="sub">
+          <Slider label="Rib depth" value={sculpt.ribDepth} shown={fmtLen(sculpt.ribDepth, units, 2)} min={0.05} max={1} step={0.01} onChange={set('ribDepth')} />
+        </div>
+      )}
+      <Slider label="Twist" value={sculpt.twist} shown={`${sculpt.twist}°`} min={-360} max={360} step={5} onChange={set('twist')} />
+      <Slider label="Paddled flat" value={sculpt.squash} shown={`${Math.round(sculpt.squash * 100)}%`} min={0} max={0.7} step={0.01} onChange={set('squash')} />
+      <Slider label="Rim waves" value={sculpt.waves} shown={sculpt.waves ? sculpt.waves : 'none'} min={0} max={12} step={1} onChange={set('waves')} />
+      {sculpt.waves > 0 && (
+        <div className="sub">
+          <Slider label="Wave height" value={sculpt.waveHeight} shown={fmtLen(sculpt.waveHeight, units)} min={0.2} max={5} step={0.1} onChange={set('waveHeight')} />
+        </div>
+      )}
+      <Slider label="Lean" value={sculpt.lean} shown={fmtLen(sculpt.lean, units)} min={-8} max={8} step={0.1} onChange={set('lean')} />
+      <Slider label="Wobble" value={sculpt.wobble} shown={fmtLen(sculpt.wobble, units)} min={0} max={1.5} step={0.01} onChange={set('wobble')} />
+      {sculpt.wobble > 0 && (
+        <button onClick={() => change({ sculpt: { ...sculpt, seed: Math.floor(Math.random() * 1e6) } })}>New wobble</button>
+      )}
+    </section>
   )
 }

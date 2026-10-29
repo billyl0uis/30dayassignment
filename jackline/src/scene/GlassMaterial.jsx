@@ -14,7 +14,7 @@ export default function GlassMaterial({ color, frost, wall }) {
       ior={1.5}
       roughness={frost * 0.55}
       attenuationColor={color}
-      attenuationDistance={tinted ? 3 : Infinity}
+      attenuationDistance={tinted ? 8 : Infinity}
       specularIntensity={1}
       envMapIntensity={1.4}
     />

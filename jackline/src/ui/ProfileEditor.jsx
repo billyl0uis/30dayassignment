@@ -34,10 +34,11 @@ export default function ProfileEditor() {
   const frame = useMemo(() => {
     if (dragging && held.current) return held.current
     const reach = handle ? Math.max(...handle.pts.map((p) => -p[0])) + handle.radius : 0
-    const half = Math.max(5, metrics.maxD / 2 + 1.5, reach + 1)
-    const top = Math.max(8, metrics.height * 1.12 + 1)
+    // Frame the turned profile, not the sculpted piece: this sheet is the base form.
+    const half = Math.max(5, Math.max(...sec.outer.map((p) => p[0])) + 1.5, reach + 1)
+    const top = Math.max(8, sec.height * 1.12 + 1)
     return (held.current = { x0: -half - 1, x1: half + 2.5, y0: -2.2, y1: top })
-  }, [dragging, metrics.maxD, metrics.height, handle])
+  }, [dragging, sec, handle])
   const vbW = frame.x1 - frame.x0, vbH = frame.y1 - frame.y0
   // Screen pixels per cm. Zero before the first layout, so fall back.
   const px = Math.min(size.w / vbW, size.h / vbH) || 40
@@ -162,6 +163,7 @@ export default function ProfileEditor() {
           </text>
         </g>
       </svg>
+      {metrics.sculpted && <span className="sculpt-badge">Turned profile · sculpting is applied on top</span>}
       <p className="editor-hint">
         Drag points to shape the outside wall · click the wall to add a point · double-click a point to remove it · hold Shift to snap to ½ cm
       </p>

@@ -9,11 +9,12 @@ export default function Vessel() {
   const { sec, handle } = useDerived()
   const spout = useStore((s) => s.spout)
   const cut = useStore((s) => s.cutaway)
+  const sculpt = useStore((s) => s.sculpt)
   const color = useStore((s) => s.color)
   const frost = useStore((s) => s.frost)
   const wall = useStore((s) => s.wall)
 
-  const glass = useMemo(() => glassGeometry(sec, { handle, spout, cut }), [sec, handle, spout, cut])
+  const glass = useMemo(() => glassGeometry(sec, { handle, spout, sculpt, cut }), [sec, handle, spout, sculpt, cut])
   const cutColor = useMemo(() => new THREE.Color('#9fd4ff').lerp(new THREE.Color(color), 0.45), [color])
   useEffect(() => () => (glass.body.dispose(), glass.cut?.dispose()), [glass])
 

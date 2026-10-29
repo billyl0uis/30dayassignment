@@ -12,6 +12,7 @@ export function stabilityCheck(m, units) {
   const foot = fmtLen(m.footD, units)
   // Under ~12° a nudge or a table bump knocks it over; 12–20° survives
   // being set down but not a sleeve catching it. Stemware sits around 23°.
+  if (m.tip < 0) return { level: 'bad', title: "Can't stand", text: 'The weight hangs past the edge of the foot, so it falls over on its own.' }
   if (m.tip < 12) return { level: 'bad', title: 'Falls over', text: `Only ${lean} of lean before it tips. Widen the ${foot} foot or lower the weight.` }
   if (m.tip < 20) return { level: 'warn', title: 'Tippy', text: `Tips at ${lean}. A bump will knock it over; a wider foot than ${foot} would help.` }
   return { level: 'good', title: 'Sits solid', text: `Leans ${lean} before tipping, on a ${foot} foot.` }
