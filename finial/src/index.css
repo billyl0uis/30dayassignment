@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* A bench tool: warm dark ground, one orange accent, paper for print. */
+:root {
+  --ground: #16110e;
+  --panel: #201914;
+  --raise: #2a211b;
+  --line: #3d3029;
+  --ink: #f6efe8;
+  --mute: #c4b4a6;
+  --faint: #9a8a7d;
+  --accent: #f2762e;
+  --accent-ink: #1a0a02;
+  --caution: #f0c050;
+  --danger: #ef6b5e;
+  --grid: #3a2e27;
+  --axis: #6b5a4e;
+  --glass-fill: rgb(159 214 208 / 0.28);
+  --glass-line: #b9e6e1;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ground: var(--ground);
+  --color-panel: var(--panel);
+  --color-raise: var(--raise);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-mute: var(--mute);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-caution: var(--caution);
+  --color-danger: var(--danger);
+}
+
+html,
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
