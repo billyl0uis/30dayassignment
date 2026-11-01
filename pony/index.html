@@ -29,7 +29,7 @@
     pointer-events: none;
   }
   h1 { margin: 0; font-size: 16px; font-weight: 600; }
-  .hint { margin: 4px 0 0; color: var(--muted); max-width: 30em; }
+  .hint { margin: 4px 0 0; color: var(--muted); max-width: 32em; }
   kbd { font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
 
   .heat { width: 260px; max-width: 100%; }
@@ -44,6 +44,7 @@
     position: absolute; top: 0; bottom: 0; left: 0; width: 3px; margin-left: -1.5px;
     background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .7); opacity: 0;
   }
+  #punty { margin-top: 10px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 
   .controls {
     position: fixed; left: 0; right: 0; bottom: 16px; padding: 0 16px;
@@ -51,16 +52,16 @@
   }
   button {
     font: inherit; color: var(--ink); background: var(--btn);
-    border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; cursor: pointer;
     user-select: none; -webkit-user-select: none;
   }
   button:hover { background: var(--btn-hover); }
   button:disabled { opacity: .4; cursor: default; }
-  #glory { touch-action: none; }
-  #glory.on { border-color: var(--accent); background: #4a2610; color: #fff; }
+  .hold { touch-action: none; }
+  .hold.on { border-color: var(--accent); background: #4a2610; color: #fff; }
 
   #msg, #done {
-    position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%);
+    position: fixed; left: 50%; bottom: var(--above-controls, 72px); transform: translateX(-50%);
     background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
     max-width: calc(100vw - 32px);
   }
@@ -76,7 +77,7 @@
 <div class="top">
   <div>
     <h1>Pulled Pony</h1>
-    <p class="hint">Drag from the edge of the glass to pull a leg, neck, head or tail. Hold <kbd>Space</kbd> or the Glory hole button to reheat. Glass left too cold shatters.</p>
+    <p class="hint">Hot glass sags, so keep turning the punty: hold <kbd>A</kbd>/<kbd>D</kbd> or Turn. Tip it with <kbd>W</kbd>/<kbd>S</kbd> to let gravity draw glass down. Drag from the edge to pull. Hold <kbd>Space</kbd> for the glory hole. Glass left too cold shatters.</p>
   </div>
   <div class="heat">
     <div class="heat-row"><span id="zone">Point at the glass</span><span id="deg"></span></div>
@@ -90,6 +91,7 @@
     <div class="scale">
       <span style="flex:250">too cold</span><span style="flex:200">stiff</span><span style="flex:150">working</span><span style="flex:200">hot</span>
     </div>
+    <div id="punty"></div>
   </div>
 </div>
 
@@ -97,7 +99,10 @@
 <div id="done"><span id="doneText">Annealed. Cooled to room temperature.</span><button id="save">Download PNG</button></div>
 
 <div class="controls">
-  <button id="glory">Glory hole</button>
+  <button id="turn" class="hold">Turn</button>
+  <button id="tipUp" class="hold">Tip up</button>
+  <button id="tipDown" class="hold">Tip down</button>
+  <button id="glory" class="hold">Glory hole</button>
   <button id="anneal">Anneal</button>
   <button id="reset">New gather</button>
 </div>
@@ -120,12 +125,21 @@ const TUNE = {
   pullRate: 14,       // how quickly the tip follows the cursor when soft
   snapBase: 40,       // cursor-to-tip lag that snaps fully stiff glass
   snapHot: 220,       // extra lag allowed when fully soft
-  inflow: 25,       // volume drawn from the body per px of pull, when hot
+  inflow: 25,         // volume drawn from the body per px of pull, when hot
   firstBit: 1100,     // max volume grabbed when starting a new pull
   bodyFloor: 0.35,    // a body slice never drops below this fraction of its start volume
   bodyFlow: 1.5,      // how fast the hot body evens out dents
   maxNodes: 700,
   shatterAfter: 1.5,  // seconds a slice can sit in "too cold" before it shatters
+  bend: 0.018,
+  bendMax: 1.5,       // rad/s: even a thin hot thread can't swing faster than this      // sag: how fast a hot joint droops (weight beyond it ÷ thickness³)
+  drip: 0.0012,      // how fast hanging glass stretches under its own weight
+  dripMax: 0.8,       // cap on that stretch, as a fraction of the slice's length per second
+  dropR: 3,           // a neck this thin can't hold the glass hanging from it
+  dropLoad: 8000,     // ...if at least this much glass hangs below it (the gather, not a leg)
+  turnRate: 5.5,      // rad/s while turning the punty (~1 turn a second)
+  tiltRate: 1.2,      // rad/s while tipping the punty
+  tiltMax: 1.3,       // ~75° up or down
   zones: { hot: 1000, working: 850, stiff: 650 },
 };
 const BODY_R = [22, 30, 35, 37, 37, 35, 30, 22];
@@ -137,11 +151,15 @@ const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
 const soft = T => Math.pow(clamp((T - TUNE.softLo) / (TUNE.softHi - TUNE.softLo), 0, 1), TUNE.softPow);
-const radiusOf = n => Math.sqrt(Math.max(n.v, 0) / TUNE.S0);
+// A slice's glass is spread along its own length, so stretching it thins it.
+const radiusOf = n => Math.sqrt(Math.max(n.v, 0) / Math.max(n.len, TUNE.S0));
 const zoneOf = T => T >= TUNE.zones.hot ? 'Hot' : T >= TUNE.zones.working ? 'Working' : T >= TUNE.zones.stiff ? 'Stiff' : 'Too cold';
 
+// Nodes live in the punty's own frame: x along the punty, y and z across it.
+// wx, wy, wz are where that lands on screen after turning and tipping.
 function mk(p) {
-  return Object.assign({ x: 0, y: 0, v: 0, r: 0, T: TUNE.gatherT, parent: null, kids: [], base: null, len: 0, body: false, rest: 0,
+  return Object.assign({ x: 0, y: 0, z: 0, wx: 0, wy: 0, wz: 0, v: 0, r: 0, T: TUNE.gatherT,
+    parent: null, kids: [], base: null, len: 0, body: false, rest: 0, sub: 0,
     coldTime: 0, seed: Math.random() * TAU }, p);
 }
 
@@ -173,7 +191,9 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let W, H, dpr, ox, oy, sc;
 let nodes = [], fragments = [], shards = [], drag = null, heating = false;
-let mode = 'work', annealT = 0;   // work | annealing | annealed | shattered
+let mode = 'work', annealT = 0;   // work | annealing | annealed | lost
+let roll = 0, tilt = 0;           // punty turn and tip, in radians
+const held = new Set();           // turn / tip controls currently held
 const mouse = { x: 0, y: 0, over: false };
 
 function resize() {
@@ -183,22 +203,54 @@ function resize() {
   sc = clamp(Math.min(W, H) / 560, 0.7, 1.6);
   ox = W * 0.5 - 40 * sc;
   oy = H * 0.42;
+  // Messages sit just above the buttons, which wrap to two rows on a phone.
+  const top = document.querySelector('.controls').getBoundingClientRect().top;
+  document.documentElement.style.setProperty('--above-controls', (H - top + 10) + 'px');
 }
 
 function newGather() {
   nodes = []; fragments = []; shards = []; drag = null; mode = 'work';
+  roll = 0; tilt = 0;
   let prev = null;
   BODY_R.forEach((r, i) => {
-    const n = mk({ x: i * BODY_GAP, y: 0, v: r * r * TUNE.S0, body: true, parent: prev });
+    const n = mk({ x: i * BODY_GAP, v: r * r * Math.max(BODY_GAP, TUNE.S0), body: true, parent: prev, len: prev ? BODY_GAP : 0 });
     n.rest = n.v; n.r = r;
     if (prev) prev.kids.push(n);
     nodes.push(n); prev = n;
   });
+  projectAll();
   document.getElementById('done').classList.remove('show');
   document.getElementById('doneText').textContent = 'Annealed. Cooled to room temperature.';
   document.getElementById('save').hidden = false;
   document.getElementById('glory').disabled = false;
   document.getElementById('anneal').disabled = false;
+}
+
+// ---------- Punty frame ----------
+// Turning rolls the piece around the punty (x axis); tipping rotates it on screen.
+function toWorld(x, y, z) {
+  const cr = Math.cos(roll), sr = Math.sin(roll), ct = Math.cos(tilt), st = Math.sin(tilt);
+  const y1 = y * cr - z * sr, z1 = y * sr + z * cr;
+  return [x * ct - y1 * st, x * st + y1 * ct, z1];
+}
+function toLocal(wx, wy, wz) {
+  const cr = Math.cos(roll), sr = Math.sin(roll), ct = Math.cos(tilt), st = Math.sin(tilt);
+  const x = wx * ct + wy * st, y1 = -wx * st + wy * ct;
+  return [x, y1 * cr + wz * sr, -y1 * sr + wz * cr];
+}
+function projectAll() {
+  for (const n of nodes) [n.wx, n.wy, n.wz] = toWorld(n.x, n.y, n.z);
+}
+
+// Where a node hangs from: its parent, or a point on the parent's surface for the start of a pull.
+function attachOf(n) {
+  const p = n.parent;
+  return n.base ? { x: p.x + n.base.x, y: p.y + n.base.y, z: p.z + n.base.z } : p;
+}
+function subtree(n) {
+  const out = [], stack = [n];
+  while (stack.length) { const m = stack.pop(); out.push(m); stack.push(...m.kids); }
+  return out;
 }
 
 // ---------- Simulation ----------
@@ -210,6 +262,7 @@ function update(dt) {
     s.life -= dt;
   }
   shards = shards.filter(s => s.life > 0);
+  if (mode !== 'annealing' && mode !== 'annealed') updateFragments(dt);
 
   if (mode === 'annealing') {
     annealT += dt;
@@ -224,6 +277,9 @@ function update(dt) {
   }
   if (mode !== 'work') return;
 
+  roll += (held.has('right') - held.has('left')) * TUNE.turnRate * dt;
+  tilt = clamp(tilt + (held.has('down') - held.has('up')) * TUNE.tiltRate * dt, -TUNE.tiltMax, TUNE.tiltMax);
+
   for (const n of nodes) {
     n.T -= TUNE.cool * (n.T - TUNE.ambient) / (n.r + 4) * dt;
     if (heating) n.T += TUNE.glory * (TUNE.gloryT - n.T) / (n.r + 4) * dt;
@@ -237,7 +293,7 @@ function update(dt) {
   }
   // A hot body slowly evens out dents left by pulling.
   for (const n of nodes) {
-    const p = n.parent; if (!n.body || !p) continue;
+    const p = n.parent; if (!n.body || !p || !p.body) continue;
     const diff = p.v / p.rest - n.v / n.rest;
     const amt = TUNE.bodyFlow * soft((p.T + n.T) / 2) * diff * Math.min(p.rest, n.rest) * dt;
     p.v -= amt; n.v += amt;
@@ -260,18 +316,103 @@ function update(dt) {
     showMsg('Shattered. That part got too cold.');
   }
 
+  const dropped = gravity(dt);
+  if (dropped) {
+    if (drag && subtree(dropped).includes(drag.tip)) release();
+    dropOff(dropped);
+    if (mode !== 'work') return;
+  }
   if (drag) dragStep(dt);
+  for (const n of nodes.slice()) {
+    if (n.parent && n.len > TUNE.split && n.v > 6 && nodes.length < TUNE.maxNodes) splitEdge(n);
+  }
   for (const n of nodes) n.r = radiusOf(n);
+  projectAll();
+}
 
+// Snapped and dropped pieces fall away in screen space.
+function updateFragments(dt) {
   const floor = (H - oy) / sc + 200;
   for (const f of fragments) {
     f.vy += 1400 * dt;
     for (const n of f.nodes) {
-      n.x += f.vx * dt; n.y += f.vy * dt;
+      n.wx += f.vx * dt; n.wy += f.vy * dt;
       n.T -= TUNE.cool * (n.T - TUNE.ambient) / (n.r + 4) * dt;
     }
   }
-  fragments = fragments.filter(f => f.nodes.some(n => n.y < floor));
+  fragments = fragments.filter(f => f.nodes.some(n => n.wy < floor));
+}
+
+// Hot glass is too thick to swing; it creeps. Each joint bends toward the floor
+// at a rate set by heat, the weight beyond it and how thin it is, and glass
+// hanging downward stretches under its own weight.
+function gravity(dt) {
+  const [gx, gy, gz] = toLocal(0, 1, 0);
+  // Out from the punty, so bending a joint carries everything beyond it.
+  const order = [nodes[0]];
+  for (let i = 0; i < order.length; i++) order.push(...order[i].kids);
+  for (let i = order.length - 1; i >= 0; i--) {
+    const n = order[i];
+    n.sub = n.v;
+    for (const k of n.kids) n.sub += k.sub;
+  }
+
+  for (let i = 1; i < order.length; i++) {
+    const n = order[i], p = n.parent;
+    const s = soft((n.T + p.T) / 2);
+    if (s <= 0) continue;
+    const a = attachOf(n);
+    let ex = n.x - a.x, ey = n.y - a.y, ez = n.z - a.z;
+    const L = Math.hypot(ex, ey, ez);
+    if (L < 1e-3) continue;
+    ex /= L; ey /= L; ez /= L;
+    const r = Math.max(1, Math.min(n.r, p.r));
+    const moved = subtree(n);
+
+    // Sag: swing this joint toward straight down, never past it.
+    const cosA = clamp(ex * gx + ey * gy + ez * gz, -1, 1);
+    const sinA = Math.sqrt(1 - cosA * cosA);
+    const ang = Math.min(Math.min(TUNE.bend * s * sinA * n.sub / (r * r * r), TUNE.bendMax) * dt, Math.acos(cosA));
+    if (ang > 1e-6 && sinA > 1e-4) {
+      let kx = ey * gz - ez * gy, ky = ez * gx - ex * gz, kz = ex * gy - ey * gx;
+      const kl = Math.hypot(kx, ky, kz);
+      kx /= kl; ky /= kl; kz /= kl;
+      const c = Math.cos(ang), sn = Math.sin(ang);
+      const rot = (vx, vy, vz) => {
+        const d = (kx * vx + ky * vy + kz * vz) * (1 - c);
+        return [vx * c + (ky * vz - kz * vy) * sn + kx * d,
+                vy * c + (kz * vx - kx * vz) * sn + ky * d,
+                vz * c + (kx * vy - ky * vx) * sn + kz * d];
+      };
+      for (const m of moved) {
+        const [rx, ry, rz] = rot(m.x - a.x, m.y - a.y, m.z - a.z);
+        m.x = a.x + rx; m.y = a.y + ry; m.z = a.z + rz;
+        if (m !== n && m.base) [m.base.x, m.base.y, m.base.z] = rot(m.base.x, m.base.y, m.base.z);
+      }
+      [ex, ey, ez] = rot(ex, ey, ez);
+    }
+
+    // Drip: glass pointing downhill lengthens and thins, pointing uphill it settles
+    // back shorter and thicker, so steady turning evens it out. Threads stop.
+    const cosD = ex * gx + ey * gy + ez * gz;
+    if (n.v > 12) {
+      const rate = Math.min(TUNE.drip * s * s * Math.abs(cosD) * n.sub / (r * r), TUNE.dripMax);
+      let dl = Math.sign(cosD) * Math.min(rate * L, 25) * dt;
+      dl = Math.max(dl, TUNE.S0 * 0.5 - n.len);
+      n.len += dl;
+      for (const m of moved) { m.x += ex * dl; m.y += ey * dl; m.z += ez * dl; }
+    }
+    // A thinned neck under a heavy load lets go.
+    if (cosD > 0 && n.r < TUNE.dropR && n.sub > TUNE.dropLoad) return n;
+  }
+  return null;
+}
+
+function dropOff(n) {
+  const loses = subtree(n).some(m => m.body);
+  detach(n, 0, 40);
+  if (!loses) { showMsg('A drip fell off.'); return; }
+  endRun('Dropped. The gather dripped off the punty.');
 }
 
 // The moving chain: from the grabbed tip back to the first fixed node.
@@ -291,17 +432,19 @@ function dragStep(dt) {
   const tip = drag.tip;
   const p = pathFor(tip);
   const anchor = p[0].parent;
-  const root = p[0].base || anchor;
+  const root = attachOf(p[0]);
 
   // The tip moves as easily as the hottest link allows,
   // but the chain is only as strong as its coldest link.
   let sMax = soft(anchor.T), sMin = 1;
   for (const n of p) { const s = soft(n.T); sMax = Math.max(sMax, s); sMin = Math.min(sMin, s); }
+  const [mx, my, mz] = toLocal(mouse.x, mouse.y, tip.wz);
   const k = 1 - Math.exp(-TUNE.pullRate * sMax * dt);
-  const tx = tip.x + (mouse.x - tip.x) * k;
-  const ty = tip.y + (mouse.y - tip.y) * k;
+  const tx = tip.x + (mx - tip.x) * k;
+  const ty = tip.y + (my - tip.y) * k;
+  const tz = tip.z + (mz - tip.z) * k;
 
-  if (Math.hypot(mouse.x - tx, mouse.y - ty) > TUNE.snapBase + TUNE.snapHot * sMin) {
+  if (Math.hypot(mx - tx, my - ty, mz - tz) > TUNE.snapBase + TUNE.snapHot * sMin) {
     snap(p, anchor, sMin);
     return;
   }
@@ -309,7 +452,7 @@ function dragStep(dt) {
   // Stretch: extra length goes mostly to the hottest edges.
   let total = 0;
   for (const n of p) total += n.len;
-  const grow = Math.hypot(tx - root.x, ty - root.y) - total;
+  const grow = Math.hypot(tx - root.x, ty - root.y, tz - root.z) - total;
   if (grow > 0) {
     const w = [];
     let wSum = 0, prev = anchor;
@@ -322,36 +465,33 @@ function dragStep(dt) {
     anchor.v -= dv; p[0].v += dv;
   }
 
-  fabrik(p, root, tx, ty);
-
-  for (const n of p) {
-    if (n.len > TUNE.split && n.v > 6 && nodes.length < TUNE.maxNodes) splitEdge(n);
-  }
+  fabrik(p, root, { x: tx, y: ty, z: tz });
 }
 
 // Two-pass FABRIK: pin the tip to the target, then pin the root back in place.
-function fabrik(p, root, tx, ty) {
+function fabrik(p, root, t) {
   for (let it = 0; it < 2; it++) {
     const last = p[p.length - 1];
-    last.x = tx; last.y = ty;
-    for (let i = p.length - 2; i >= 0; i--) place(p[i], p[i + 1], p[i + 1].len, tx, ty);
+    last.x = t.x; last.y = t.y; last.z = t.z;
+    for (let i = p.length - 2; i >= 0; i--) place(p[i], p[i + 1], p[i + 1].len, t);
     let prev = root;
-    for (const n of p) { place(n, prev, n.len, tx, ty); prev = n; }
+    for (const n of p) { place(n, prev, n.len, t); prev = n; }
   }
 }
-function place(n, from, len, tx, ty) {
-  let dx = n.x - from.x, dy = n.y - from.y, d = Math.hypot(dx, dy);
-  if (d < 1e-6) { dx = tx - from.x; dy = ty - from.y; d = Math.hypot(dx, dy) || 1; }
+function place(n, from, len, t) {
+  let dx = n.x - from.x, dy = n.y - from.y, dz = n.z - from.z, d = Math.hypot(dx, dy, dz);
+  if (d < 1e-6) { dx = t.x - from.x; dy = t.y - from.y; dz = t.z - from.z; d = Math.hypot(dx, dy, dz) || 1; }
   n.x = from.x + dx / d * len;
   n.y = from.y + dy / d * len;
+  n.z = from.z + dz / d * len;
 }
 
 function splitEdge(n) {
   const par = n.parent;
-  const a = n.base || par;
+  const a = attachOf(n);
   const m = mk({
-    x: (a.x + n.x) / 2, y: (a.y + n.y) / 2, T: (par.T + n.T) / 2,
-    parent: par, kids: [n], base: n.base, len: n.len / 2,
+    x: (a.x + n.x) / 2, y: (a.y + n.y) / 2, z: (a.z + n.z) / 2, T: (par.T + n.T) / 2,
+    parent: par, kids: [n], base: n.base, len: n.len / 2, body: n.body && par.body,
   });
   // The new slice takes glass from its neighbours, so the stretched part thins.
   if (!par.body && par.kids.length === 1 && !n.base) {
@@ -359,6 +499,7 @@ function splitEdge(n) {
   } else {
     m.v = n.v / 2; n.v /= 2;
   }
+  if (m.body) { m.rest = n.rest / 2; n.rest /= 2; }
   par.kids[par.kids.indexOf(n)] = m;
   n.parent = m; n.base = null; n.len /= 2;
   m.r = radiusOf(m);
@@ -366,17 +507,22 @@ function splitEdge(n) {
 }
 
 function startBranch(anchor) {
-  let dx = mouse.x - anchor.x, dy = mouse.y - anchor.y, d = Math.hypot(dx, dy);
+  let dx = mouse.x - anchor.wx, dy = mouse.y - anchor.wy, d = Math.hypot(dx, dy);
   if (d < 1e-3) { dx = 0; dy = 1; d = 1; }
-  dx /= d; dy /= d;
+  const [lx, ly, lz] = toLocal(dx / d, dy / d, 0);
   const take = Math.min(anchor.v * (anchor.body ? 0.15 : 0.3), TUNE.firstBit);
   anchor.v -= take;
-  const bx = anchor.x + dx * anchor.r * 0.8, by = anchor.y + dy * anchor.r * 0.8;
-  const n = mk({ x: bx + dx * 2, y: by + dy * 2, v: take, T: anchor.T, parent: anchor, base: { x: bx, y: by }, len: 2 });
+  const off = anchor.r * 0.8;
+  const base = { x: lx * off, y: ly * off, z: lz * off };
+  const n = mk({
+    x: anchor.x + base.x + lx * 2, y: anchor.y + base.y + ly * 2, z: anchor.z + base.z + lz * 2,
+    v: take, T: anchor.T, parent: anchor, base, len: 2,
+  });
   n.r = radiusOf(n);
   anchor.kids.push(n);
   anchor.r = radiusOf(anchor);
   nodes.push(n);
+  [n.wx, n.wy, n.wz] = toWorld(n.x, n.y, n.z);
   return n;
 }
 
@@ -389,7 +535,7 @@ function snap(p, anchor, sMax) {
     prev = n;
   });
   const tip = drag.tip;
-  detach(p[best], clamp((mouse.x - tip.x) * 2, -300, 300), -80);
+  detach(p[best], clamp((mouse.x - tip.wx) * 2, -300, 300), -80);
   drag = null;
   canvas.style.cursor = 'crosshair';
   showMsg(sMax < 0.35 ? 'Snapped. Too stiff to pull: reheat first.' : 'Snapped. Pulled too fast for that heat.');
@@ -399,8 +545,7 @@ function snap(p, anchor, sMax) {
 function breakOff(n) {
   const par = n.parent;
   par.kids.splice(par.kids.indexOf(n), 1);
-  const sub = [], stack = [n];
-  while (stack.length) { const m = stack.pop(); sub.push(m); stack.push(...m.kids); }
+  const sub = subtree(n);
   const gone = new Set(sub);
   nodes = nodes.filter(m => !gone.has(m));
   n.parent = null; n.base = null;
@@ -417,7 +562,7 @@ function spawnShards(list) {
     for (let i = 0; i < count; i++) {
       const dir = Math.random() * TAU, speed = 80 + Math.random() * 220;
       shards.push({
-        x: n.x + Math.cos(dir) * n.r * Math.random(), y: n.y + Math.sin(dir) * n.r * Math.random(),
+        x: n.wx + Math.cos(dir) * n.r * Math.random(), y: n.wy + Math.sin(dir) * n.r * Math.random(),
         vx: Math.cos(dir) * speed, vy: Math.sin(dir) * speed - 120,
         a: Math.random() * TAU, va: (Math.random() - 0.5) * 20,
         size: 1.5 + Math.random() * Math.max(1, n.r * 0.6),
@@ -430,32 +575,41 @@ function spawnShards(list) {
 function shatterAll() {
   spawnShards(nodes);
   nodes = []; fragments = [];
+  endRun('Shattered. The glass got too cold.');
+}
+
+// The piece is lost: show the result and wait for a new gather.
+function endRun(text) {
   release(); setHeating(false);
-  mode = 'shattered';
-  document.getElementById('doneText').textContent = 'Shattered. The glass got too cold.';
+  mode = 'lost';
+  document.getElementById('doneText').textContent = text;
   document.getElementById('save').hidden = true;
   document.getElementById('done').classList.add('show');
   document.getElementById('glory').disabled = true;
   document.getElementById('anneal').disabled = true;
 }
 
-// ---------- Drawing ----------
+// ---------- Drawing (screen positions: wx, wy) ----------
 function edgeQuad(c, a, ra, b, rb) {
-  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+  const dx = b.wx - a.wx, dy = b.wy - a.wy, len = Math.hypot(dx, dy);
   if (len < 0.01) return;
   const nx = -dy / len, ny = dx / len;
   c.beginPath();
-  c.moveTo(a.x + nx * ra, a.y + ny * ra);
-  c.lineTo(b.x + nx * rb, b.y + ny * rb);
-  c.lineTo(b.x - nx * rb, b.y - ny * rb);
-  c.lineTo(a.x - nx * ra, a.y - ny * ra);
+  c.moveTo(a.wx + nx * ra, a.wy + ny * ra);
+  c.lineTo(b.wx + nx * rb, b.wy + ny * rb);
+  c.lineTo(b.wx - nx * rb, b.wy - ny * rb);
+  c.lineTo(a.wx - nx * ra, a.wy - ny * ra);
   c.closePath();
   c.fill();
 }
-function disc(c, n, r) { c.beginPath(); c.arc(n.x, n.y, Math.max(r, 0.5), 0, TAU); c.fill(); }
+function disc(c, n, r) { c.beginPath(); c.arc(n.wx, n.wy, Math.max(r, 0.5), 0, TAU); c.fill(); }
 
 function drawGlass(c, list) {
-  for (const n of list) n.col = nodeColor(n.T);
+  // Parts on the far side of the punty are drawn first and darker.
+  for (const n of list) {
+    const col = nodeColor(n.T), k = 1 - 0.35 * clamp(-n.wz / 30, 0, 1);
+    n.col = [col[0] * k, col[1] * k, col[2] * k];
+  }
 
   // Glow halo, added on top of the background.
   c.save();
@@ -464,53 +618,62 @@ function drawGlass(c, list) {
     const a = smooth(620, 1150, n.T) * 0.16;
     if (a < 0.003) continue;
     const R = n.r * 1.8 + 18;
-    const g = c.createRadialGradient(n.x, n.y, n.r * 0.5, n.x, n.y, R);
+    const g = c.createRadialGradient(n.wx, n.wy, n.r * 0.5, n.wx, n.wy, R);
     g.addColorStop(0, rgba(n.col, a));
     g.addColorStop(1, rgba(n.col, 0));
     c.fillStyle = g;
-    c.beginPath(); c.arc(n.x, n.y, R, 0, TAU); c.fill();
+    c.beginPath(); c.arc(n.wx, n.wy, R, 0, TAU); c.fill();
   }
   c.restore();
 
-  // Darker rim of each slice's own colour, so the silhouette reads when cold.
-  for (const n of list) {
-    const k = lerp(0.3, 0.75, smooth(600, 1050, n.T));
-    c.fillStyle = rgba([n.col[0] * k, n.col[1] * k, n.col[2] * k]);
-    if (n.parent) edgeQuad(c, n.parent, n.parent.r + 1.5, n, n.r + 1.5);
-    disc(c, n, n.r + 1.5);
+  const layers = [[], [], []];
+  for (const n of list) layers[n.wz < -12 ? 0 : n.wz > 12 ? 2 : 1].push(n);
+  for (const layer of layers) {
+    // Darker rim of each slice's own colour, so the silhouette reads when cold.
+    for (const n of layer) {
+      const k = lerp(0.3, 0.75, smooth(600, 1050, n.T));
+      c.fillStyle = rgba([n.col[0] * k, n.col[1] * k, n.col[2] * k]);
+      if (n.parent) edgeQuad(c, n.parent, n.parent.r + 1.5, n, n.r + 1.5);
+      disc(c, n, n.r + 1.5);
+    }
+    // Body of the glass.
+    for (const n of layer) {
+      const p = n.parent; if (!p) continue;
+      const g = c.createLinearGradient(p.wx, p.wy, n.wx, n.wy);
+      g.addColorStop(0, rgba(p.col)); g.addColorStop(1, rgba(n.col));
+      c.fillStyle = g;
+      edgeQuad(c, p, p.r, n, n.r);
+    }
+    for (const n of layer) { c.fillStyle = rgba(n.col); disc(c, n, n.r); }
+    // One specular streak, drawn as a single union so overlaps don't stack.
+    c.fillStyle = 'rgba(255,255,255,0.2)';
+    c.beginPath();
+    for (const n of layer) {
+      if (n.r < 7) continue;
+      c.moveTo(n.wx - n.r * 0.2 + n.r * 0.5, n.wy - n.r * 0.5);
+      c.ellipse(n.wx - n.r * 0.2, n.wy - n.r * 0.5, n.r * 0.5, n.r * 0.18, 0, 0, TAU);
+    }
+    c.fill();
   }
-
-  // Body of the glass.
-  for (const n of list) {
-    const p = n.parent; if (!p) continue;
-    const g = c.createLinearGradient(p.x, p.y, n.x, n.y);
-    g.addColorStop(0, rgba(p.col)); g.addColorStop(1, rgba(n.col));
-    c.fillStyle = g;
-    edgeQuad(c, p, p.r, n, n.r);
-  }
-  for (const n of list) { c.fillStyle = rgba(n.col); disc(c, n, n.r); }
-
-  // One specular streak, drawn as a single union so overlaps don't stack.
-  c.fillStyle = 'rgba(255,255,255,0.2)';
-  c.beginPath();
-  for (const n of list) {
-    if (n.r < 7) continue;
-    c.moveTo(n.x - n.r * 0.2 + n.r * 0.5, n.y - n.r * 0.5);
-    c.ellipse(n.x - n.r * 0.2, n.y - n.r * 0.5, n.r * 0.5, n.r * 0.18, 0, 0, TAU);
-  }
-  c.fill();
 }
 
 function drawPunty(c) {
-  const left = -ox / sc - 10;
+  const left = -3000;
   const glow = smooth(650, 1100, nodes[0] ? nodes[0].T : 0);
+  c.save();
+  c.rotate(tilt);
   const g = c.createLinearGradient(-160, 0, 0, 0);
   g.addColorStop(0, '#5d5852');
   g.addColorStop(1, rgba([lerp(93, 160, glow), lerp(88, 50, glow), lerp(82, 24, glow)]));
   c.fillStyle = g;
   c.fillRect(left, -3.5, -left + 4, 7);
-  c.fillStyle = 'rgba(255,255,255,0.12)';
-  c.fillRect(left, -3.5, -left + 4, 1.5);
+  // A painted stripe on the rod slides round as the punty turns.
+  const sy = -3 * Math.sin(roll), sz = Math.cos(roll);
+  if (sz > 0) {
+    c.fillStyle = `rgba(255,240,220,${0.75 * sz})`;
+    c.fillRect(left, sy - 0.8, -left - 8, 1.6);
+  }
+  c.restore();
 }
 
 // Warning: white check lines spread across a slice as it nears shattering.
@@ -523,9 +686,9 @@ function drawCrackle(c) {
     c.beginPath();
     for (let i = 0; i < 3; i++) {
       const a = n.seed + i * 2.1, len = n.r * (0.4 + 0.9 * k);
-      c.moveTo(n.x, n.y);
-      c.lineTo(n.x + Math.cos(a) * len * 0.5 + Math.cos(a + 1) * len * 0.15, n.y + Math.sin(a) * len * 0.5 + Math.sin(a + 1) * len * 0.15);
-      c.lineTo(n.x + Math.cos(a) * len, n.y + Math.sin(a) * len);
+      c.moveTo(n.wx, n.wy);
+      c.lineTo(n.wx + Math.cos(a) * len * 0.5 + Math.cos(a + 1) * len * 0.15, n.wy + Math.sin(a) * len * 0.5 + Math.sin(a + 1) * len * 0.15);
+      c.lineTo(n.wx + Math.cos(a) * len, n.wy + Math.sin(a) * len);
     }
     c.stroke();
   }
@@ -551,6 +714,7 @@ function drawShards(c) {
 }
 
 function draw(now) {
+  if (mode === 'work') projectAll();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const bg = ctx.createRadialGradient(ox, oy, 0, ox, oy, Math.max(W, H) * 0.8);
   bg.addColorStop(0, '#1f1a15'); bg.addColorStop(1, '#0e0c0a');
@@ -570,7 +734,7 @@ function draw(now) {
   ctx.save();
   ctx.translate(ox, oy);
   ctx.scale(sc, sc);
-  if (mode === 'work' || mode === 'shattered') drawPunty(ctx);
+  if (mode === 'work' || mode === 'lost') drawPunty(ctx);
   drawGlass(ctx, nodes);
   for (const f of fragments) drawGlass(ctx, f.nodes);
   if (mode === 'work') drawCrackle(ctx);
@@ -580,20 +744,25 @@ function draw(now) {
   updateHeatMeter();
 }
 
-// ---------- Heat meter ----------
+// ---------- Heat meter and punty readout ----------
 const zoneEl = document.getElementById('zone');
 const degEl = document.getElementById('deg');
 const markerEl = document.getElementById('marker');
+const puntyEl = document.getElementById('punty');
 
 function nodeAt(x, y, slack) {
   let best = null, bestD = Infinity;
   for (const n of nodes) {
-    const d = Math.hypot(x - n.x, y - n.y) - n.r;
+    const d = Math.hypot(x - n.wx, y - n.wy) - n.r;
     if (d < slack && d < bestD) { bestD = d; best = n; }
   }
   return best;
 }
 function updateHeatMeter() {
+  const turned = Math.round(((roll % TAU) + TAU) % TAU * 180 / Math.PI) % 360;
+  const tip = Math.round(Math.abs(tilt) * 180 / Math.PI);
+  puntyEl.textContent = `Punty turned ${turned}° · ` + (tip < 3 ? 'level' : `tipped ${tip}° ${tilt > 0 ? 'down' : 'up'}`);
+
   const n = mouse.over ? (drag ? drag.tip : nodeAt(mouse.x, mouse.y, 4)) : null;
   if (!n) {
     zoneEl.textContent = 'Point at the glass';
@@ -622,7 +791,7 @@ canvas.addEventListener('pointerdown', e => {
   let hit = null, bestD = Infinity;
   for (const n of nodes) {
     if (n.body || n.kids.length) continue;
-    const d = Math.hypot(mouse.x - n.x, mouse.y - n.y);
+    const d = Math.hypot(mouse.x - n.wx, mouse.y - n.wy);
     if (d < n.r + slack && d < bestD) { bestD = d; hit = n; }
   }
   const extend = !!hit;
@@ -650,13 +819,34 @@ function setHeating(on) {
 gloryBtn.addEventListener('pointerdown', e => { gloryBtn.setPointerCapture(e.pointerId); setHeating(true); });
 gloryBtn.addEventListener('pointerup', () => setHeating(false));
 gloryBtn.addEventListener('pointercancel', () => setHeating(false));
+
+// Turn and tip: held keys or held buttons.
+const KEYS = { KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
+  KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down' };
+const BUTTONS = { turn: 'right', tipUp: 'up', tipDown: 'down' };
+function syncButtons() {
+  for (const [id, token] of Object.entries(BUTTONS)) document.getElementById(id).classList.toggle('on', held.has(token));
+}
+for (const [id, token] of Object.entries(BUTTONS)) {
+  const b = document.getElementById(id);
+  b.addEventListener('pointerdown', e => { b.setPointerCapture(e.pointerId); held.add(token); syncButtons(); });
+  for (const type of ['pointerup', 'pointercancel']) b.addEventListener(type, () => { held.delete(token); syncButtons(); });
+}
 window.addEventListener('keydown', e => {
-  if (e.code !== 'Space') return;
-  e.preventDefault();
-  if (!e.repeat) setHeating(true);
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (!e.repeat) setHeating(true);
+    return;
+  }
+  const token = KEYS[e.code];
+  if (token) { e.preventDefault(); held.add(token); syncButtons(); }
 });
-window.addEventListener('keyup', e => { if (e.code === 'Space') setHeating(false); });
-window.addEventListener('blur', () => setHeating(false));
+window.addEventListener('keyup', e => {
+  if (e.code === 'Space') setHeating(false);
+  const token = KEYS[e.code];
+  if (token) { held.delete(token); syncButtons(); }
+});
+window.addEventListener('blur', () => { setHeating(false); held.clear(); syncButtons(); });
 
 document.getElementById('anneal').addEventListener('click', () => {
   if (mode !== 'work') return;
@@ -683,8 +873,8 @@ function showMsg(text) {
 function savePNG() {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const n of nodes) {
-    x0 = Math.min(x0, n.x - n.r); y0 = Math.min(y0, n.y - n.r);
-    x1 = Math.max(x1, n.x + n.r); y1 = Math.max(y1, n.y + n.r);
+    x0 = Math.min(x0, n.wx - n.r); y0 = Math.min(y0, n.wy - n.r);
+    x1 = Math.max(x1, n.wx + n.r); y1 = Math.max(y1, n.wy + n.r);
   }
   const pad = 30, s = 2;
   const off = document.createElement('canvas');
