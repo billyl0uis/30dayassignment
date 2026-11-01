@@ -122,17 +122,19 @@ const TUNE = {
   softLo: 650,        // below this the glass will not move
   softHi: 1050,       // above this it is fully soft
   softPow: 1.6,
-  pullRate: 14,       // how quickly the tip follows the cursor when soft
-  snapBase: 40,       // cursor-to-tip lag that snaps fully stiff glass
-  snapHot: 220,       // extra lag allowed when fully soft
+  pullRate: 30,       // how quickly the tip follows the cursor when soft
+  snapBase: 30,       // cursor-to-tip lag that strains fully stiff glass
+  snapHot: 320,       // extra lag allowed when fully soft
+  snapHold: 0.2,      // seconds the glass must stay over-strained before it snaps
   inflow: 25,         // volume drawn from the body per px of pull, when hot
   firstBit: 1100,     // max volume grabbed when starting a new pull
   bodyFloor: 0.35,    // a body slice never drops below this fraction of its start volume
   bodyFlow: 1.5,      // how fast the hot body evens out dents
   maxNodes: 700,
-  shatterAfter: 1.5,  // seconds a slice can sit in "too cold" before it shatters
-  bend: 0.018,
-  bendMax: 1.5,       // rad/s: even a thin hot thread can't swing faster than this      // sag: how fast a hot joint droops (weight beyond it ÷ thickness³)
+  shatterT: 500,      // below this a slice starts building up cold stress
+  shatterAfter: 4,    // seconds a slice can sit below shatterT before it shatters
+  bend: 0.018,        // sag: how fast a hot joint droops (weight beyond it ÷ thickness³)
+  bendMax: 1.5,       // rad/s: even a thin hot thread can't swing faster than this
   drip: 0.0012,      // how fast hanging glass stretches under its own weight
   dripMax: 0.8,       // cap on that stretch, as a fraction of the slice's length per second
   dropR: 3,           // a neck this thin can't hold the glass hanging from it
@@ -301,7 +303,7 @@ function update(dt) {
 
   // Glass left too cold shatters. A cold body takes the whole piece with it.
   for (const n of nodes) {
-    n.coldTime = n.T < TUNE.zones.stiff ? n.coldTime + dt : Math.max(0, n.coldTime - 2 * dt);
+    n.coldTime = n.T < TUNE.shatterT ? n.coldTime + dt : Math.max(0, n.coldTime - 2 * dt);
   }
   if (nodes.some(n => n.body && n.coldTime > TUNE.shatterAfter)) {
     shatterAll();
@@ -309,7 +311,7 @@ function update(dt) {
   }
   for (let n; (n = nodes.find(m => m.coldTime > TUNE.shatterAfter));) {
     // Break where the cold starts, nearest the body.
-    while (!n.parent.body && n.parent.T < TUNE.zones.stiff) n = n.parent;
+    while (!n.parent.body && n.parent.T < TUNE.shatterT) n = n.parent;
     const gone = breakOff(n);
     spawnShards(gone);
     if (drag && gone.includes(drag.tip)) release();
@@ -348,6 +350,8 @@ function updateFragments(dt) {
 // hanging downward stretches under its own weight.
 function gravity(dt) {
   const [gx, gy, gz] = toLocal(0, 1, 0);
+  // The tweezers hold the length being pulled, so gravity leaves it alone.
+  const holding = drag ? new Set(pathFor(drag.tip)) : null;
   // Out from the punty, so bending a joint carries everything beyond it.
   const order = [nodes[0]];
   for (let i = 0; i < order.length; i++) order.push(...order[i].kids);
@@ -359,6 +363,7 @@ function gravity(dt) {
 
   for (let i = 1; i < order.length; i++) {
     const n = order[i], p = n.parent;
+    if (holding && holding.has(n)) continue;
     const s = soft((n.T + p.T) / 2);
     if (s <= 0) continue;
     const a = attachOf(n);
@@ -439,12 +444,16 @@ function dragStep(dt) {
   let sMax = soft(anchor.T), sMin = 1;
   for (const n of p) { const s = soft(n.T); sMax = Math.max(sMax, s); sMin = Math.min(sMin, s); }
   const [mx, my, mz] = toLocal(mouse.x, mouse.y, tip.wz);
-  const k = 1 - Math.exp(-TUNE.pullRate * sMax * dt);
+  // sqrt: even barely-workable glass still follows, just slower.
+  const k = 1 - Math.exp(-TUNE.pullRate * Math.sqrt(sMax) * dt);
   const tx = tip.x + (mx - tip.x) * k;
   const ty = tip.y + (my - tip.y) * k;
   const tz = tip.z + (mz - tip.z) * k;
 
-  if (Math.hypot(mx - tx, my - ty, mz - tz) > TUNE.snapBase + TUNE.snapHot * sMin) {
+  // A quick flick only strains the glass; it snaps if you keep yanking.
+  const over = Math.hypot(mx - tx, my - ty, mz - tz) > TUNE.snapBase + TUNE.snapHot * sMin;
+  drag.strain = over ? drag.strain + dt : Math.max(0, drag.strain - 2 * dt);
+  if (drag.strain > TUNE.snapHold) {
     snap(p, anchor, sMin);
     return;
   }
@@ -799,7 +808,7 @@ canvas.addEventListener('pointerdown', e => {
   if (!hit) return;
   if (hit.T < TUNE.zones.stiff) { showMsg('Too cold to grab. Reheat in the glory hole.'); return; }
   canvas.setPointerCapture(e.pointerId);
-  drag = { tip: extend ? hit : startBranch(hit) };
+  drag = { tip: extend ? hit : startBranch(hit), strain: 0 };
   canvas.style.cursor = 'grabbing';
 });
 canvas.addEventListener('pointermove', e => {
