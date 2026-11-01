@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>30-Day Assignment</title>
-<meta name="description" content="Everything made for the 30-day assignment: glass, metal, bone and other browser projects.">
+<meta name="description" content="Everything made for the 30-day assignment, numbered in the order it was made.">
 <style>
   :root {
     --bg: #f6f2ec;
@@ -13,7 +13,6 @@
     --muted: #6d6358;
     --line: #e2d9cc;
     --accent: #c4581a;
-    --tag: #f0e7da;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -23,7 +22,6 @@
       --muted: #a39789;
       --line: #342d26;
       --accent: #ff9b3d;
-      --tag: #2a241e;
     }
   }
   * { box-sizing: border-box; }
@@ -33,17 +31,9 @@
   }
   main { max-width: 1040px; margin: 0 auto; padding: 48px 16px 64px; }
   h1 { margin: 0; font-size: clamp(28px, 5vw, 40px); line-height: 1.1; letter-spacing: -0.01em; }
-  .intro { margin: 10px 0 0; color: var(--muted); max-width: 36em; }
-
-  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 20px; }
-  .filters button {
-    font: inherit; font-size: 14px; color: var(--ink); background: transparent;
-    border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer;
-  }
-  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .intro { margin: 10px 0 28px; color: var(--muted); max-width: 36em; }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; list-style: none; margin: 0; padding: 0; }
-  .grid li[hidden] { display: none; }
   .card {
     display: flex; flex-direction: column; height: 100%; padding: 18px 18px 16px;
     background: var(--card); border: 1px solid var(--line); border-radius: 12px;
@@ -51,11 +41,10 @@
   }
   .card:hover, .card:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
   .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .card h2 { margin: 0; font-size: 18px; }
+  .num { color: var(--accent); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .card h2 { margin: 2px 0 0; font-size: 18px; }
   .card p { margin: 6px 0 14px; color: var(--muted); font-size: 14px; flex: 1; }
-  .meta { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-  .tag { background: var(--tag); border-radius: 999px; padding: 2px 10px; color: var(--muted); }
-  .open { color: var(--accent); font-weight: 600; }
+  .open { color: var(--accent); font-size: 13px; font-weight: 600; }
 
   footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
   footer a { color: inherit; }
@@ -64,17 +53,9 @@
 <body>
 <main>
   <h1>30-Day Assignment</h1>
-  <p class="intro">Everything I've made for the 30-day assignment, mostly about hot glass, plus some metalwork and bone prep. Each project opens in its own tab.</p>
+  <p class="intro">Everything I've made for the 30-day assignment, in the order I made it. Each project opens in its own tab.</p>
 
-  <div class="filters" role="group" aria-label="Filter projects">
-    <button type="button" data-filter="all" aria-pressed="true">All</button>
-    <button type="button" data-filter="Glass" aria-pressed="false">Glass</button>
-    <button type="button" data-filter="Metal" aria-pressed="false">Metal</button>
-    <button type="button" data-filter="Bones" aria-pressed="false">Bones</button>
-    <button type="button" data-filter="Other" aria-pressed="false">Other</button>
-  </div>
-
-  <ul class="grid" id="projects"></ul>
+  <ol class="grid" id="projects"></ol>
 
   <footer>Source on <a href="https://github.com/billyl0uis/30dayassignment">GitHub</a>.</footer>
 </main>
@@ -82,44 +63,34 @@
 <script>
   // In the order they were made. Add new projects to the end.
   const PROJECTS = [
-    ['Tuxedo Tail', 'tuxedo-tail/', 'Other', 'Stroke a tuxedo cat from head to tail tip, and the tail grows a little each time, up to an Olympic pool.'],
-    ['InstaFace', 'instaface/', 'Other', 'A big-text social feed for older people. Everything works, but posts stay on your device and pretend friends reply.'],
-    ['Silverbench', 'silverbench/', 'Metal', 'Cut, solder, rivet and finish sterling on a soldering board, with guided lessons and 3D hinges and clasps.'],
-    ['Foldline', 'foldline/', 'Metal', 'Fold-forming: fold a blank, hammer the edge, anneal and open it, and watch the form rise in 3D.'],
-    ['Goblet Works', 'goblet-works/', 'Glass', 'Gather, blow, pull a stem, paddle a foot and open the rim to make goblets, then keep them on a shelf.'],
-    ['Clean Bones', 'clean-bones/', 'Bones', 'Clean a rabbit skeleton with beetles, superworms or maceration, then degrease, whiten and lay it out.'],
-    ['Carcass', 'carcass/', 'Bones', 'Start with a whole raccoon: skin, gut, deflesh and macerate, with every mistake carried to a museum grade.'],
-    ['Vitrigraph Lab', 'vitrigraph-lab/', 'Glass', 'Load a vitrigraph pot, heat it, pull cane by hand, then chop it to see the murrini cross-sections.'],
-    ['Glass Blocks', 'glass-blocks/play/', 'Glass', 'Stack shape presets on a center axis, stretch, squash and taper them, and see them as glass in 3D.'],
-    ['Jackline', 'jackline/play/', 'Glass', 'Draw half a vessel profile and it spins into hollow 3D glass, with capacity, weight and tipping checks.'],
-    ['Glass CAD', 'glass-cad/play/', 'Glass', 'Size glass parts in inches or centimetres, stack, cut, melt and deform them, and print a shop sheet.'],
-    ['Glass Mash', 'glass-mash/play/', 'Glass', 'A glass sketchbook: draw shapes flat and they inflate into 3D glass you can melt together and carve.'],
-    ['Finial', 'finial/play/', 'Glass', 'Plan hand-blown lidded jars: body and lid profiles, wall thickness, lid fit, capacity and a shop sheet.'],
-    ['Flacon', 'flacon/play/', 'Glass', 'Plan hand-blown perfume bottles: neck and stopper, capacity in ml with a fill line, and risk checks.'],
-    ['Pulled Pony', 'pony/', 'Glass', 'Pull legs, neck and tail from a gather before the glass cools. Reheat in the glory hole, then anneal.'],
+    ['Tuxedo Tail', 'tuxedo-tail/', 'Stroke a tuxedo cat from head to tail tip, and the tail grows a little each time, up to an Olympic pool.'],
+    ['InstaFace', 'instaface/', 'A big-text social feed for older people. Everything works, but posts stay on your device and pretend friends reply.'],
+    ['Silverbench', 'silverbench/', 'Cut, solder, rivet and finish sterling on a soldering board, with guided lessons and 3D hinges and clasps.'],
+    ['Foldline', 'foldline/', 'Fold-forming: fold a blank, hammer the edge, anneal and open it, and watch the form rise in 3D.'],
+    ['Goblet Works', 'goblet-works/', 'Gather, blow, pull a stem, paddle a foot and open the rim to make goblets, then keep them on a shelf.'],
+    ['Clean Bones', 'clean-bones/', 'Clean a rabbit skeleton with beetles, superworms or maceration, then degrease, whiten and lay it out.'],
+    ['Carcass', 'carcass/', 'Start with a whole raccoon: skin, gut, deflesh and macerate, with every mistake carried to a museum grade.'],
+    ['Vitrigraph Lab', 'vitrigraph-lab/', 'Load a vitrigraph pot, heat it, pull cane by hand, then chop it to see the murrini cross-sections.'],
+    ['Glass Blocks', 'glass-blocks/play/', 'Stack shape presets on a center axis, stretch, squash and taper them, and see them as glass in 3D.'],
+    ['Jackline', 'jackline/play/', 'Draw half a vessel profile and it spins into hollow 3D glass, with capacity, weight and tipping checks.'],
+    ['Glass CAD', 'glass-cad/play/', 'Size glass parts in inches or centimetres, stack, cut, melt and deform them, and print a shop sheet.'],
+    ['Glass Mash', 'glass-mash/play/', 'A glass sketchbook: draw shapes flat and they inflate into 3D glass you can melt together and carve.'],
+    ['Finial', 'finial/play/', 'Plan hand-blown lidded jars: body and lid profiles, wall thickness, lid fit, capacity and a shop sheet.'],
+    ['Flacon', 'flacon/play/', 'Plan hand-blown perfume bottles: neck and stopper, capacity in ml with a fill line, and risk checks.'],
+    ['Pulled Pony', 'pony/', 'Pull legs, neck and tail from a gather before the glass cools. Reheat in the glory hole, then anneal.'],
   ];
 
   const list = document.getElementById('projects');
-  for (const [name, href, tag, blurb] of PROJECTS) {
+  PROJECTS.forEach(([name, href, blurb], i) => {
     const li = document.createElement('li');
-    li.dataset.tag = tag;
     li.innerHTML = `<a class="card" href="${href}" target="_blank" rel="noopener">
-      <h2></h2><p></p>
-      <div class="meta"><span class="tag"></span><span class="open">Open ↗</span></div>
+      <span class="num"></span><h2></h2><p></p><span class="open">Open ↗</span>
     </a>`;
+    li.querySelector('.num').textContent = String(i + 1).padStart(2, '0');
     li.querySelector('h2').textContent = name;
     li.querySelector('p').textContent = blurb;
-    li.querySelector('.tag').textContent = tag;
     list.append(li);
-  }
-
-  const buttons = document.querySelectorAll('.filters button');
-  for (const b of buttons) {
-    b.addEventListener('click', () => {
-      for (const o of buttons) o.setAttribute('aria-pressed', String(o === b));
-      for (const li of list.children) li.hidden = b.dataset.filter !== 'all' && li.dataset.tag !== b.dataset.filter;
-    });
-  }
+  });
 </script>
 </body>
 </html>
