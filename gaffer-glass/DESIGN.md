@@ -215,9 +215,9 @@ The root size is 15px, so 1rem is 15px throughout.
 - **Headline** (600, 1.35rem, 1.2): card and dialog headings ("Hot shop time", "Order board", "Morning, day N").
 - **Title** (600, 1.1rem, 1.2): order types on the order board. Sub-headings inside cards (h3) step down to 600 at 0.95rem in Panel Muted.
 - **Body** (400, 15px, 1.5): card copy, notes (0.875rem, muted), the toast (0.925rem).
-- **Label** (400, 0.75rem): Panel Muted labels beside figures: "Temperature", "In annealer", readout names, header stat names.
+- **Label** (400, 0.75rem): Panel Muted labels beside figures: "Temperature", "Making", "Pressure", readout names, header stat names.
 - **Control** (600, 0.8rem, 1.1): hold-tool labels; 1.05rem on the two big thumb buttons, 0.875rem on tap pills, 0.95rem on regular buttons.
-- **Readout** (Mono 400, 1.35rem, tabular): the annealer count and the live temperature.
+- **Readout** (Mono 400, 1.35rem, tabular): the live temperature.
 - **Numeric** (Mono 500, 0.875rem, tabular): readout values, header stats (1rem), prices, totals, key hints in kbd.
 
 ### Named Rules
@@ -229,7 +229,10 @@ The root size is 15px, so 1rem is 15px throughout.
 
 The session screen is a full-bleed three.js 3D scene (drag to look around, Reset view or double-click to return) (100dvh under the header, overflow hidden) with absolutely positioned floats over it, inset 12px from the edges on desktop and 8px on phones:
 
-- **Top left:** the session pill (In annealer count, Reset view, Close up).
+- **Top left:** the step goals panel: "Making" and the piece's name, a segmented bar (one segment per recipe step, Working Heat when done), and "Next: …" in Heat Bright; it opens to the full recipe. The station chip sits under it.
+- **Top center:** the studio ticker, a solid slate pill that fades in for sales, visitors and pieces out of the annealer.
+- **Right edge:** the Shop, Gallery and How to panels slide in as a solid slate drawer (420px, 14px corners) with underline tabs; on phones it is a bottom sheet at 78% height. The bench keeps running behind it.
+- **Above Blow:** the pressure pill with a Breath-blue range slider.
 - **Top right:** the readout rail, 250px wide: temperature, gauge, then ten label/value rows. On phones it folds into a compact mono HUD plus a "Details" pill that opens the full rail as a two-column grid.
 - **Lower center:** the toast, a pill 196px above the bottom (290px when the controls wrap below 1100px; pinned near the top on phones).
 - **Bottom:** the thumb controls. Left pad: Glory hole (138px) with Gather and the Rotating toggle (64px) beside it; Rotating wears a green ring while the pipe turns and an amber ring when stopped. Right pad: Marver, Block and Jacks (64px) beside Blow (138px). Centered between them: the jar tray above the row of tap pills. Pads use a 10px gap; the bottom padding respects the safe-area inset.
@@ -268,7 +271,7 @@ Plain, sturdy studio buttons on dark cards.
 - **Shape:** gently rounded (8px).
 - **Primary:** Working Heat fill, Heat Ink text, 600 weight, 0.55rem by 1rem; the big size (1.05rem, 0.75rem by 1.4rem) is for the screen's one main action.
 - **Hover / Focus:** primary brightens to Working Heat Bright; secondary and ghost keep their fill and take a Working Heat border. Focus everywhere is a 2px Working Heat Bright outline at 2px offset. Disabled drops to 40% opacity.
-- **Secondary:** Slate, Raised with a 1px Rule, Lit border. **Ghost:** the same, transparent. **Small:** 0.3rem by 0.7rem at 0.875rem, for prices on the supply shelf, Reset view and Close up. **Link:** underlined Bench Ink, Muted text on the wall, for destructive escapes like "Start over".
+- **Secondary:** Slate, Raised with a 1px Rule, Lit border. **Ghost:** the same, transparent. **Small:** 0.3rem by 0.7rem at 0.875rem, for prices on the supply shelf, the top-bar actions, Shelve, Deliver and Reset view. **Link:** underlined Bench Ink, Muted text on the wall, for destructive escapes like "Start over".
 
 ### Hold Tools (signature)
 Round slate buttons under the thumbs, held rather than clicked.

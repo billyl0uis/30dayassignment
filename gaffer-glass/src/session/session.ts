@@ -1,4 +1,4 @@
-import { LOOP, SAG } from '../config';
+import { BLOW, LOOP, SAG } from '../config';
 import {
   applyTap, canHold, canTap, type Check, type HoldAction, type Mods, type SimEvent, type TapAction,
 } from '../sim/actions';
@@ -11,15 +11,15 @@ export interface Message {
   at: number; // session clock when it was said
 }
 
-export interface SessionResult {
-  annealed: FinishedPiece[];
-  cullet: number;
-  colors: Record<ColorId, number>; // charges left after the session
+/** What the bench tells the studio about: a piece knocked off, a color charge used. */
+export interface BenchHooks {
+  onFinished(fp: FinishedPiece): void;
+  onColorUsed(c: ColorId): void;
 }
 
 const RANK: Record<SimEvent['kind'], number> = { hint: 0, info: 1, warn: 2, fail: 3 };
 
-/** One open-ended session at the hot shop, until the player closes up. Owns the piece on the pipe; knows nothing about the DOM. */
+/** The bench, always open. Owns the piece on the pipe; knows nothing about the DOM or the money. */
 export class Session {
   clock = 0; // seconds since the shop was fired up
   piece: Piece | null = newPiece();
@@ -28,19 +28,18 @@ export class Session {
   rotating = true; // the pipe rolls unless the player stops it
   turning = false;
   turnPhase = 0;
-  annealed: FinishedPiece[] = [];
-  cullet = 0;
+  pressure: number = BLOW.pressure; // breath pressure for blowing, 0–1
   selectedColor: ColorId | null = null;
   message: Message | null = { text: 'Fresh pipe, preheated. Hold F at the furnace to gather.', kind: 'info', at: 0 };
-  over = false;
 
   private justStarted = false;
   private acc = 0;
   private lastToolAt = -Infinity;
 
   constructor(
-    public readonly mods: Mods,
-    public colors: Record<ColorId, number>,
+    public mods: Mods,
+    public colors: Record<ColorId, number>, // the studio's jars; kept current by the caller
+    private hooks: BenchHooks,
   ) {
     this.selectedColor = (Object.keys(colors) as ColorId[]).find((c) => colors[c] > 0) ?? null;
   }
@@ -48,7 +47,7 @@ export class Session {
   // ── Input ──
 
   press(a: HoldAction) {
-    if (this.over || this.held === a) return;
+    if (this.held === a) return;
     this.held = a;
     this.justStarted = true;
     const ok = canHold(this.piece, a);
@@ -60,7 +59,6 @@ export class Session {
   }
 
   canTap(a: TapAction): Check {
-    if (this.over) return { ok: false, reason: 'The session is over.' };
     return canTap(this.piece, a, this.tapCtx());
   }
 
@@ -73,20 +71,18 @@ export class Session {
       return this.say({ kind: 'info', text: 'New pipe. Hold F at the furnace to gather.' }, true);
     }
     if (a === 'dump') {
-      if (p && !p.failed) this.cullet += 1;
       this.piece = null;
       return this.say({ kind: 'info', text: 'Into the cullet bucket. N for a new pipe.' }, true);
     }
     if (!p) return;
     const r = applyTap(p, a, this.tapCtx());
-    if (a === 'color' && this.selectedColor) this.colors = { ...this.colors, [this.selectedColor]: this.colors[this.selectedColor] - 1 };
+    if (a === 'color' && this.selectedColor) this.hooks.onColorUsed(this.selectedColor);
     this.piece = r.piece;
-    if (r.finished) this.annealed.push(r.finished);
+    if (r.finished) this.hooks.onFinished(r.finished);
     r.events.forEach((e) => this.say(e, true));
   }
 
   toggleRotation() {
-    if (this.over) return;
     this.rotating = !this.rotating;
     this.say({ kind: 'hint', text: this.rotating ? 'Rotating.' : 'Stopped turning — hot glass will droop.' }, true);
   }
@@ -95,31 +91,12 @@ export class Session {
     this.selectedColor = c;
   }
 
-  /** Close up for the night. A piece still on the pipe can't go in the annealer half-made, so it goes in the cullet. */
-  closeUp() {
-    if (this.over) return;
-    this.over = true;
-    this.held = this.tool = null;
-    const q = this.piece;
-    if (q && !q.failed && q.V > 0) {
-      this.cullet += 1;
-      this.say({ kind: 'fail', text: 'Closed up — the piece on the pipe goes in the cullet bucket.' }, true);
-    } else {
-      this.say({ kind: 'info', text: 'Closed up. The annealer is loaded for the night.' }, true);
-    }
-  }
-
-  result(): SessionResult {
-    return { annealed: this.annealed, cullet: this.cullet, colors: this.colors };
-  }
-
   // ── Loop ──
 
   /** Advance by a real frame's worth of time, in fixed sim steps. */
   update(realDt: number) {
-    if (this.over) return;
     this.acc += Math.min(realDt, LOOP.maxFrame);
-    while (this.acc >= LOOP.step && !this.over) {
+    while (this.acc >= LOOP.step) {
       this.acc -= LOOP.step;
       this.stepOnce(LOOP.step);
     }
@@ -131,14 +108,11 @@ export class Session {
     this.tool = this.held && canHold(p, this.held).ok ? this.held : null;
     if (p) {
       const coasting = this.clock - this.lastToolAt < SAG.coastSeconds;
-      const r = step(p, this.held, dt, { mods: this.mods, rotating: this.rotating, justStarted: this.justStarted, coasting });
+      const r = step(p, this.held, dt, { mods: this.mods, rotating: this.rotating, justStarted: this.justStarted, coasting, pressure: this.pressure });
       if (this.tool) this.lastToolAt = this.clock;
       this.piece = r.piece;
       this.turning = r.turning && !r.piece.failed;
-      for (const e of r.events) {
-        if (e.kind === 'fail') this.cullet += 1;
-        this.say(e);
-      }
+      for (const e of r.events) this.say(e);
     } else {
       this.turning = false;
     }

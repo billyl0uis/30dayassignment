@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ORDER_TYPES } from '../config';
+import { PRODUCTS } from '../config';
 import { applyTap, canTap, NO_MODS, type HoldAction, type Mods, type SimEvent, type TapContext } from './actions';
 import { step } from './physics';
 import { geometry, newPiece, pieceType, type FinishedPiece, type Piece } from './piece';
-import { sellPieces, specScore, type Order } from './scoring';
+import { quality, specScore, worth } from './scoring';
 
 const DT = 1 / 60;
 const NO_COLOR: TapContext = { selectedColor: null, colorCharges: 0 };
@@ -62,19 +62,14 @@ function makeTumbler(b = new Bench()) {
 }
 
 describe('a tumbler from start to finish', () => {
-  it('comes out as a tumbler inside the order spec and sells to the order board', () => {
+  it('comes out as a tumbler inside its spec, with high quality and close to full worth', () => {
     const b = makeTumbler();
     expect(b.fail).toBeNull();
     const fp = b.finished!;
     expect(fp.type).toBe('tumbler');
-    expect(specScore(fp, ORDER_TYPES.tumbler)).toBeGreaterThan(0.95);
-    const orders: Order[] = [
-      { id: 'a', type: 'paperweight', client: 'a café', color: null },
-      { id: 'b', type: 'tumbler', client: 'a café', color: null },
-    ];
-    const { sales } = sellPieces([fp], orders);
-    expect(sales[0].order?.id).toBe('b');
-    expect(sales[0].price).toBeGreaterThan(35);
+    expect(specScore(fp, PRODUCTS.tumbler)).toBeGreaterThan(0.95);
+    expect(quality(fp)).toBeGreaterThan(0.9);
+    expect(worth(fp)).toBeGreaterThan(PRODUCTS.tumbler.base * 0.9);
   });
 });
 
@@ -89,7 +84,7 @@ describe('the other pieces', () => {
     expect(b.fail).toBeNull();
     const fp = b.finished!;
     expect(fp.type).toBe('paperweight');
-    expect(specScore(fp, ORDER_TYPES.paperweight)).toBeGreaterThan(0.95);
+    expect(specScore(fp, PRODUCTS.paperweight)).toBeGreaterThan(0.95);
     expect(b.events.some((e) => e.text.startsWith('Too hot to regather'))).toBe(false);
   });
 
@@ -105,7 +100,7 @@ describe('the other pieces', () => {
     b.tap('knockOff');
     expect(b.fail).toBeNull();
     expect(b.finished!.type).toBe('bowl');
-    expect(specScore(b.finished!, ORDER_TYPES.bowl)).toBeGreaterThan(0.9);
+    expect(specScore(b.finished!, PRODUCTS.bowl)).toBeGreaterThan(0.9);
   });
 });
 

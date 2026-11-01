@@ -12,6 +12,7 @@ export interface StepContext {
   rotating: boolean; // the pipe is rolling on the rails (on by default; Space stops it)
   justStarted: boolean; // first step of the current hold
   coasting?: boolean; // a tool was let go of moments ago and the pipe is still rolling
+  pressure?: number; // breath pressure for blowing, 0–1
 }
 
 export interface StepResult {
@@ -31,7 +32,7 @@ export function step(p0: Piece, held: HoldAction | null, dt: number, ctx: StepCo
   const turning = tool !== null || ctx.rotating || !!ctx.coasting;
   if (p.V <= 0 && tool !== 'gather') return { piece: p, events, turning };
 
-  const hctx = { mods: ctx.mods, justStarted: ctx.justStarted, events, floppy: false };
+  const hctx = { mods: ctx.mods, justStarted: ctx.justStarted, events, floppy: false, pressure: ctx.pressure };
   if (tool) applyHold(p, tool, dt, hctx);
   if (p.failed) return { piece: p, events, turning };
 

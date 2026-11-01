@@ -4,17 +4,47 @@
 
 export const ROOM_F = 70;
 
-// ── Session & economy ────────────────────────────────────────────────
+// ── Studio & economy ─────────────────────────────────────────────────
 export const ECONOMY = {
-  startCash: 100,
+  startCash: 20, // you open the studio with this and a furnace of clear glass
   goal: 1000, // save this much toward your own furnace
-  repBowlUnlock: 3, // reputation needed before bowl orders appear
-  repPerSale: 1,
-  repPerGradeA: 2,
-  colorRequestChance: 0.3, // share of orders that ask for a specific color
-  colorBonus: 15,
-  secondsMin: 6, // seconds sell for this…
-  secondsMax: 20, // …up to this, scaled by quality and size
+  colorValue: 1.15, // a colored piece is worth this much more
+  floorValue: 0.35, // a piece at 0% quality is still worth this share of its base
+};
+
+export const ANNEAL = {
+  seconds: 8, // real seconds in the annealer before a piece comes out to storage
+};
+
+export const CABINET = {
+  slots: 6, // shelf spaces in the cabinet
+  freshSeconds: 20, // a just-shelved piece isn't browsed until it has sat this long
+};
+
+// Visitors drop by in real time and browse the cabinet.
+export const VISITORS = {
+  gapMin: 25, // seconds between visits…
+  gapMax: 40,
+  repSpeedup: 250, // …shortened by rep/repSpeedup, up to maxSpeedup
+  maxSpeedup: 0.4,
+  budgetMin: 15, // what a visitor will spend, before reputation
+  budgetMax: 70,
+  budgetRep: 80, // budget × (1 + rep/budgetRep)
+  repValue: 0.004, // reputation makes your work worth more to them: × (1 + rep·repValue)
+  wantedBoost: 1.3, // the kind of piece they came in for
+  otherKind: 0.55,
+  coloredBoost: 1.1,
+  repPerSale: 0.5, // + quality/repQualityDiv
+  repQualityDiv: 0.6,
+};
+
+export const COMMISSIONS = {
+  count: 3,
+  minQ: [0.6, 0.8] as const, // quality bar
+  payK: [1.0, 1.25] as const, // × the piece's base worth
+  rep: [3, 5] as const,
+  colorChance: 0.3, // share that ask for a color
+  colorPay: 1.2, // a color request pays this much more
 };
 
 // ── Furnace (gather) ─────────────────────────────────────────────────
@@ -88,6 +118,9 @@ export const BLOW = {
   blowoutWall: 0.07, // wall thinner than this = blowout
   thinRef: 0.2, // thin walls give way faster: rate × clamp(thinRef / wall, 1, thinMax)
   thinMax: 3,
+  pressure: 0.55, // default breath pressure (0–1); the slider sets it
+  pressureMin: 0.2,
+  pressureBlowout: 0.4, // blowout wall × (1 + pressureBlowout·(pressure/default − 1)): harder breath tears at a thicker wall
 };
 
 export const JACKS = {
@@ -140,38 +173,30 @@ export const SCORE = {
   wEven: 0.25,
   wSpec: 0.35,
   falloff: 0.15, // outside a range, spec falls off over this share of the range's midpoint
-  gradeA: 0.85,
-  gradeB: 0.7,
-  gradeC: 0.55, // below this a piece only sells as seconds
 };
 
 export type Range = [number, number];
+/** What a buyer expects of a kind of piece; anything outside a range costs quality. */
 export interface OrderSpec {
-  label: string;
-  pay: number;
   D?: Range;
   H?: Range;
   wall?: Range;
   HD?: Range; // roundness: height ÷ diameter
 }
 
-export const ORDER_TYPES = {
-  paperweight: { label: 'Paperweight', pay: 30, D: [2.5, 3.5], HD: [0.85, 1.15] },
-  tumbler: { label: 'Tumbler', pay: 42, D: [3, 3.9], H: [3.2, 5], wall: [0.08, 0.25] },
-  bowl: { label: 'Bowl', pay: 72, D: [5, 7.5], H: [1.8, 3.2], wall: [0.08, 0.3] },
-} satisfies Record<string, OrderSpec>;
+/** What you can make. Keyed by the sim's piece type; the ranges are what a buyer expects. */
+export const PRODUCTS = {
+  paperweight: { label: 'Paperweight', base: 30, D: [2.5, 3.5], HD: [0.85, 1.15] },
+  ornament: { label: 'Ornament', base: 26, D: [2, 3.5], wall: [0.05, 0.2] },
+  tumbler: { label: 'Tumbler', base: 42, D: [3, 3.9], H: [3.2, 5], wall: [0.08, 0.25] },
+  bowl: { label: 'Bowl', base: 72, D: [5, 7.5], H: [1.8, 3.2], wall: [0.08, 0.3], unlock: 'jacks' },
+  'closed vessel': { label: 'Vase', base: 64, D: [2.8, 4.5], H: [4.5, 8], wall: [0.08, 0.3], unlock: 'door' },
+} satisfies Record<string, OrderSpec & { label: string; base: number; unlock?: string }>;
 
-export const CLIENTS = [
-  'a café',
-  'a wedding registry',
-  'a gallery consignment',
-  'a neighbor',
-  'a farmers-market stall',
-  'a restaurant opening',
-  'a retirement gift',
-  'a museum shop',
-  'a housewarming',
-  'a craft fair booth',
+// Generic first names for visitors and commission customers.
+export const CUSTOMERS = [
+  'Ana', 'Ben', 'Chloe', 'Dev', 'Eli', 'Farah', 'Gus', 'Hana', 'Ivo', 'June',
+  'Kai', 'Lena', 'Milo', 'Nora', 'Omar', 'Pia', 'Quinn', 'Rosa', 'Sam', 'Tess',
 ];
 
 // ── Shop ─────────────────────────────────────────────────────────────
@@ -185,11 +210,18 @@ export const COLORS = {
 
 export const CLEAR_RGB: [number, number, number] = [205, 228, 232];
 
+/** Tools. Some unlock a new kind of piece, and only once you've sold or delivered enough of another. */
 export const UPGRADES = {
-  jacks: { label: 'Smoother jacks', price: 90, blurb: 'Jacks move 40% slower for control; the neck holds to 115%.' },
   pad: { label: 'Wet newspaper pad', price: 20, blurb: 'Centers 60% faster than the block.' },
-  door: { label: 'Bigger glory hole door', price: 70, blurb: 'Reheats about 40% faster.' },
-};
+  jacks: {
+    label: 'Smoother jacks', price: 55, blurb: 'Slower, steadier jacks; the neck holds to 115%. Unlocks bowls.',
+    requires: { type: 'tumbler', count: 2 },
+  },
+  door: {
+    label: 'Bigger glory hole door', price: 70, blurb: 'Reheats about 40% faster. Unlocks vases.',
+    requires: { type: 'bowl', count: 1 },
+  },
+} satisfies Record<string, { label: string; price: number; blurb: string; requires?: { type: string; count: number } }>;
 
 // ── Sim loop ─────────────────────────────────────────────────────────
 export const LOOP = {

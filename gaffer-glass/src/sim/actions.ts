@@ -1,5 +1,5 @@
 import {
-  BLOCK, BLOW, COLOR, GATHER, GLORY, JACKS, KNOCKOFF, MARVER, SAG, TRANSFER,
+  BLOCK, BLOW, COLOR, GATHER, GLORY, JACKS, KNOCKOFF, MARVER, PRODUCTS, SAG, TRANSFER,
 } from '../config';
 import { clamp, geometry, type ColorId, type FinishedPiece, type Piece, pieceType } from './piece';
 import { fluid } from './physics';
@@ -71,6 +71,7 @@ export function canTap(p: Piece | null, a: TapAction, ctx: TapContext): Check {
 }
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+const article = (w: string) => `${/^[aeiou]/i.test(w) ? 'an' : 'a'} ${w.toLowerCase()}`;
 
 // ── Hold tools: one step of dt seconds. Mutates a copy the caller owns. ──
 
@@ -80,6 +81,8 @@ export interface HoldContext {
   events: SimEvent[];
   /** Set when the glory hole caused this step's sag, so a slump gets the right reason. */
   floppy?: boolean;
+  /** Breath pressure for blowing, 0–1; BLOW.pressure is the everyday default. */
+  pressure?: number;
 }
 
 const STIFF = 'Too stiff — reheat.';
@@ -148,16 +151,20 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
         p.blown = true;
         p.r = Math.max(p.r, BLOW.startR);
       }
+      // Harder breath blows faster and tears through at a thicker wall.
+      const pressure = clamp(ctx.pressure ?? BLOW.pressure, BLOW.pressureMin, 1);
+      const push = pressure / BLOW.pressure;
       const thin = clamp(BLOW.thinRef / geometry(p).wall, 1, BLOW.thinMax);
-      const dr = BLOW.rate * thin * f * dt;
+      const dr = BLOW.rate * push * thin * f * dt;
       p.r += dr;
       p.L += BLOW.lengthGrowth * dr;
       if (p.T > BLOW.tooHotF) {
         p.uneven += BLOW.hotUneven * dt;
         ctx.events.push({ kind: 'warn', text: `Blowing above ${BLOW.tooHotF}°F — the wall is going uneven.` });
       }
-      if (geometry(p).wall < BLOW.blowoutWall)
-        fail(p, 'crack', `Blowout — the wall got thinner than ${BLOW.blowoutWall}". Stop blowing sooner or gather more glass.`, ctx);
+      const tearAt = BLOW.blowoutWall * (1 + BLOW.pressureBlowout * (push - 1));
+      if (geometry(p).wall < tearAt)
+        fail(p, 'crack', `Blowout — the wall got thinner than ${tearAt.toFixed(2)}". Ease off the pressure, stop blowing sooner, or gather more glass.`, ctx);
       return;
     }
     case 'jacks': {
@@ -218,7 +225,7 @@ export function applyTap(p0: Piece, a: 'color' | 'transfer' | 'knockOff', ctx: T
         fail(p, 'crack', `Cracked going into the annealer — it was under ${KNOCKOFF.minF}°F. Reheat before you knock off.`, { events });
         return { piece: p, events };
       }
-      events.push({ kind: 'info', text: `Into the annealer: a ${pieceType(p)}. N for a new pipe.` });
+      events.push({ kind: 'info', text: `Into the annealer: ${article(PRODUCTS[pieceType(p)].label)}. N for a new pipe.` });
       return { piece: null, events, finished: finish(p) };
   }
 }

@@ -70,14 +70,13 @@ export class Scene {
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     this.scene.environmentIntensity = 0.6;
-    this.scene.background = new THREE.Color('#e9e5dd');
-    this.scene.fog = new THREE.Fog('#e9e5dd', 160, 320);
+    this.scene.background = new THREE.Color('#c3c8cb');
+    this.scene.fog = new THREE.Fog('#c3c8cb', 160, 320);
     this.buildRoom();
 
     const steel = new THREE.MeshStandardMaterial({ color: '#8b9399', metalness: 0.85, roughness: 0.35 });
-    this.pipe = new THREE.Mesh(new THREE.CylinderGeometry(GEOM.pipeR, GEOM.pipeR, 60, 24, 1, true), steel);
-    this.pipe.rotation.z = Math.PI / 2;
-    this.pipe.position.x = -30 + 0.3;
+    this.pipe = new THREE.Mesh(blowpipeGeometry(), steel);
+    this.pipe.rotation.z = -Math.PI / 2; // the lathe's axis (y) becomes the pipe's (x)
     this.pipe.castShadow = true;
     // A brass band near the tip, so you can see the pipe roll.
     this.pipeMark = new THREE.Mesh(
@@ -211,7 +210,7 @@ export class Scene {
       this.halo.position.copy(center);
       this.halo.scale.setScalar((pr.length + pr.maxR * 2) * 1.6);
       this.halo.material.color = color(heat);
-      this.halo.material.opacity = 0.32 * glow;
+      this.halo.material.opacity = 0.2 * glow;
       this.heatLight.position.copy(center).add(new THREE.Vector3(0, 0, pr.maxR + 1));
       this.heatLight.color = color(heat);
       this.heatLight.intensity = 500 * glow * (0.6 + 0.4 * Math.min(1, p.V / 10));
@@ -244,7 +243,7 @@ export class Scene {
         g.position.set(len / 2 + 1, -dropEnd / 2, 0);
         g.scale.setScalar(Math.max(1, (len + 2 * R) / 7));
         this.stationLight.position.set(len / 2, R + 2, 2);
-        this.stationLight.intensity = 1400;
+        this.stationLight.intensity = 450;
         return;
       }
       case 'glory': {
@@ -253,7 +252,7 @@ export class Scene {
         g.position.set(len * 0.55, -dropEnd / 2, 0);
         g.scale.set(Math.max(1, len / 4), Math.max(1, (R + 1.6) / 3), Math.max(1, (R + 1.6) / 3));
         this.stationLight.position.set(len * 0.55, 0, 2);
-        this.stationLight.intensity = 1100;
+        this.stationLight.intensity = 380;
         return;
       }
       case 'marver': {
@@ -323,7 +322,7 @@ export class Scene {
   /** The daylit shop: block wall, a big window, concrete floor, the furnace and glory hole, a shelf of jars. */
   private buildRoom() {
     const s = this.scene;
-    s.add(new THREE.HemisphereLight('#f4f1ea', '#a39b8e', 1.6));
+    s.add(new THREE.HemisphereLight('#f4f1ea', '#a39b8e', 1.25));
     const sun = new THREE.DirectionalLight('#fff4e0', 2.2);
     sun.position.set(25, 70, -40);
     sun.castShadow = true;
@@ -340,13 +339,13 @@ export class Scene {
     fill.position.set(-20, 20, 60);
     s.add(fill);
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), new THREE.MeshStandardMaterial({ color: '#bfb9ae', roughness: 0.92 }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), new THREE.MeshStandardMaterial({ color: '#8f8a82', roughness: 0.92 }));
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = FLOOR_Y;
     floor.receiveShadow = true;
     s.add(floor);
     // The window's light on the floor.
-    const patch = new THREE.Mesh(new THREE.PlaneGeometry(60, 50), new THREE.MeshBasicMaterial({ color: '#fffbf0', transparent: true, opacity: 0.35 }));
+    const patch = new THREE.Mesh(new THREE.PlaneGeometry(60, 50), new THREE.MeshBasicMaterial({ color: '#fffbf0', transparent: true, opacity: 0.18 }));
     patch.rotation.x = -Math.PI / 2;
     patch.position.set(10, FLOOR_Y + 0.05, -30);
     s.add(patch);
@@ -421,6 +420,23 @@ export class Scene {
   }
 }
 
+/**
+ * A blowpipe, turned on a lathe: a steel tube with a heavier nose at the gathering end
+ * and the bore you blow through running down the middle. Lathe y runs along the pipe, tip at 0.3.
+ */
+function blowpipeGeometry() {
+  const R = GEOM.pipeR;
+  const nose = R * 1.2;
+  const bore = R * 0.32;
+  const pts = [
+    [bore, -60], [R, -60], // the mouthpiece end, far off to the left
+    [R, -1.6], [nose, -1.1], // the tube swells into the nose
+    [nose, 0.05], [nose * 0.88, 0.3], // a small chamfer at the tip
+    [bore, 0.3], [bore, -3], [0, -3], // the bore, open at the tip
+  ].map(([r, y]) => new THREE.Vector2(r, y));
+  return new THREE.LatheGeometry(pts, 32);
+}
+
 // ── The piece as a solid of revolution ──────────────────────────────
 
 /** A fixed grid: the outer skin out to the tip, then the inner skin back, so a blown piece is a real shell. */
@@ -477,15 +493,15 @@ function styleGlass(m: THREE.MeshPhysicalMaterial, p: Piece, glow: number, heat:
 // ── Props that appear when a tool is working ─────────────────────────
 
 function buildStations() {
-  const fire = new THREE.MeshBasicMaterial({ color: '#ffb056', side: THREE.DoubleSide });
-  const brick = new THREE.MeshStandardMaterial({ color: '#7d3a22', roughness: 0.9, side: THREE.DoubleSide });
+  const fire = new THREE.MeshBasicMaterial({ color: '#5a1a0c', side: THREE.DoubleSide }); // deep and dark, so the glowing glass reads against it
+  const brick = new THREE.MeshStandardMaterial({ color: '#4a2116', roughness: 0.9, side: THREE.DoubleSide });
   const steel = new THREE.MeshStandardMaterial({ color: '#7f878d', metalness: 0.8, roughness: 0.35, side: THREE.DoubleSide });
 
   // Furnace: a cutaway of the glowing chamber with the pot of glass below the pipe.
   const gather = new THREE.Group();
   const back = new THREE.Mesh(new THREE.PlaneGeometry(14, 10), fire);
   back.position.set(0, 0.5, -3.5);
-  const pool = new THREE.Mesh(new THREE.BoxGeometry(14, 2.2, 7), new THREE.MeshBasicMaterial({ color: '#ffe7a6' }));
+  const pool = new THREE.Mesh(new THREE.BoxGeometry(14, 2.2, 7), new THREE.MeshBasicMaterial({ color: '#b5501c' }));
   pool.position.set(0, -3.4, 0);
   const crown = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 14, 32, 1, true, Math.PI / 2, Math.PI), brick); // top, back and bottom
   crown.rotation.z = Math.PI / 2;
@@ -498,7 +514,7 @@ function buildStations() {
   const shell = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 4, 40, 1, true, ...arc), steel);
   shell.rotation.z = Math.PI / 2;
   const lining = new THREE.Mesh(new THREE.CylinderGeometry(2.85, 2.85, 4, 40, 1, true, ...arc),
-    new THREE.MeshBasicMaterial({ color: '#ff8a2a', side: THREE.BackSide }));
+    new THREE.MeshBasicMaterial({ color: '#6b2210', side: THREE.BackSide }));
   lining.rotation.z = Math.PI / 2;
   glory.add(shell, lining);
 
@@ -554,9 +570,9 @@ function blockTexture() {
   c.width = 512;
   c.height = 256;
   const x = c.getContext('2d')!;
-  x.fillStyle = '#ece8e0';
+  x.fillStyle = '#7b8489'; // cool gray block: hot glass is warm and bright, so it stands off this
   x.fillRect(0, 0, 512, 256);
-  x.strokeStyle = 'rgba(120,110,95,0.22)';
+  x.strokeStyle = 'rgba(60,66,72,0.28)';
   x.lineWidth = 2;
   for (let row = 0; row < 8; row++) {
     const y = row * 32;

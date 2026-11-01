@@ -1,9 +1,10 @@
-import { COLORS, COOL, GLORY, LOOP, SAG } from '../config';
+import { BLOW, COLORS, COOL, GLORY, LOOP, PRODUCTS, SAG } from '../config';
 import { Scene, STATION_LABEL } from '../render/scene';
 import { bindHoldButton, bindKeyboard, COLOR_ORDER, HOLD_KEYS, TAP_KEYS } from '../session/input';
 import { Session } from '../session/session';
 import { canHold, dropAt, type HoldAction, type TapAction } from '../sim/actions';
-import { geometry, pieceType } from '../sim/piece';
+import { geometry, pieceType, type PieceType } from '../sim/piece';
+import { goalState } from '../studio/goals';
 import { h, inches, pct } from './dom';
 
 const GAUGE_MAX = 2400;
@@ -15,8 +16,14 @@ const ZONES: [number, number, string, string][] = [
   [COOL.hotF, GAUGE_MAX, 'toohot', 'Too hot'],
 ];
 
-/** Builds the session screen and runs its frame loop until the night closes. */
-export function mountSession(root: HTMLElement, session: Session, onClose: () => void): () => void {
+export interface Bench {
+  /** Show a studio event (a sale, a piece out of the annealer) on the ticker. */
+  notify(text: string): void;
+  dispose(): void;
+}
+
+/** The bench: the 3D shop, the step goals for what you're making, the readouts and the thumb controls. */
+export function mountBench(root: HTMLElement, session: Session, making: () => PieceType): Bench {
   const canvas = h('canvas', { class: 'stage', 'aria-label': 'The piece on the pipe' });
   const scene = new Scene(canvas);
 
@@ -24,7 +31,7 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
   const val = () => h('span', { class: 'val' });
   const r = {
     temp: val(), V: val(), D: val(), H: val(), wall: val(), centered: val(), even: val(),
-    neck: val(), neckLabel: h('span', {}, 'Jack line'), color: val(), type: val(), annealed: val(),
+    neck: val(), neckLabel: h('span', {}, 'Jack line'), color: val(), type: val(),
   };
   const marker = h('div', { class: 'gauge-marker' });
   const gauge = h('div', { class: 'gauge', role: 'img', 'aria-label': 'Temperature gauge' },
@@ -39,7 +46,7 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
     h('div', { class: 'readouts' },
       row('Glass', r.V), row('Diameter', r.D), row('Height', r.H), row('Wall', r.wall),
       row('Centered', r.centered), row('Even', r.even), row(r.neckLabel, r.neck),
-      row('Color', r.color), row('Would be', r.type), row('In annealer', r.annealed)),
+      row('Color', r.color), row('Would be', r.type)),
   );
 
   // ── Color jars ──
@@ -77,6 +84,14 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
   rotate.addEventListener('click', () => session.toggleRotation());
   const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), rotate);
   const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('jacks'));
+  // Breath pressure: harder blows faster and tears at a thicker wall.
+  const pressureVal = h('span', { class: 'val' });
+  const pressure = h('input', {
+    type: 'range', min: String(Math.round(BLOW.pressureMin * 100)), max: '100', step: '5',
+    value: String(Math.round(session.pressure * 100)), 'aria-label': 'Blow pressure',
+  });
+  pressure.addEventListener('input', () => (session.pressure = Number(pressure.value) / 100));
+  const pressureBox = h('label', { class: 'pressure float' }, h('span', { class: 'lbl' }, 'Pressure'), pressure, pressureVal);
   const taps = h('div', { class: 'taps' }, ...tapBtns.values());
 
   const msg = h('p', { class: 'message', role: 'status', 'aria-live': 'polite' });
@@ -85,14 +100,16 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
   const hudNeck = h('span', {});
   const hudCenter = h('span', {});
   const hud = h('div', { class: 'hud', 'aria-hidden': 'true' }, hudTemp, hudNeck, hudCenter);
-  // No clock: you work as long as you like and close up when you're done.
-  const closeBtn = h('button', { class: 'btn small', type: 'button', title: 'Close up for the night; the annealer comes down and pieces sell in the morning' }, 'Close up');
-  closeBtn.addEventListener('click', () => {
-    const p = session.piece;
-    const onPipe = p && !p.failed && p.V > 0;
-    if (!onPipe || confirm('Close up now? The piece still on the pipe goes in the cullet.')) session.closeUp();
-  });
-  const kilnCount = h('span', { class: 'val' });
+  // Step goals for what you're making, Glassworks-style: segments, then the next thing to do.
+  const goalKind = h('strong', {});
+  const goalBar = h('div', { class: 'goal-steps' });
+  const goalNext = h('p', { class: 'goal-next' });
+  const goalList = h('ol', { class: 'goal-list' });
+  const goal = h('details', { class: 'goal-panel float' },
+    h('summary', {}, h('span', { class: 'lbl' }, 'Making'), goalKind, goalBar, goalNext),
+    goalList);
+  const ticker = h('p', { class: 'ticker', role: 'status', 'aria-live': 'polite' });
+  let tickerAt = -Infinity;
   const viewBtn = h('button', { class: 'btn small view-btn', type: 'button', title: 'Drag the shop to look around; double-click also resets' }, 'Reset view');
   viewBtn.addEventListener('click', () => scene.resetView());
   const chip = h('div', { class: 'station-chip', 'aria-hidden': 'true' });
@@ -102,22 +119,17 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
     more.setAttribute('aria-expanded', String(open));
   });
   rail.prepend(more);
-
-  const overlay = h('div', { class: 'overlay', hidden: true },
-    h('div', { class: 'overlay-card' },
-      h('h2', {}, 'Closed up'),
-      h('p', { class: 'overlay-text' }),
-      h('button', { class: 'btn primary', type: 'button', onclick: () => onClose() }, 'On to the morning')));
+  rail.append(viewBtn);
 
   const screen = h('section', { class: 'session' },
     canvas,
-    h('div', { class: 'session-bar float' }, h('div', { class: 'clock' }, h('span', { class: 'lbl' }, 'In annealer'), kilnCount), viewBtn, closeBtn),
+    goal,
     chip,
+    ticker,
     rail,
     hud,
     msg,
-    h('div', { class: 'controls' }, padLeft, h('div', { class: 'middle' }, jars, taps), padRight),
-    overlay);
+    h('div', { class: 'controls' }, padLeft, h('div', { class: 'middle' }, jars, taps), h('div', { class: 'right-stack' }, pressureBox, padRight)));
   root.replaceChildren(screen);
 
   const unbindKeys = bindKeyboard(session);
@@ -135,7 +147,7 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
       turning: session.turning, mods: session.mods, time: now / 1000,
     }, dt);
     sinceReadout += dt;
-    if (sinceReadout >= 1 / LOOP.readoutHz || session.over) {
+    if (sinceReadout >= 1 / LOOP.readoutHz) {
       sinceReadout = 0;
       refresh();
     }
@@ -144,7 +156,9 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
 
   function refresh() {
     const p = session.piece;
-    kilnCount.textContent = String(session.annealed.length);
+    renderGoal();
+    pressureVal.textContent = `${pressure.value}%`;
+    ticker.classList.toggle('show', performance.now() - tickerAt < 6000);
     const has = !!p && p.V > 0;
     const g = p ? geometry(p) : null;
     const T = has ? p!.T : null;
@@ -170,8 +184,7 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
     hudNeck.textContent = has ? `${r.neckLabel.textContent} ${p!.punty ? pct(p!.o) : pct(p!.n)}` : '';
     hudCenter.textContent = has ? `Centered ${r.centered.textContent}` : '';
     r.color.textContent = p?.color ? COLORS[p.color].label : 'Clear';
-    r.type.textContent = has && !p!.failed ? pieceType(p!) : '—';
-    r.annealed.textContent = String(session.annealed.length);
+    r.type.textContent = has && !p!.failed ? PRODUCTS[pieceType(p!)].label : '—';
 
     for (const [a, b] of holdBtns) {
       const ok = canHold(p, a);
@@ -199,24 +212,36 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
 
     // Messages fade after a few seconds; a fail stays up while the failed piece is on the pipe.
     const m = session.message;
-    const fresh = m && (session.clock - m.at < 5 || (m.kind === 'fail' && (session.piece?.failed || session.over)));
+    const fresh = m && (session.clock - m.at < 5 || (m.kind === 'fail' && session.piece?.failed));
     msg.textContent = fresh ? m.text : '';
     msg.dataset.kind = m?.kind ?? 'info';
 
-    if (session.over && overlay.hidden) {
-      overlay.hidden = false;
-      const n = session.annealed.length;
-      overlay.querySelector('.overlay-text')!.textContent =
-        `${n} piece${n === 1 ? '' : 's'} in the annealer, ${session.cullet} in the cullet. They come out in the morning.`;
-      (overlay.querySelector('button') as HTMLButtonElement).focus();
-    }
+  }
+
+  let goalKey = '';
+  function renderGoal() {
+    const st = goalState(making(), session.piece);
+    const key = `${st.label}|${st.steps.map((x) => +x.done).join('')}|${st.next}`;
+    if (key === goalKey) return;
+    goalKey = key;
+    goalKind.textContent = st.label;
+    goalBar.replaceChildren(...st.steps.map((x) => h('i', { class: x.done ? 'done' : '' })));
+    goalNext.textContent = st.next ? `Next: ${st.next}` : 'Ready to knock off';
+    goalList.replaceChildren(...st.steps.map((x) => h('li', { class: x.done ? 'done' : '' }, x.label)));
   }
 
   refresh();
   raf = requestAnimationFrame(frame);
-  return () => {
-    cancelAnimationFrame(raf);
-    unbindKeys();
-    scene.dispose();
+  return {
+    notify(text: string) {
+      ticker.textContent = text;
+      tickerAt = performance.now();
+      ticker.classList.add('show');
+    },
+    dispose() {
+      cancelAnimationFrame(raf);
+      unbindKeys();
+      scene.dispose();
+    },
   };
 }
