@@ -76,7 +76,7 @@
 <div class="top">
   <div>
     <h1>Pulled Pony</h1>
-    <p class="hint">Drag from the edge of the glass to pull a leg, neck, head or tail. Hold <kbd>Space</kbd> or the Glory hole button to reheat.</p>
+    <p class="hint">Drag from the edge of the glass to pull a leg, neck, head or tail. Hold <kbd>Space</kbd> or the Glory hole button to reheat. Glass left too cold shatters.</p>
   </div>
   <div class="heat">
     <div class="heat-row"><span id="zone">Point at the glass</span><span id="deg"></span></div>
@@ -94,7 +94,7 @@
 </div>
 
 <div id="msg"></div>
-<div id="done"><span>Annealed. Cooled to room temperature.</span><button id="save">Download PNG</button></div>
+<div id="done"><span id="doneText">Annealed. Cooled to room temperature.</span><button id="save">Download PNG</button></div>
 
 <div class="controls">
   <button id="glory">Glory hole</button>
@@ -125,6 +125,7 @@ const TUNE = {
   bodyFloor: 0.35,    // a body slice never drops below this fraction of its start volume
   bodyFlow: 1.5,      // how fast the hot body evens out dents
   maxNodes: 700,
+  shatterAfter: 1.5,  // seconds a slice can sit in "too cold" before it shatters
   zones: { hot: 1000, working: 850, stiff: 650 },
 };
 const BODY_R = [22, 30, 35, 37, 37, 35, 30, 22];
@@ -140,7 +141,8 @@ const radiusOf = n => Math.sqrt(Math.max(n.v, 0) / TUNE.S0);
 const zoneOf = T => T >= TUNE.zones.hot ? 'Hot' : T >= TUNE.zones.working ? 'Working' : T >= TUNE.zones.stiff ? 'Stiff' : 'Too cold';
 
 function mk(p) {
-  return Object.assign({ x: 0, y: 0, v: 0, r: 0, T: TUNE.gatherT, parent: null, kids: [], base: null, len: 0, body: false, rest: 0 }, p);
+  return Object.assign({ x: 0, y: 0, v: 0, r: 0, T: TUNE.gatherT, parent: null, kids: [], base: null, len: 0, body: false, rest: 0,
+    coldTime: 0, seed: Math.random() * TAU }, p);
 }
 
 // ---------- Colour: incandescence fading to the glass colour ----------
@@ -170,8 +172,8 @@ const rgba = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let W, H, dpr, ox, oy, sc;
-let nodes = [], fragments = [], drag = null, heating = false;
-let mode = 'work', annealT = 0;   // work | annealing | annealed
+let nodes = [], fragments = [], shards = [], drag = null, heating = false;
+let mode = 'work', annealT = 0;   // work | annealing | annealed | shattered
 const mouse = { x: 0, y: 0, over: false };
 
 function resize() {
@@ -184,7 +186,7 @@ function resize() {
 }
 
 function newGather() {
-  nodes = []; fragments = []; drag = null; mode = 'work';
+  nodes = []; fragments = []; shards = []; drag = null; mode = 'work';
   let prev = null;
   BODY_R.forEach((r, i) => {
     const n = mk({ x: i * BODY_GAP, y: 0, v: r * r * TUNE.S0, body: true, parent: prev });
@@ -193,12 +195,22 @@ function newGather() {
     nodes.push(n); prev = n;
   });
   document.getElementById('done').classList.remove('show');
+  document.getElementById('doneText').textContent = 'Annealed. Cooled to room temperature.';
+  document.getElementById('save').hidden = false;
   document.getElementById('glory').disabled = false;
   document.getElementById('anneal').disabled = false;
 }
 
 // ---------- Simulation ----------
 function update(dt) {
+  for (const s of shards) {
+    s.vy += 1400 * dt;
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    s.a += s.va * dt;
+    s.life -= dt;
+  }
+  shards = shards.filter(s => s.life > 0);
+
   if (mode === 'annealing') {
     annealT += dt;
     const k = 1 - Math.exp(-2.6 * dt);
@@ -229,6 +241,23 @@ function update(dt) {
     const diff = p.v / p.rest - n.v / n.rest;
     const amt = TUNE.bodyFlow * soft((p.T + n.T) / 2) * diff * Math.min(p.rest, n.rest) * dt;
     p.v -= amt; n.v += amt;
+  }
+
+  // Glass left too cold shatters. A cold body takes the whole piece with it.
+  for (const n of nodes) {
+    n.coldTime = n.T < TUNE.zones.stiff ? n.coldTime + dt : Math.max(0, n.coldTime - 2 * dt);
+  }
+  if (nodes.some(n => n.body && n.coldTime > TUNE.shatterAfter)) {
+    shatterAll();
+    return;
+  }
+  for (let n; (n = nodes.find(m => m.coldTime > TUNE.shatterAfter));) {
+    // Break where the cold starts, nearest the body.
+    while (!n.parent.body && n.parent.T < TUNE.zones.stiff) n = n.parent;
+    const gone = breakOff(n);
+    spawnShards(gone);
+    if (drag && gone.includes(drag.tip)) release();
+    showMsg('Shattered. That part got too cold.');
   }
 
   if (drag) dragStep(dt);
@@ -366,7 +395,8 @@ function snap(p, anchor, sMax) {
   showMsg(sMax < 0.35 ? 'Snapped. Too stiff to pull: reheat first.' : 'Snapped. Pulled too fast for that heat.');
 }
 
-function detach(n, vx, vy) {
+// Remove n and everything beyond it from the piece; returns the removed nodes.
+function breakOff(n) {
   const par = n.parent;
   par.kids.splice(par.kids.indexOf(n), 1);
   const sub = [], stack = [n];
@@ -374,7 +404,39 @@ function detach(n, vx, vy) {
   const gone = new Set(sub);
   nodes = nodes.filter(m => !gone.has(m));
   n.parent = null; n.base = null;
-  fragments.push({ nodes: sub, vx, vy });
+  return sub;
+}
+
+function detach(n, vx, vy) {
+  fragments.push({ nodes: breakOff(n), vx, vy });
+}
+
+function spawnShards(list) {
+  for (const n of list) {
+    const count = clamp(Math.round(n.r / 2), 2, 7);
+    for (let i = 0; i < count; i++) {
+      const dir = Math.random() * TAU, speed = 80 + Math.random() * 220;
+      shards.push({
+        x: n.x + Math.cos(dir) * n.r * Math.random(), y: n.y + Math.sin(dir) * n.r * Math.random(),
+        vx: Math.cos(dir) * speed, vy: Math.sin(dir) * speed - 120,
+        a: Math.random() * TAU, va: (Math.random() - 0.5) * 20,
+        size: 1.5 + Math.random() * Math.max(1, n.r * 0.6),
+        col: nodeColor(n.T), life: 1.4 + Math.random() * 0.6,
+      });
+    }
+  }
+}
+
+function shatterAll() {
+  spawnShards(nodes);
+  nodes = []; fragments = [];
+  release(); setHeating(false);
+  mode = 'shattered';
+  document.getElementById('doneText').textContent = 'Shattered. The glass got too cold.';
+  document.getElementById('save').hidden = true;
+  document.getElementById('done').classList.add('show');
+  document.getElementById('glory').disabled = true;
+  document.getElementById('anneal').disabled = true;
 }
 
 // ---------- Drawing ----------
@@ -451,6 +513,43 @@ function drawPunty(c) {
   c.fillRect(left, -3.5, -left + 4, 1.5);
 }
 
+// Warning: white check lines spread across a slice as it nears shattering.
+function drawCrackle(c) {
+  c.lineWidth = 0.8;
+  for (const n of nodes) {
+    if (n.coldTime <= 0) continue;
+    const k = Math.min(1, n.coldTime / TUNE.shatterAfter);
+    c.strokeStyle = `rgba(255,255,255,${0.25 + 0.6 * k})`;
+    c.beginPath();
+    for (let i = 0; i < 3; i++) {
+      const a = n.seed + i * 2.1, len = n.r * (0.4 + 0.9 * k);
+      c.moveTo(n.x, n.y);
+      c.lineTo(n.x + Math.cos(a) * len * 0.5 + Math.cos(a + 1) * len * 0.15, n.y + Math.sin(a) * len * 0.5 + Math.sin(a + 1) * len * 0.15);
+      c.lineTo(n.x + Math.cos(a) * len, n.y + Math.sin(a) * len);
+    }
+    c.stroke();
+  }
+}
+
+function drawShards(c) {
+  for (const s of shards) {
+    c.save();
+    c.translate(s.x, s.y);
+    c.rotate(s.a);
+    c.globalAlpha = Math.min(1, s.life / 0.5);
+    c.fillStyle = rgba(s.col);
+    c.strokeStyle = 'rgba(255,255,255,0.5)';
+    c.lineWidth = 0.6;
+    c.beginPath();
+    c.moveTo(-s.size, -s.size * 0.4);
+    c.lineTo(s.size * 0.9, -s.size * 0.2);
+    c.lineTo(-s.size * 0.2, s.size * 0.7);
+    c.closePath();
+    c.fill(); c.stroke();
+    c.restore();
+  }
+}
+
 function draw(now) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const bg = ctx.createRadialGradient(ox, oy, 0, ox, oy, Math.max(W, H) * 0.8);
@@ -471,9 +570,11 @@ function draw(now) {
   ctx.save();
   ctx.translate(ox, oy);
   ctx.scale(sc, sc);
-  if (mode === 'work') drawPunty(ctx);
+  if (mode === 'work' || mode === 'shattered') drawPunty(ctx);
   drawGlass(ctx, nodes);
   for (const f of fragments) drawGlass(ctx, f.nodes);
+  if (mode === 'work') drawCrackle(ctx);
+  drawShards(ctx);
   ctx.restore();
 
   updateHeatMeter();
@@ -561,6 +662,7 @@ document.getElementById('anneal').addEventListener('click', () => {
   if (mode !== 'work') return;
   mode = 'annealing'; annealT = 0;
   release(); setHeating(false);
+  for (const n of nodes) n.coldTime = 0;
   fragments = [];
   document.getElementById('glory').disabled = true;
   document.getElementById('anneal').disabled = true;
