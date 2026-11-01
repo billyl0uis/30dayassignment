@@ -9,18 +9,22 @@ import { download, stamp } from '../download.js'
 import Sheet from './Sheet.jsx'
 import Vessel from './Vessel.jsx'
 
+// Light is a bright morning studio: sky overhead, a warm glow at the
+// horizon. Dark is a soft dusk, warm but not orange, so tints keep their color.
 const THEMES = {
-  dark: { top: '#0a0b0e', horizon: '#636a79', floor: '#2b2f38', cell: '#2a2e38', section: '#3a404c' },
-  light: { top: '#fbf9f5', horizon: '#e6dfd3', floor: '#dcd4c6', cell: '#cfc6b8', section: '#bcb2a2' },
+  dark: { top: '#262433', horizon: '#b9a89c', floor: '#3b3531', cell: '#4b4440', section: '#625852' },
+  light: { top: '#8cc0e8', horizon: '#fff2df', floor: '#e2d0b4', cell: '#cdb99a', section: '#b49d7c' },
 }
 
 export default function Viewport() {
   const theme = useStore((s) => s.theme)
+  // Neutral tone mapping keeps mid-tones true. The film-style default
+  // brightens and greys everything seen through the glass, so it went milky.
   return (
     <div className="viewport">
-      <Canvas camera={{ position: [0, 14, 44], fov: 30, near: 0.5, far: 1000 }} dpr={[1, 2]} gl={{ preserveDrawingBuffer: true, antialias: true }}>
+      <Canvas camera={{ position: [0, 14, 44], fov: 30, near: 0.5, far: 1000 }} dpr={[1, 2]} gl={{ preserveDrawingBuffer: true, antialias: true, toneMapping: THREE.NeutralToneMapping }}>
         <Backdrop theme={theme} />
-        <Studio />
+        <Studio theme={theme} />
         <Scene theme={theme} />
         <OrbitControls makeDefault target={[0, 6, 0]} minDistance={8} maxDistance={160} maxPolarAngle={Math.PI * 0.53} enableDamping />
         <Follow />
@@ -42,9 +46,10 @@ function Backdrop({ theme }) {
         uniforms: { top: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, floor: { value: new THREE.Color() } },
         vertexShader: `varying vec3 vDir; void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
         fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 floor; varying vec3 vDir;
-          void main() { float h = vDir.y;
-            vec3 c = h > 0.0 ? mix(horizon, top, smoothstep(0.0, 0.5, h)) : mix(horizon, floor, smoothstep(0.0, 0.55, -h));
+          void main() { float h = vDir.y + 0.12; // horizon a little low, so the sky shows
+            vec3 c = h > 0.0 ? mix(horizon, top, smoothstep(0.0, 0.3, h)) : mix(horizon, floor, smoothstep(0.0, 0.3, -h));
             gl_FragColor = vec4(c, 1.0);
+            #include <tonemapping_fragment>
             #include <colorspace_fragment>
           }`,
       }),
@@ -63,15 +68,27 @@ function Backdrop({ theme }) {
   )
 }
 
-// Soft light panels, rendered once: glass is mostly reflections, so this is
-// what makes it read as glass.
-function Studio() {
+// Soft light panels: glass is mostly reflections, so this is what makes it
+// read as glass. On a dark set, bright strips at the sides draw light edges.
+// On a light set they'd wash out, so they become black cards instead, the
+// way product photographers outline clear glass on white.
+function Studio({ theme }) {
+  const light = theme === 'light'
   return (
-    <Environment resolution={256} frames={1}>
-      <color attach="background" args={['#0c0d10']} />
+    <Environment key={theme} resolution={256} frames={1}>
+      <color attach="background" args={[light ? '#4a423a' : '#0c0d10']} />
       <Lightformer form="rect" intensity={3} position={[0, 6, -10]} scale={[16, 5, 1]} />
-      <Lightformer form="rect" intensity={2.2} position={[-10, 2, 0]} rotation-y={Math.PI / 2} scale={[3, 14, 1]} />
-      <Lightformer form="rect" intensity={1.6} position={[10, 3, 2]} rotation-y={-Math.PI / 2} scale={[2, 12, 1]} color="#ffd9b0" />
+      {light ? (
+        <>
+          <Lightformer form="rect" intensity={1} color="#000000" position={[-9, 3, 2]} rotation-y={Math.PI / 2} scale={[4, 16, 1]} />
+          <Lightformer form="rect" intensity={1} color="#000000" position={[9, 3, 2]} rotation-y={-Math.PI / 2} scale={[4, 16, 1]} />
+        </>
+      ) : (
+        <>
+          <Lightformer form="rect" intensity={2.2} position={[-10, 2, 0]} rotation-y={Math.PI / 2} scale={[3, 14, 1]} />
+          <Lightformer form="rect" intensity={1.6} position={[10, 3, 2]} rotation-y={-Math.PI / 2} scale={[2, 12, 1]} color="#ffd9b0" />
+        </>
+      )}
       <Lightformer form="circle" intensity={4} position={[0, 12, 0]} rotation-x={Math.PI / 2} scale={6} />
       <Lightformer form="ring" intensity={1.2} position={[4, -2, 9]} scale={4} color="#bfe3ff" />
     </Environment>
