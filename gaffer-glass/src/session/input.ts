@@ -22,7 +22,7 @@ export const TAP_KEYS: Record<TapAction, { code: string; key: string; label: str
 
 export const COLOR_ORDER = Object.keys(COLORS) as ColorId[];
 
-/** Keyboard: hold keys press while down, tap keys fire once, Space starts/stops rotation, 1–5 pick a color jar. Returns an unbind. */
+/** Keyboard: hold keys press while down, tap keys fire once, Space starts/stops rotation, ↑/↓ tip the pipe, 1–5 pick a color jar. Returns an unbind. */
 export function bindKeyboard(session: Session): () => void {
   const holdByCode = new Map(Object.entries(HOLD_KEYS).map(([a, k]) => [k.code, a as HoldAction]));
   const tapByCode = new Map(Object.entries(TAP_KEYS).map(([a, k]) => [k.code, a as TapAction]));
@@ -33,6 +33,13 @@ export function bindKeyboard(session: Session): () => void {
     const tap = tapByCode.get(e.code);
     const digit = /^Digit([1-9])$/.exec(e.code);
     const space = e.code === 'Space';
+    // Arrow keys tip the pipe: Up raises the tip, Down lowers it, for as long as you hold them.
+    const tip = e.code === 'ArrowUp' ? -1 : e.code === 'ArrowDown' ? 1 : 0;
+    if (tip) {
+      e.preventDefault();
+      session.tiltTarget = tip;
+      return;
+    }
     if (hold || tap || digit || space) e.preventDefault(); // keeps Space from scrolling the page
     if (e.repeat) return;
     if (space) session.toggleRotation();
@@ -44,10 +51,14 @@ export function bindKeyboard(session: Session): () => void {
     }
   };
   const up = (e: KeyboardEvent) => {
+    if ((e.code === 'ArrowUp' && session.tiltTarget < 0) || (e.code === 'ArrowDown' && session.tiltTarget > 0)) session.tiltTarget = 0;
     const hold = holdByCode.get(e.code);
     if (hold) session.release(hold);
   };
-  const blur = () => session.held && session.release(session.held);
+  const blur = () => {
+    if (session.held) session.release(session.held);
+    session.tiltTarget = 0;
+  };
 
   window.addEventListener('keydown', down);
   window.addEventListener('keyup', up);

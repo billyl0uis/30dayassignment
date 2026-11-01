@@ -89,6 +89,14 @@ export function deliver(s: Studio, commissionId: string, pieceId: number): Studi
     `Delivered ${p.name} to ${c.customer}: +$${c.pay}, +${c.rep} reputation.`);
 }
 
+/** Turn a commission down; another customer takes its place. */
+export function pass(s: Studio, commissionId: string): Studio {
+  const c = s.commissions.find((x) => x.id === commissionId);
+  if (!c) return s;
+  const after = { ...s, commissions: s.commissions.filter((x) => x.id !== commissionId) };
+  return log({ ...after, commissions: refillCommissions(after) }, `Passed on ${c.customer}'s ${kindLabel(c.type).toLowerCase()}.`);
+}
+
 // ── Visitors ─────────────────────────────────────────────────────────
 
 /** Seconds until the next visitor; regulars come more often as your reputation grows. */
@@ -106,8 +114,8 @@ export function visit(s: Studio, now: number, rnd = Math.random): { studio: Stud
   const who = CUSTOMERS[Math.floor(rnd() * CUSTOMERS.length)];
   const kinds = unlockedKinds(s);
   const wanted = kinds[Math.floor(rnd() * kinds.length)];
-  const budget = between(VISITORS.budgetMin, VISITORS.budgetMax, rnd) * (1 + s.rep / VISITORS.budgetRep);
-  const regard = 1 + s.rep * VISITORS.repValue;
+  const budget = between(VISITORS.budgetMin, VISITORS.budgetMax, rnd) * Math.min(VISITORS.maxBudget, 1 + s.rep / VISITORS.budgetRep);
+  const regard = Math.min(VISITORS.maxRegard, 1 + s.rep * VISITORS.repValue);
 
   let best: { p: StoredPiece; prob: number } | null = null;
   for (const p of onShelf) {

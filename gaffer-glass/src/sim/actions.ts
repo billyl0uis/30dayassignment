@@ -1,7 +1,7 @@
 import {
   BLOCK, BLOW, COLOR, GATHER, GLORY, JACKS, KNOCKOFF, MARVER, PRODUCTS, SAG, TRANSFER,
 } from '../config';
-import { clamp, geometry, type ColorId, type FinishedPiece, type Piece, pieceType } from './piece';
+import { clamp, geometry, setSag, type ColorId, type FinishedPiece, type Piece, pieceType } from './piece';
 import { fluid } from './physics';
 
 export type HoldAction = 'gather' | 'glory' | 'marver' | 'block' | 'blow' | 'jacks';
@@ -32,7 +32,11 @@ export const dropAt = (mods: Mods) => (mods.smoothJacks ? JACKS.smoothDropAt : J
 export function canHold(p: Piece | null, a: HoldAction): Check {
   if (!p) return no('Nothing on the pipe — press N for a new pipe.');
   if (p.failed) return no('That piece is done for — N for a new pipe or Q to dump it.');
-  if (a === 'gather') return p.punty ? no('No gathering on the punty.') : OK;
+  if (a === 'gather') {
+    if (p.punty) return no('No gathering on the punty.');
+    if (p.V >= GATHER.maxV) return no('That’s all the glass the pipe can carry.');
+    return OK;
+  }
   if (p.V <= 0) return no('Gather some glass first (F at the furnace).');
   if (a === 'block' && p.punty) return no('Block on the pipe, not the punty.');
   if (a === 'blow' && p.punty) return no("You can't blow through the punty — it's solid.");
@@ -98,7 +102,7 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
         }
         p.gathers += 1;
       }
-      const dV = GATHER.rate * dt;
+      const dV = Math.min(GATHER.rate * dt, GATHER.maxV - p.V);
       const V = p.V + dV;
       // New glass arrives at furnace temperature, then the furnace keeps pulling.
       p.T = (p.T * p.V + GATHER.furnaceF * dV) / V;
@@ -117,7 +121,7 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
       p.T += (GLORY.targetF - p.T) * k * dt;
       if (p.T > GLORY.floppyF) {
         const over = (p.T - GLORY.floppyF) / 100;
-        p.s += GLORY.floppySag * over * dt;
+        setSag(p, p.s + GLORY.floppySag * over * dt);
         ctx.floppy = true;
         ctx.events.push({ kind: 'warn', text: `Over ${GLORY.floppyF}°F — it's going floppy. Pull it out.` });
         if (p.blown && p.r > 0) {
@@ -141,7 +145,7 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
         p.L += (c.lengthRatio * R - p.L) * c.shapeK * f * dt;
       }
       const boost = a === 'block' && ctx.mods.pad ? BLOCK.padBoost : 1;
-      p.s = Math.max(0, p.s - c.centerRate * boost * f * dt);
+      setSag(p, Math.max(0, p.s - c.centerRate * boost * f * dt));
       return;
     }
     case 'blow': {

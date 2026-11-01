@@ -9,6 +9,8 @@ export type PanelId = 'shop' | 'gallery' | 'help';
 export interface HeaderActions {
   setMaking(t: PieceType): void;
   open(p: PanelId): void;
+  togglePause(): void;
+  paused: boolean;
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -49,6 +51,7 @@ export function renderHeader(el: HTMLElement, s: Studio, act: HeaderActions) {
       h('div', { class: 'goal-label' }, h('span', {}, 'Own furnace'), h('span', { class: 'mono' }, `${money(s.cash)} / ${money(ECONOMY.goal)}`)),
       h('div', { class: 'goal-bar' }, h('div', { class: 'goal-fill', style: `width:${progress * 100}%` }))),
     h('nav', { class: 'top-actions' },
+      h('button', { class: `btn small${act.paused ? ' primary' : ''}`, type: 'button', title: 'Pause (Esc)', onclick: () => act.togglePause() }, act.paused ? 'Resume' : 'Pause'),
       h('button', { class: 'btn small', type: 'button', onclick: () => act.open('gallery') },
         'Gallery', waiting ? h('span', { class: 'badge' }, waiting) : null),
       h('button', { class: 'btn small primary', type: 'button', onclick: () => act.open('shop') }, 'Shop'),

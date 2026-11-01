@@ -115,14 +115,24 @@ describe('every fail state is reachable and explains itself', () => {
     const b = gathered().hold(null, 5);
     expect(b.p.s).toBe(0);
   });
-  it('a droop comes back on center once rotation restarts while it is soft', () => {
-    const b = new Bench(NO_MODS, false).hold('gather', 2.5).hold(null, 0.8);
+  it('turning holds a droop where it is: it neither worsens nor fixes itself', () => {
+    const b = new Bench(NO_MODS, false).hold('gather', 2.5).hold(null, 1);
     const drooped = b.p.s;
     expect(drooped).toBeGreaterThan(0.1);
     b.rotating = true;
-    b.reheat().hold(null, 1.5);
-    expect(b.fail).toBeNull();
-    expect(b.p.s).toBeLessThan(drooped / 2);
+    b.hold(null, 2);
+    expect(b.p.s).toBeCloseTo(drooped, 5);
+  });
+  it('stopping with the droop on top lets gravity pull it back; with it underneath it gets worse', () => {
+    const settle = (roll: number) => {
+      // Droop it downward with the pipe at roll 0, then stop the pipe at another angle.
+      let p = new Bench(NO_MODS, false).hold('gather', 2.5).hold(null, 1).p;
+      const before = p.s;
+      for (let t = 0; t < 0.6; t += DT) p = step(p, null, DT, { mods: NO_MODS, rotating: false, justStarted: false, roll }).piece;
+      return p.s - before;
+    };
+    expect(settle(Math.PI)).toBeLessThan(0); // droop on top: back toward center
+    expect(settle(0)).toBeGreaterThan(0); // droop underneath: further off
   });
   it('floppy in the glory hole', () => {
     const b = gathered().hold('glory', 40);

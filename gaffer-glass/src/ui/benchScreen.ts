@@ -17,8 +17,12 @@ const ZONES: [number, number, string, string][] = [
 ];
 
 export interface Bench {
+  /** Called when the player resumes from the paused veil. */
+  onResume: () => void;
   /** Show a studio event (a sale, a piece out of the annealer) on the ticker. */
   notify(text: string): void;
+  /** Freeze or unfreeze the bench, with a veil over it while paused. */
+  setPaused(paused: boolean): void;
   dispose(): void;
 }
 
@@ -82,7 +86,16 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
   const rotate = h('button', { class: 'tool hold tool-rotate', type: 'button', 'aria-pressed': 'true' },
     h('span', { class: 'tl' }, 'Rotating'), h('kbd', {}, 'Space'));
   rotate.addEventListener('click', () => session.toggleRotation());
-  const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), rotate);
+  // Tip the pipe: hold to let gravity stretch the glass (down) or slump it short (up).
+  const tipBtn = (dir: -1 | 1, label: string, key: string) => {
+    const b = h('button', { class: `tool hold tool-tip tip-${dir < 0 ? 'up' : 'down'}`, type: 'button', title: dir < 0 ? 'Tip up: soft glass slumps short and fat' : 'Tip down: soft glass runs long' },
+      h('span', { class: 'tl' }, label), h('kbd', {}, key));
+    bindHoldButton(b, () => (session.tiltTarget = dir), () => session.tiltTarget === dir && (session.tiltTarget = 0));
+    return b;
+  };
+  const tipUp = tipBtn(-1, 'Tip up', '↑');
+  const tipDown = tipBtn(1, 'Tip down', '↓');
+  const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), rotate, tipUp, tipDown);
   const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('jacks'));
   // Breath pressure: harder blows faster and tears at a thicker wall.
   const pressureVal = h('span', { class: 'val' });
@@ -109,6 +122,10 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
     h('summary', {}, h('span', { class: 'lbl' }, 'Making'), goalKind, goalBar, goalNext),
     goalList);
   const ticker = h('p', { class: 'ticker', role: 'status', 'aria-live': 'polite' });
+  const pauseVeil = h('div', { class: 'pause-veil', hidden: true },
+    h('div', { class: 'pause-card' }, h('h2', {}, 'Paused'), h('p', { class: 'note' }, 'The glass is holding still. Press Esc or Resume to carry on.'),
+      h('button', { class: 'btn primary', type: 'button', onclick: () => onResume() }, 'Resume')));
+  let onResume = () => {};
   let tickerAt = -Infinity;
   const viewBtn = h('button', { class: 'btn small view-btn', type: 'button', title: 'Drag the shop to look around; double-click also resets' }, 'Reset view');
   viewBtn.addEventListener('click', () => scene.resetView());
@@ -126,6 +143,7 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
     goal,
     chip,
     ticker,
+    pauseVeil,
     rail,
     hud,
     msg,
@@ -144,7 +162,7 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
     session.update(dt);
     scene.draw({
       piece: session.piece, tool: session.tool, turnPhase: session.turnPhase,
-      turning: session.turning, mods: session.mods, time: now / 1000,
+      turning: session.turning, mods: session.mods, time: now / 1000, tilt: session.tilt,
     }, dt);
     sinceReadout += dt;
     if (sinceReadout >= 1 / LOOP.readoutHz) {
@@ -195,6 +213,8 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
     }
     const t = session.tool;
     chip.textContent = t ? (t === 'block' && session.mods.pad ? 'Newspaper pad' : STATION_LABEL[t]) : '';
+    tipUp.classList.toggle('active', session.tiltTarget < 0);
+    tipDown.classList.toggle('active', session.tiltTarget > 0);
     rotate.classList.toggle('active', session.rotating);
     rotate.setAttribute('aria-pressed', String(session.rotating));
     rotate.querySelector('.tl')!.textContent = session.rotating ? 'Rotating' : 'Stopped';
@@ -233,6 +253,15 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
   refresh();
   raf = requestAnimationFrame(frame);
   return {
+    setPaused(paused: boolean) {
+      session.paused = paused;
+      if (paused && session.held) session.release(session.held);
+      session.tiltTarget = 0;
+      pauseVeil.hidden = !paused;
+    },
+    set onResume(fn: () => void) {
+      onResume = fn;
+    },
     notify(text: string) {
       ticker.textContent = text;
       tickerAt = performance.now();

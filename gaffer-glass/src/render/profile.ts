@@ -64,7 +64,7 @@ export function profile(p: Piece): Profile {
     xs.push(x);
     outer.push(out);
     inner.push(inn);
-    drop.push(p.s * 0.6 * len * u * u);
+    drop.push(p.s * 0.45 * len * u * u); // how far the axis has bent off center here
   }
   return { xs, outer, inner, drop, length: len, maxR: Math.max(...outer, 0), neckX, open: p.punty };
 }

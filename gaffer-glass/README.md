@@ -42,7 +42,10 @@ The session runs the sim in fixed 1/60 s steps inside `requestAnimationFrame`, s
 ## Choices beyond the brief
 
 - **Thin walls blow faster.** Blow rate scales up as the wall thins (`BLOW.thinRef`, `thinMax`), so a blowout is reachable and comes on suddenly, the way a bubble balloons.
-- **The pipe rotates by default.** Space stops and starts it, like Glassworks' Rotating toggle. While it turns, soft glass drifts back on center (`SAG.turnCenterRate`); stopped, hot glass droops.
+- **The pipe rotates by default.** Space stops and starts it, like Glassworks' Rotating toggle. Turning holds a droop where it is; it doesn't fix it. The droop is a direction that turns with the pipe, and gravity only acts while the pipe is still: stop with the droop underneath and it gets worse, stop with it on top and it swings back through center. Marvering and blocking also re-center. A piece only slumps off at `SAG.dropAt`.
+- **Tip the pipe.** ↑/↓ (or the thumb buttons) tip it: soft glass runs long tipped down and slumps short tipped up (`TILT`).
+- **A pipe carries at most `GATHER.maxV` of glass.**
+- **Pause** (Esc or the top bar) freezes the bench, the visitors and the annealer.
 - **Always open, in real time.** No days and no clock: the annealer takes `ANNEAL.seconds`, and visitors browse the cabinet every 25–40 s (sooner with reputation), buying when your price is near what a piece is worth to them.
 - **Blow pressure.** A slider sets breath pressure; harder blows faster and tears at a thicker wall (`BLOW.pressure*`).
 - **No rent, no side jobs.** Like Glassworks, you can't get stuck: firing up the shop and clear glass are free, and money goes only on color jars and tools.

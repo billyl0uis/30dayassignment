@@ -30,7 +30,9 @@ The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampw
 
 - **Always open, real time** (as in Glassworks): no days and no clock. The annealer takes a few seconds; visitors drop by every 25–40 s.
 - **Hold tools,** one at a time: gather (F), glory hole (G), marver (M), block (K), blow (B), jacks (J).
-- **Rotation is on by default,** as in Glassworks. Space stops and starts it; stopped, hot glass droops, and turning again while it's soft brings it back on center.
+- **Rotation is on by default,** as in Glassworks. Space stops and starts it. Turning holds a droop where it is. To re-center, stop turning with the droop on top so gravity pulls it back (then start again in time), or marver or block it.
+- **Tipping the pipe** (↑/↓) lets gravity stretch soft glass long or slump it short.
+- **Pause** with Esc or the top-bar button.
 - **Tap actions:** roll in color (C), transfer to punty (P), knock off (X), new pipe (N), dump in cullet (Q).
 - **Blow pressure** slider: harder blows faster and tears at a thicker wall.
 - **What you're making** is picked in the top bar and drives the step goals panel.

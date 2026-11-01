@@ -1,4 +1,4 @@
-import { BLOW, LOOP, SAG } from '../config';
+import { BLOW, LOOP, SAG, TILT } from '../config';
 import {
   applyTap, canHold, canTap, type Check, type HoldAction, type Mods, type SimEvent, type TapAction,
 } from '../sim/actions';
@@ -26,9 +26,12 @@ export class Session {
   held: HoldAction | null = null;
   tool: HoldAction | null = null; // the held tool if it's actually allowed
   rotating = true; // the pipe rolls unless the player stops it
+  paused = false; // frozen: nothing cools, droops or moves
   turning = false;
   turnPhase = 0;
   pressure: number = BLOW.pressure; // breath pressure for blowing, 0–1
+  tilt = 0; // where the pipe is, −1 tip up … +1 tip down; swings toward tiltTarget
+  tiltTarget = 0;
   selectedColor: ColorId | null = null;
   message: Message | null = { text: 'Fresh pipe, preheated. Hold F at the furnace to gather.', kind: 'info', at: 0 };
 
@@ -47,7 +50,7 @@ export class Session {
   // ── Input ──
 
   press(a: HoldAction) {
-    if (this.held === a) return;
+    if (this.paused || this.held === a) return;
     this.held = a;
     this.justStarted = true;
     const ok = canHold(this.piece, a);
@@ -63,6 +66,7 @@ export class Session {
   }
 
   tap(a: TapAction) {
+    if (this.paused) return;
     const ok = this.canTap(a);
     if (!ok.ok) return this.say({ kind: 'hint', text: ok.reason }, true);
     const p = this.piece;
@@ -83,6 +87,7 @@ export class Session {
   }
 
   toggleRotation() {
+    if (this.paused) return;
     this.rotating = !this.rotating;
     this.say({ kind: 'hint', text: this.rotating ? 'Rotating.' : 'Stopped turning — hot glass will droop.' }, true);
   }
@@ -95,6 +100,7 @@ export class Session {
 
   /** Advance by a real frame's worth of time, in fixed sim steps. */
   update(realDt: number) {
+    if (this.paused) return;
     this.acc += Math.min(realDt, LOOP.maxFrame);
     while (this.acc >= LOOP.step) {
       this.acc -= LOOP.step;
@@ -104,11 +110,13 @@ export class Session {
 
   private stepOnce(dt: number) {
     this.clock += dt;
+    this.tilt += (this.tiltTarget - this.tilt) * Math.min(1, TILT.ease * dt);
+    if (Math.abs(this.tilt) < 0.01 && this.tiltTarget === 0) this.tilt = 0;
     const p = this.piece;
     this.tool = this.held && canHold(p, this.held).ok ? this.held : null;
     if (p) {
       const coasting = this.clock - this.lastToolAt < SAG.coastSeconds;
-      const r = step(p, this.held, dt, { mods: this.mods, rotating: this.rotating, justStarted: this.justStarted, coasting, pressure: this.pressure });
+      const r = step(p, this.held, dt, { mods: this.mods, rotating: this.rotating, justStarted: this.justStarted, coasting, pressure: this.pressure, tilt: this.tilt, roll: this.turnPhase * Math.PI * 2 });
       if (this.tool) this.lastToolAt = this.clock;
       this.piece = r.piece;
       this.turning = r.turning && !r.piece.failed;

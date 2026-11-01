@@ -10,7 +10,9 @@ export interface Piece {
   L: number; // length along the pipe (in)
   r: number; // inner bubble radius (in)
   T: number; // temperature (°F)
-  s: number; // sag / off-center, 0–1 (1 = slumped)
+  s: number; // how far off center it has drooped (the length of cx, cy)
+  cx: number; // the droop as a direction in the pipe's own frame: it turns with the pipe,
+  cy: number; // so stopping with the droop on top lets gravity pull it back
   n: number; // jack line depth, 0–1+
   o: number; // opening after transfer, 0–1.25
   punty: boolean;
@@ -23,7 +25,7 @@ export interface Piece {
 
 export function newPiece(): Piece {
   return {
-    V: 0, L: 0, r: 0, T: ROOM_F, s: 0, n: 0, o: 0,
+    V: 0, L: 0, r: 0, T: ROOM_F, s: 0, cx: 0, cy: 0, n: 0, o: 0,
     punty: false, blown: false, uneven: 0, color: null, gathers: 0, failed: null,
   };
 }
@@ -75,4 +77,17 @@ export interface FinishedPiece {
   centered: number; // 0–1
   even: number; // 0–1
   color: ColorId | null;
+}
+
+/** Set how far off center the piece is, keeping the direction it has drooped. */
+export function setSag(p: Piece, s: number) {
+  const m = Math.hypot(p.cx, p.cy);
+  if (m < 1e-9) {
+    p.cx = -s; // no direction yet: call it down in the pipe's frame
+    p.cy = 0;
+  } else {
+    p.cx *= s / m;
+    p.cy *= s / m;
+  }
+  p.s = Math.max(0, s);
 }

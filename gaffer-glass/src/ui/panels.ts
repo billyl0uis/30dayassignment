@@ -10,6 +10,7 @@ export interface PanelActions {
   buyColor(c: keyof typeof COLORS): void;
   buyUpgrade(u: UpgradeId): void;
   deliver(commissionId: string, pieceId: number): void;
+  pass(commissionId: string): void;
   setPrice(id: number, price: number): void;
   shelve(id: number): void;
   unshelve(id: number): void;
@@ -128,6 +129,8 @@ export class Panels {
     const deliver = ready.length
       ? h('button', { class: 'btn small primary', type: 'button', onclick: () => this.act.deliver(c.id, ready[0].id) }, `Deliver ${ready[0].name}`)
       : h('p', { class: 'note' }, 'Nothing in storage fits yet.');
+    const pass = h('button', { class: 'btn small ghost', type: 'button', title: 'Turn it down; another customer takes its place' }, 'Pass');
+    pass.addEventListener('click', () => this.act.pass(c.id));
     return h('article', { class: 'order' },
       h('div', { class: 'order-head' },
         h('span', { class: 'order-type' }, `${c.customer} wants ${article(kindLabel(c.type))}`),
@@ -137,7 +140,7 @@ export class Panels {
         ? h('p', { class: 'color-ask' },
           h('span', { class: 'swatch', style: `background:rgb(${COLORS[c.color].rgb.join(',')})` }), `In ${COLORS[c.color].label.toLowerCase()}`)
         : null,
-      deliver);
+      h('div', { class: 'order-actions' }, deliver, pass));
   }
 
   // ── Gallery ──
@@ -201,12 +204,12 @@ export class Panels {
       h('p', {}, 'Pick what you’re making in the top bar. The panel on the left walks you through it. Knock the piece off into the annealer; it comes out to the Gallery with its quality and worth. Shelve it in your cabinet for visitors, or deliver it to a commission.'),
       ...recipes,
       h('details', {}, h('summary', {}, 'Always'),
-        h('p', {}, 'The pipe rotates on its own. Stop it (Space) and hot glass droops; start it again while the glass is soft and it comes back on center. Reheat before it drops under 1150°F; under 850°F the glory hole will crack it. More blow pressure is faster but tears at a thicker wall.')),
+        h('p', {}, 'The pipe rotates on its own, which keeps a droop from getting worse but doesn’t fix it. To bring it back, stop turning (Space) when the droop is on top, let gravity pull it through center, then start turning again; or marver or block it. A pipe carries about 24 in³ at most. Tip the pipe down (↓) and soft glass runs long; tip it up (↑) and it slumps short and fat. Reheat before it drops under 1150°F; under 850°F the glory hole will crack it. More blow pressure is faster but tears at a thicker wall.')),
       h('p', { class: 'note' }, 'Temperatures and timings are simplified for play.'),
       h('h3', {}, 'Keys'),
       h('p', { class: 'keys mono' },
         'Hold: F gather · G glory hole · M marver · K block · B blow · J jacks', h('br'),
-        'Space start/stop rotating · Tap: C color · P transfer · X knock off · N new pipe · Q dump · 1–5 pick a jar · Drag to look around'),
+        'Space start/stop rotating · ↑/↓ tip the pipe · Tap: C color · P transfer · X knock off · N new pipe · Q dump · 1–5 pick a jar · Drag to look around'),
       h('footer', { class: 'foot' }, reset));
   }
 }

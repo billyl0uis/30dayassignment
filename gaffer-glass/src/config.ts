@@ -30,7 +30,9 @@ export const VISITORS = {
   budgetMin: 15, // what a visitor will spend, before reputation
   budgetMax: 70,
   budgetRep: 80, // budget × (1 + rep/budgetRep)
-  repValue: 0.004, // reputation makes your work worth more to them: × (1 + rep·repValue)
+  repValue: 0.004, // reputation makes your work worth more to them: × (1 + rep·repValue)…
+  maxRegard: 1.5, // …up to this, so a famous studio still has to price sensibly
+  maxBudget: 3, // budget × (1 + rep/budgetRep) tops out at this multiple
   wantedBoost: 1.3, // the kind of piece they came in for
   otherKind: 0.55,
   coloredBoost: 1.1,
@@ -53,6 +55,7 @@ export const GATHER = {
   furnaceF: 2100, // glass temperature in the furnace
   pullK: 0.6, // how fast the piece is pulled toward furnace temp while in (1/s)
   firstLength: 1.4, // L of the first gather (in)
+  maxV: 24, // all the glass one pipe can carry (in³)
   tooHotToRegatherF: 1900, // starting a new gather above this adds seeds/unevenness
   regatherUneven: 0.15, // unevenness added by a too-hot regather
 };
@@ -85,11 +88,22 @@ export const COOL = {
 export const SAG = {
   minF: 1050, // no sag below this
   span: 1100, // soft = (T − minF)/span
-  rate: 0.5, // s += dt·rate·soft²·(1 + V/massV) when nothing is turning it
+  rate: 0.32, // droop grows by dt·rate·soft²·(1 + V/massV) while the pipe is still
   massV: 15,
-  centeredK: 1.6, // centered score = 1 − centeredK·s
+  dropAt: 1.6, // droop this far and the piece slumps off onto the floor
+  warnAt: 0.25, // droop this far and the bench warns you
+  centeredK: 0.75, // centered score = 1 − centeredK·droop
   coastSeconds: 0.35, // the pipe keeps rolling this long after you let go of a tool
-  turnCenterRate: 0.3, // while the pipe rotates, soft glass drifts back on center (sag/s, scaled by fluid)
+};
+
+// Tipping the pipe lets gravity shape soft glass: tip down and it runs long, tip up and it slumps short and fat.
+export const TILT = {
+  rate: 0.55, // in/s of length change at full tilt, fully soft, scaled by mass
+  massV: 10, // heavier glass flows harder: × (1 + V/massV)
+  ease: 4, // how fast the pipe swings toward where you're tipping it (1/s)
+  maxDegrees: 14, // how far the pipe tips on screen at full tilt
+  minLR: 0.9, // shortest: L ≥ minLR × 2R (a squat ball)
+  maxLR: 3.4, // longest: L ≤ maxLR × 2R before it's a drip, not a piece
 };
 
 // ── Bench tools ──────────────────────────────────────────────────────
@@ -97,14 +111,14 @@ export const MARVER = {
   coolRate: 45, // °F/s drawn off by the steel
   lengthRatio: 2.9, // pushes L toward this × R (a cylinder)
   shapeK: 0.9, // shaping speed (1/s), scaled by fluid
-  centerRate: 0.35, // sag removed per second, scaled by fluid
+  centerRate: 0.18, // droop taken out per second, scaled by fluid: slow, and it costs you heat
 };
 
 export const BLOCK = {
   coolRate: 40, // °F/s into the wet wooden block
   lengthRatio: 2.0, // pushes L toward 2R (round)
   shapeK: 1.2,
-  centerRate: 0.7, // re-centers harder than the marver
+  centerRate: 0.4, // re-centers harder than the marver
   padBoost: 1.6, // wet newspaper pad: centers 60% faster than the block
 };
 
@@ -150,7 +164,7 @@ export const TRANSFER = {
 
 export const KNOCKOFF = {
   minNeck: 0.45, // jack line needed to knock off from the pipe
-  minF: 800, // colder than this cracks going into the annealer
+  minF: 900, // colder than this cracks going into the annealer (soda-lime anneals near 960°F, strains near 880°F)
 };
 
 // ── Geometry & rendering helpers ─────────────────────────────────────

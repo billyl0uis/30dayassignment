@@ -525,7 +525,7 @@ body[data-screen='session'] main {
   height: 138px;
 }
 .pad-left {
-  grid-template-columns: 138px 64px;
+  grid-template-columns: 138px 64px 64px;
 }
 .pad-left .tool-glory {
   grid-column: 1;
@@ -1077,9 +1077,15 @@ body[data-screen='session'] main {
 .req {
   color: var(--warn);
 }
-.order .btn,
-.order .note {
+.order-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: 0.55rem;
+}
+.order-actions .note {
+  margin: 0;
 }
 .piece-list {
   display: grid;
@@ -1195,4 +1201,95 @@ body[data-screen='session'] main {
       transform: translateY(24px);
     }
   }
+}
+
+/* Tip up / tip down: hold buttons that swing the pipe, with an arrow drawn in CSS. */
+.tool.tool-tip .tl::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  margin: 0 auto 3px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+.tool.tip-up .tl::before {
+  border-bottom: 7px solid currentColor;
+}
+.tool.tip-down .tl::before {
+  border-top: 7px solid currentColor;
+}
+
+@media (max-width: 760px) {
+  .pad {
+    grid-template-columns: 46px 46px;
+    grid-template-rows: 46px 46px;
+    gap: 6px;
+  }
+  .pad .tool.big {
+    width: 96px;
+    height: 96px;
+  }
+  .tool.hold {
+    width: 46px;
+    height: 46px;
+    font-size: 0.62rem;
+  }
+  .pad-left {
+    grid-template-columns: 96px 46px 46px;
+    grid-template-rows: 46px 46px;
+  }
+  .pad-left .tool-glory {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .pad-right {
+    grid-template-columns: 46px 96px;
+    grid-template-rows: 46px 46px 46px;
+  }
+  .pad-right .tool-blow {
+    grid-row: 2 / span 2;
+  }
+}
+@media (max-width: 760px) {
+  /* The pressure pill floats above the Blow pad so both pads fit side by side. */
+  .right-stack {
+    position: relative;
+  }
+  .right-stack .pressure {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 6px);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 760px) {
+  .controls .middle {
+    padding-bottom: 40px; /* room for the floating pressure pill */
+  }
+}
+
+/* Paused: a veil over the bench, the shop still visible behind it. */
+.pause-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  background: rgba(28, 32, 40, 0.35);
+}
+.pause-veil[hidden] {
+  display: none;
+}
+.pause-card {
+  background: var(--panel-solid);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 1.3rem 1.5rem;
+  max-width: 340px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.pause-card h2 {
+  margin-bottom: 0.3rem;
 }
