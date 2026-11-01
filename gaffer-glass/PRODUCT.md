@@ -48,7 +48,7 @@ The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampw
 ## Brand Commitments
 
 - **Name:** "Gaffer Glass". "Gaffer" leads; "Glass" accompanies it as a smaller, secondary word wherever the name is shown on screen. Links, folder, package and page title use the full name (`gaffer-glass`).
-- **Not a copy of Glassworks:** it is inspired by Glassworks' loop and realism, but Gaffer Glass must not reuse its UI, layout, controls, art, copy or brand.
+- **Close to Glassworks in feel, not a copy:** the owner wants the look to sit as close to Glassworks as possible (decided 2026-11-01, replacing the earlier "do not copy its UI or layout" rule). That means the same kind of screen: a bright, lit studio scene filling the window, compact dark panels floating over it, and big round hold buttons placed for the thumbs. Gaffer Glass still draws its own art and icons, writes its own copy, and never uses Glassworks' name, logo or assets.
 - **Generic names only:** clients and color names stay generic. No real business names and no glass-manufacturer brand names.
 
 ## Evidence on Hand

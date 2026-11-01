@@ -33,7 +33,7 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
         h('span', {}, label))),
     marker);
   const row = (label: Node | string, v: HTMLElement) => h('div', { class: 'readout' }, h('span', { class: 'lbl' }, label), v);
-  const rail = h('aside', { class: 'rail' },
+  const rail = h('aside', { class: 'rail float' },
     h('div', { class: 'temp' }, h('span', { class: 'lbl' }, 'Temperature'), r.temp),
     gauge,
     h('div', { class: 'readouts' },
@@ -44,19 +44,22 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
 
   // ── Color jars ──
   const jarButtons = COLOR_ORDER.map((c, i) => {
-    const b = h('button', { class: 'jar', type: 'button', title: `${COLORS[c].label} (${i + 1})` },
+    const b = h('button', { class: 'jar', type: 'button', title: `${COLORS[c].label} (${i + 1})`, 'aria-label': `${COLORS[c].label} jar` },
       h('span', { class: 'swatch', style: `background:rgb(${COLORS[c].rgb.join(',')})` }),
-      h('span', { class: 'jar-name' }, COLORS[c].label), h('span', { class: 'jar-count' }));
+      h('span', { class: 'jar-count' }));
     b.addEventListener('click', () => session.selectColor(c));
     return b;
   });
-  const jars = h('div', { class: 'jars' }, h('span', { class: 'lbl' }, 'Color jar'), ...jarButtons);
+  const jars = h('div', { class: 'jars' }, ...jarButtons);
 
   // ── Tools ──
+  // Glory hole and blow get the big thumb buttons; the rest sit in a cluster beside them.
+  const BIG: HoldAction[] = ['glory', 'blow'];
   const holdBtns = new Map<HoldAction, HTMLButtonElement>();
   for (const a of Object.keys(HOLD_KEYS) as HoldAction[]) {
     const k = HOLD_KEYS[a];
-    const b = h('button', { class: `tool hold tool-${a}`, type: 'button' }, h('span', { class: 'tl' }, k.label), h('kbd', {}, k.key));
+    const b = h('button', { class: `tool hold tool-${a}${BIG.includes(a) ? ' big' : ''}`, type: 'button' },
+      h('span', { class: 'tl' }, k.label), h('kbd', {}, k.key));
     bindHoldButton(b, () => session.press(a), () => session.release(a));
     holdBtns.set(a, b);
   }
@@ -68,20 +71,27 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
     b.addEventListener('contextmenu', (e) => e.preventDefault());
     tapBtns.set(a, b);
   }
-  const tools = h('div', { class: 'tools' },
-    h('div', { class: 'tool-group' }, h('h3', {}, 'Hold'), h('div', { class: 'grid' }, ...holdBtns.values())),
-    h('div', { class: 'tool-group' }, h('h3', {}, 'Tap'), h('div', { class: 'grid' }, ...tapBtns.values())));
+  const hb = (a: HoldAction) => holdBtns.get(a)!;
+  const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), hb('turn'));
+  const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('jacks'));
+  const taps = h('div', { class: 'taps' }, ...tapBtns.values());
 
   const msg = h('p', { class: 'message', role: 'status', 'aria-live': 'polite' });
-  // Phone-only heads-up numbers on the canvas, since the rail sits below the tools there.
+  // Compact numbers for the phone, where the full readout panel is folded away.
   const hudTemp = h('span', { class: 'hud-temp' });
   const hudNeck = h('span', {});
   const hudCenter = h('span', {});
   const hud = h('div', { class: 'hud', 'aria-hidden': 'true' }, hudTemp, hudNeck, hudCenter);
-  const endBtn = h('button', { class: 'btn ghost', type: 'button' }, 'End session early');
+  const endBtn = h('button', { class: 'btn small', type: 'button' }, 'End early');
   endBtn.addEventListener('click', () => {
     if (confirm('End the session now? A piece still on the pipe goes in the cullet.')) session.endEarly();
   });
+  const more = h('button', { class: 'more', type: 'button', 'aria-expanded': 'false' }, 'Details');
+  more.addEventListener('click', () => {
+    const open = rail.classList.toggle('open');
+    more.setAttribute('aria-expanded', String(open));
+  });
+  rail.prepend(more);
 
   const overlay = h('div', { class: 'overlay', hidden: true },
     h('div', { class: 'overlay-card' },
@@ -90,10 +100,12 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
       h('button', { class: 'btn primary', type: 'button', onclick: () => onClose() }, 'Close up for the night')));
 
   const screen = h('section', { class: 'session' },
-    h('div', { class: 'session-bar' }, h('div', { class: 'clock' }, h('span', { class: 'lbl' }, 'Time left'), r.time), endBtn),
-    h('div', { class: 'bench' }, h('div', { class: 'stage-wrap' }, canvas, hud, msg), rail),
-    jars,
-    tools,
+    canvas,
+    h('div', { class: 'session-bar float' }, h('div', { class: 'clock' }, h('span', { class: 'lbl' }, 'Time left'), r.time), endBtn),
+    rail,
+    hud,
+    msg,
+    h('div', { class: 'controls' }, padLeft, h('div', { class: 'middle' }, jars, taps), padRight),
     overlay);
   root.replaceChildren(screen);
 

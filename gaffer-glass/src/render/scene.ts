@@ -23,7 +23,7 @@ const STATION_LABEL: Record<HoldAction, string> = {
   turn: 'Turning',
 };
 
-const DISPLAY_FONT = '"Barlow Condensed", "Arial Narrow", sans-serif';
+const UI_FONT = '"IBM Plex Sans", system-ui, sans-serif';
 
 /** Side view of the hot shop bay. Owns only its camera; everything else comes in per frame. */
 export class Scene {
@@ -52,7 +52,7 @@ export class Scene {
 
   // World (inches, y down) → screen (CSS px).
   private X = (x: number) => this.w * 0.5 + (x - this.cam.x) * this.cam.scale;
-  private Y = (y: number) => this.h * 0.44 + (y - this.cam.y) * this.cam.scale;
+  private Y = (y: number) => this.h * 0.42 + (y - this.cam.y) * this.cam.scale;
   private S = (d: number) => d * this.cam.scale;
 
   draw(v: SceneView, dt: number) {
@@ -60,13 +60,13 @@ export class Scene {
     const { ctx, w, h } = this;
     const p = v.piece;
     const pr = p && p.V > 0 ? profile(p) : null;
-    const floorY = h * 0.9;
+    const floorY = h * 0.8;
 
     // Auto-zoom: ease toward a frame that fits the piece, the pipe end, and a station margin.
     const len = Math.max(pr?.length ?? 0, 3.5);
     const maxR = Math.max(pr?.maxR ?? 0, 1.5);
     const maxDrop = pr ? pr.drop[pr.drop.length - 1] : 0;
-    const scale = clamp(Math.min(w / (len + 4.5), (h * 0.62) / (2 * maxR + maxDrop + 1.6)), 8, Math.min(w, h) / 4);
+    const scale = clamp(Math.min(w / (len + 4.5), (h * 0.62) / (2 * maxR + maxDrop + 1.6)), 8, Math.min(w, h) / 10);
     const k = Math.min(1, dt * 3);
     this.cam.scale += (scale - this.cam.scale) * k;
     this.cam.x += (len / 2 - 0.4 - this.cam.x) * k;
@@ -106,25 +106,22 @@ export class Scene {
     }
   }
 
+  private room?: { w: number; h: number; img: HTMLCanvasElement };
+
+  /** The shop itself, in screen space. Painted once per size and reused every frame. */
   private background(floorY: number) {
-    const { ctx, w, h } = this;
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, '#0b0908');
-    g.addColorStop(0.6, '#15100d');
-    g.addColorStop(1, '#0a0807');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-    // Steel columns at the back of the bay.
-    ctx.fillStyle = 'rgba(120, 104, 92, 0.05)';
-    for (let i = 0; i < 4; i++) ctx.fillRect(((i + 0.5) / 4) * w - 6, 0, 12, floorY);
-    // Floor.
-    const f = ctx.createLinearGradient(0, floorY, 0, h);
-    f.addColorStop(0, '#1d1714');
-    f.addColorStop(1, '#0d0a09');
-    ctx.fillStyle = f;
-    ctx.fillRect(0, floorY, w, h - floorY);
-    ctx.fillStyle = 'rgba(255, 140, 60, 0.12)';
-    ctx.fillRect(0, floorY, w, 1);
+    const { w, h } = this;
+    if (!this.room || this.room.w !== w || this.room.h !== h) {
+      const dpr = this.canvas.width / w;
+      const img = document.createElement('canvas');
+      img.width = this.canvas.width;
+      img.height = this.canvas.height;
+      const c = img.getContext('2d')!;
+      c.scale(dpr, dpr);
+      paintRoom(c, w, h, floorY);
+      this.room = { w, h, img };
+    }
+    this.ctx.drawImage(this.room.img, 0, 0, w, h);
   }
 
   /** The blowpipe, or after transfer the thinner solid punty. */
@@ -229,7 +226,7 @@ export class Scene {
     // Rim light.
     this.outline(pr, pr.outer);
     ctx.lineWidth = 1.2;
-    ctx.strokeStyle = glow > 0.1 ? rgba(mix(heat, [255, 255, 255], 0.3), 0.6 * glow) : 'rgba(230,240,245,0.35)';
+    ctx.strokeStyle = glow > 0.1 ? rgba(mix(heat, [255, 255, 255], 0.3), 0.6 * glow) : 'rgba(38,52,60,0.55)';
     ctx.stroke();
   }
 
@@ -336,7 +333,7 @@ export class Scene {
         // Breath puffs at the pipe mouth, off to the left.
         for (let i = 0; i < 4; i++) {
           const t = (v.time * 0.9 + i / 4) % 1;
-          ctx.fillStyle = `rgba(220, 225, 235, ${0.22 * (1 - t)})`;
+          ctx.fillStyle = `rgba(150, 160, 175, ${0.3 * (1 - t)})`;
           ctx.beginPath();
           ctx.arc(14 + t * 46, this.Y(0) - t * 16, 5 + t * 12, 0, Math.PI * 2);
           ctx.fill();
@@ -371,7 +368,7 @@ export class Scene {
         ctx.stroke();
         for (let i = 0; i < 3; i++) {
           const t = (v.time * 0.7 + i / 3) % 1;
-          ctx.fillStyle = `rgba(230, 230, 230, ${0.18 * (1 - t)})`;
+          ctx.fillStyle = `rgba(160, 165, 172, ${0.28 * (1 - t)})`;
           ctx.beginPath();
           ctx.arc(cx + (i - 1) * rr * 0.6, cy - this.S(g.R) - t * 40, 6 + t * 10, 0, Math.PI * 2);
           ctx.fill();
@@ -413,19 +410,145 @@ export class Scene {
 
   private chip(text: string, x: number, y: number, quiet = false) {
     const { ctx } = this;
-    ctx.font = `600 14px ${DISPLAY_FONT}`;
-    const label = text.toUpperCase();
+    ctx.font = `600 13px ${UI_FONT}`;
+    const label = text;
     const tw = ctx.measureText(label).width;
-    ctx.fillStyle = 'rgba(10, 8, 7, 0.7)';
-    roundRect(ctx, x, y, tw + 18, 24, 4);
+    ctx.fillStyle = 'rgba(28, 32, 40, 0.88)';
+    roundRect(ctx, x, y, tw + 20, 26, 8);
     ctx.fill();
-    ctx.fillStyle = quiet ? '#a89a8f' : '#ff8a3d';
+    ctx.fillStyle = quiet ? '#9aa4b2' : '#ffb067';
     ctx.textBaseline = 'middle';
-    ctx.fillText(label, x + 9, y + 12.5);
+    ctx.fillText(label, x + 10, y + 13.5);
   }
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2));
+}
+
+/**
+ * A daylit hot shop: whitewashed block wall, a big steel-sash window throwing light across the
+ * concrete, the furnace at the left, the glory hole at the right and a shelf of color jars.
+ */
+function paintRoom(c: CanvasRenderingContext2D, w: number, h: number, floorY: number) {
+  const wall = c.createLinearGradient(0, 0, 0, floorY);
+  wall.addColorStop(0, '#f1eee8');
+  wall.addColorStop(1, '#dcd7ce');
+  c.fillStyle = wall;
+  c.fillRect(0, 0, w, floorY);
+  // Block coursing.
+  c.strokeStyle = 'rgba(120, 110, 95, 0.09)';
+  c.lineWidth = 1;
+  const course = Math.max(18, h / 28);
+  for (let y = course, row = 0; y < floorY; y += course, row++) {
+    c.beginPath();
+    c.moveTo(0, y);
+    c.lineTo(w, y);
+    c.stroke();
+    for (let x = (row % 2) * course; x < w; x += course * 2) {
+      c.beginPath();
+      c.moveTo(x, y - course);
+      c.lineTo(x, y);
+      c.stroke();
+    }
+  }
+
+  // Window, high and centered, with its light falling across the floor.
+  const ww = Math.min(w * 0.34, 420), wh = floorY * 0.36;
+  const wx = w * 0.5 - ww / 2, wy = floorY * 0.08;
+  const sky = c.createLinearGradient(0, wy, 0, wy + wh);
+  sky.addColorStop(0, '#bcd9ea');
+  sky.addColorStop(1, '#e4f0f4');
+  c.fillStyle = sky;
+  c.fillRect(wx, wy, ww, wh);
+  c.strokeStyle = '#59626a';
+  c.lineWidth = 4;
+  c.strokeRect(wx, wy, ww, wh);
+  c.lineWidth = 2;
+  for (let i = 1; i < 4; i++) {
+    c.beginPath();
+    c.moveTo(wx + (ww * i) / 4, wy);
+    c.lineTo(wx + (ww * i) / 4, wy + wh);
+    c.stroke();
+  }
+  c.beginPath();
+  c.moveTo(wx, wy + wh / 2);
+  c.lineTo(wx + ww, wy + wh / 2);
+  c.stroke();
+
+  // Shelf of color jars, upper right.
+  const sx = w * 0.74, sy = floorY * 0.3, sw = Math.min(w * 0.22, 260);
+  c.fillStyle = '#8a6a4a';
+  c.fillRect(sx, sy, sw, 6);
+  const jars = ['#2646c4', '#cd801e', '#28a06e', '#ece8dc', '#c81c4c', '#2646c4', '#cd801e'];
+  const jw = sw / jars.length;
+  jars.forEach((col, i) => {
+    const jh = 20 + ((i * 7) % 3) * 6;
+    c.fillStyle = col;
+    c.globalAlpha = 0.85;
+    c.fillRect(sx + i * jw + 4, sy - jh, jw - 8, jh);
+    c.globalAlpha = 1;
+    c.fillStyle = '#3a3f46';
+    c.fillRect(sx + i * jw + 3, sy - jh - 4, jw - 6, 5);
+  });
+
+  // Furnace, left: a steel box on legs with the glowing door.
+  const fw = Math.min(w * 0.2, 240), fh = floorY * 0.62;
+  const fx = -fw * 0.25, fy = floorY - fh;
+  c.fillStyle = '#6f777e';
+  c.fillRect(fx, fy, fw, fh * 0.82);
+  c.fillStyle = '#4e555b';
+  c.fillRect(fx, fy, fw, 8);
+  c.fillRect(fx + 10, fy + fh * 0.82, 10, fh * 0.18);
+  c.fillRect(fx + fw - 20, fy + fh * 0.82, 10, fh * 0.18);
+  const dx = fx + fw * 0.32, dy = fy + fh * 0.3, dw = fw * 0.55, dh = fh * 0.3;
+  c.fillStyle = '#9c4a2a';
+  c.fillRect(dx - 6, dy - 6, dw + 12, dh + 12);
+  const door = c.createRadialGradient(dx + dw / 2, dy + dh / 2, 0, dx + dw / 2, dy + dh / 2, dw * 0.7);
+  door.addColorStop(0, '#fff1c4');
+  door.addColorStop(0.5, '#ffa23a');
+  door.addColorStop(1, '#d4521a');
+  c.fillStyle = door;
+  c.fillRect(dx, dy, dw, dh);
+  const spill = c.createRadialGradient(dx + dw / 2, dy + dh / 2, 0, dx + dw / 2, dy + dh / 2, fw * 1.2);
+  spill.addColorStop(0, 'rgba(255, 150, 60, 0.22)');
+  spill.addColorStop(1, 'rgba(255, 150, 60, 0)');
+  c.fillStyle = spill;
+  c.fillRect(0, 0, fx + fw * 2.4, h);
+
+  // Glory hole, right: a drum on a stand with its round port.
+  const gr = Math.min(w * 0.09, 110);
+  const gx = w + gr * 0.15, gy = floorY - gr * 2.1;
+  c.fillStyle = '#4e555b';
+  c.fillRect(gx - gr * 0.5, gy + gr * 0.8, 12, floorY - gy - gr * 0.8);
+  c.fillStyle = '#7b838a';
+  c.beginPath();
+  c.arc(gx, gy, gr * 1.1, 0, Math.PI * 2);
+  c.fill();
+  const port = c.createRadialGradient(gx - gr * 0.2, gy, 0, gx - gr * 0.2, gy, gr * 0.6);
+  port.addColorStop(0, '#fff0c0');
+  port.addColorStop(0.6, '#ff8a2a');
+  port.addColorStop(1, '#b8400f');
+  c.fillStyle = port;
+  c.beginPath();
+  c.arc(gx - gr * 0.2, gy, gr * 0.55, 0, Math.PI * 2);
+  c.fill();
+
+  // Concrete floor, lighter where the window lands.
+  const floor = c.createLinearGradient(0, floorY, 0, h);
+  floor.addColorStop(0, '#bdb7ac');
+  floor.addColorStop(1, '#cfcac0');
+  c.fillStyle = floor;
+  c.fillRect(0, floorY, w, h - floorY);
+  c.fillStyle = 'rgba(255, 252, 240, 0.4)';
+  c.beginPath();
+  c.moveTo(wx + ww * 0.1, floorY);
+  c.lineTo(wx + ww * 1.1, floorY);
+  c.lineTo(wx + ww * 1.5, h);
+  c.lineTo(wx + ww * 0.3, h);
+  c.closePath();
+  c.fill();
+  c.fillStyle = 'rgba(70, 64, 56, 0.25)';
+  c.fillRect(0, floorY, w, 2);
 }
