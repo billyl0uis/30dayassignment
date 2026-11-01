@@ -1,6 +1,6 @@
 # 30dayassignment
 
-Projects made for the 30-day assignment, one folder each.
+Projects made for the 30-day assignment, one folder each. The home page links to all of them: https://billyl0uis.github.io/30dayassignment/
 
 | Project | What it is |
 |---|---|
@@ -16,5 +16,6 @@ Projects made for the 30-day assignment, one folder each.
 | [Jackline](jackline/) | Draw half a vessel's profile and it spins into a hollow 3D glass piece: tumblers, goblets, pitchers, bottles. Checks capacity, weight, grip, cleaning and tipping, and prints a 1:1 profile template. [Play it online](https://billyl0uis.github.io/30dayassignment/jackline/play/). |
 | [Glass CAD](glass-cad/) | Part CAD, part playground for glass: size parts in inches or centimetres, stack, cut, melt, shell and deform them, see them as glass in 3D, and print a measured shop sheet. [Play it online](https://billyl0uis.github.io/30dayassignment/glass-cad/play/). |
 | [Glass Mash](glass-mash/) | A glass sketchbook: draw shapes flat and they inflate into 3D glass you can move, melt together and carve. [Play it online](https://billyl0uis.github.io/30dayassignment/glass-mash/play/). |
-| [Finial](finial/) | A planning tool for hand-blown lidded jars: draw the body and lid profiles, check wall thickness, lid fit, capacity and weight, and print a shop sheet for the bench. Vite + React + three.js; run with `npm run dev`. |
-| [Flacon](flacon/) | A planning tool for hand-blown perfume bottles: draw the body, size the neck from a ground stopper, cork or bought hardware, check capacity in ml with a fill line, resize to a target, and flag a heavy base or thin neck. Shares Finial's vessel core. Vite + React + three.js; run with `npm run dev`. |
+| [Finial](finial/) | A planning tool for hand-blown lidded jars: draw the body and lid profiles, check wall thickness, lid fit, capacity and weight, and print a shop sheet for the bench. [Play it online](https://billyl0uis.github.io/30dayassignment/finial/play/). |
+| [Flacon](flacon/) | A planning tool for hand-blown perfume bottles: draw the body, size the neck from a ground stopper, cork or bought hardware, check capacity in ml with a fill line, resize to a target, and flag a heavy base or thin neck. Shares Finial's vessel core. [Play it online](https://billyl0uis.github.io/30dayassignment/flacon/play/). |
+| [Pulled Pony](pony/) | A one-page hot-glass toy: pull legs, neck, head and tail from a gather on the punty before it cools, reheat in the glory hole, and anneal it to a PNG. [Play it online](https://billyl0uis.github.io/30dayassignment/pony/). |

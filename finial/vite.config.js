@@ -5,6 +5,9 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: './',
+  // The built copy lives in play/ and is committed, so GitHub Pages can serve it as-is.
+  build: { outDir: 'play', emptyOutDir: true },
   server: { port: 5193 },
   // The vessel core is imported as @core from the app. Inside core, imports
   // stay relative (core/architecture.test.js checks), so core can be lifted
