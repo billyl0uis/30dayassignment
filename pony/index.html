@@ -58,7 +58,7 @@
   button:hover { background: var(--btn-hover); }
   button:disabled { opacity: .4; cursor: default; }
   .hold { touch-action: none; }
-  .hold.on { border-color: var(--accent); background: #4a2610; color: #fff; }
+  button.on { border-color: var(--accent); background: #4a2610; color: #fff; }
 
   #msg, #done {
     position: fixed; left: 50%; bottom: var(--above-controls, 72px); transform: translateX(-50%);
@@ -77,7 +77,7 @@
 <div class="top">
   <div>
     <h1>Pulled Pony</h1>
-    <p class="hint">Hot glass sags, so keep turning the punty: hold <kbd>A</kbd>/<kbd>D</kbd> or Turn. Tip it with <kbd>W</kbd>/<kbd>S</kbd> to let gravity draw glass down. Drag from the edge to pull. Hold <kbd>Space</kbd> for the glory hole. Glass left too cold shatters.</p>
+    <p class="hint">The punty rolls back and forth on its own so hot glass doesn't sag, and holds still while you pull. <kbd>T</kbd> stops or starts it. Tip it with <kbd>W</kbd>/<kbd>S</kbd> to let gravity draw glass down. Drag from the edge to pull. Hold <kbd>Space</kbd> for the glory hole. Glass left too cold shatters.</p>
   </div>
   <div class="heat">
     <div class="heat-row"><span id="zone">Point at the glass</span><span id="deg"></span></div>
@@ -99,7 +99,7 @@
 <div id="done"><span id="doneText">Annealed. Cooled to room temperature.</span><button id="save">Download PNG</button></div>
 
 <div class="controls">
-  <button id="turn" class="hold">Turn</button>
+  <button id="turn" class="on">Stop turning</button>
   <button id="tipUp" class="hold">Tip up</button>
   <button id="tipDown" class="hold">Tip down</button>
   <button id="glory" class="hold">Glory hole</button>
@@ -115,7 +115,7 @@ const TUNE = {
   ambient: 25,
   gatherT: 1120,      // °C straight out of the furnace
   maxT: 1200,
-  cool: 0.4,          // cooling rate; divided by (radius + 4) so thin parts cool faster
+  cool: 0.25,         // cooling rate; divided by (radius + 4) so thin parts cool faster
   glory: 4.5,         // glory hole heating rate, also faster for thin parts
   gloryT: 1250,
   conduct: 3,         // heat flow between neighbouring nodes
@@ -133,13 +133,14 @@ const TUNE = {
   maxNodes: 700,
   shatterT: 500,      // below this a slice starts building up cold stress
   shatterAfter: 4,    // seconds a slice can sit below shatterT before it shatters
-  bend: 0.018,        // sag: how fast a hot joint droops (weight beyond it ÷ thickness³)
-  bendMax: 1.5,       // rad/s: even a thin hot thread can't swing faster than this
+  bend: 0.002,        // sag: how fast a hot joint droops (weight × lever arm × length ÷ thickness⁴)
+  bendMax: 0.8,       // rad/s per 100px of glass: even a thin hot thread can't curl faster than this
   drip: 0.0012,      // how fast hanging glass stretches under its own weight
   dripMax: 0.8,       // cap on that stretch, as a fraction of the slice's length per second
   dropR: 3,           // a neck this thin can't hold the glass hanging from it
   dropLoad: 8000,     // ...if at least this much glass hangs below it (the gather, not a leg)
-  turnRate: 5.5,      // rad/s while turning the punty (~1 turn a second)
+  turnRate: 3.5,      // rad/s the punty turns on its own (~half a turn a second)
+  turnEase: 20,       // how quickly it starts, stops and reverses
   tiltRate: 1.2,      // rad/s while tipping the punty
   tiltMax: 1.3,       // ~75° up or down
   zones: { hot: 1000, working: 850, stiff: 650 },
@@ -195,6 +196,8 @@ let W, H, dpr, ox, oy, sc;
 let nodes = [], fragments = [], shards = [], drag = null, heating = false;
 let mode = 'work', annealT = 0;   // work | annealing | annealed | lost
 let roll = 0, tilt = 0;           // punty turn and tip, in radians
+let spin = 0, turning = true;     // current turn speed; whether the punty turns on its own
+let dir = 1, stroke = 0;          // which way it is rolling, and how far this stroke has gone
 const held = new Set();           // turn / tip controls currently held
 const mouse = { x: 0, y: 0, over: false };
 
@@ -212,7 +215,7 @@ function resize() {
 
 function newGather() {
   nodes = []; fragments = []; shards = []; drag = null; mode = 'work';
-  roll = 0; tilt = 0;
+  roll = 0; tilt = 0; spin = 0; dir = 1; stroke = 0;
   let prev = null;
   BODY_R.forEach((r, i) => {
     const n = mk({ x: i * BODY_GAP, v: r * r * Math.max(BODY_GAP, TUNE.S0), body: true, parent: prev, len: prev ? BODY_GAP : 0 });
@@ -279,7 +282,14 @@ function update(dt) {
   }
   if (mode !== 'work') return;
 
-  roll += (held.has('right') - held.has('left')) * TUNE.turnRate * dt;
+  // The gaffer rolls the punty a full turn one way then back along the bench
+  // rails, so slow sag can't wind a leg round the body, and holds still while
+  // you pull. Reversals are quick: lingering there would let the glass sag.
+  if (stroke >= TAU) { dir = -dir; stroke = 0; }
+  const want = turning && !drag ? dir * TUNE.turnRate : 0;
+  spin += (want - spin) * (1 - Math.exp(-TUNE.turnEase * dt));
+  roll += spin * dt;
+  stroke += Math.abs(spin) * dt;
   tilt = clamp(tilt + (held.has('down') - held.has('up')) * TUNE.tiltRate * dt, -TUNE.tiltMax, TUNE.tiltMax);
 
   for (const n of nodes) {
@@ -345,9 +355,10 @@ function updateFragments(dt) {
   fragments = fragments.filter(f => f.nodes.some(n => n.wy < floor));
 }
 
-// Hot glass is too thick to swing; it creeps. Each joint bends toward the floor
-// at a rate set by heat, the weight beyond it and how thin it is, and glass
-// hanging downward stretches under its own weight.
+// Hot glass is too thick to swing; it creeps like a viscous beam. Each joint
+// bends at a rate set by the turning force of the glass beyond it (weight ×
+// lever arm), the slice's length and its thickness⁴, and glass hanging downward
+// stretches under its own weight.
 function gravity(dt) {
   const [gx, gy, gz] = toLocal(0, 1, 0);
   // The tweezers hold the length being pulled, so gravity leaves it alone.
@@ -357,8 +368,8 @@ function gravity(dt) {
   for (let i = 0; i < order.length; i++) order.push(...order[i].kids);
   for (let i = order.length - 1; i >= 0; i--) {
     const n = order[i];
-    n.sub = n.v;
-    for (const k of n.kids) n.sub += k.sub;
+    n.sub = n.v; n.cx = n.v * n.x; n.cy = n.v * n.y; n.cz = n.v * n.z;
+    for (const k of n.kids) { n.sub += k.sub; n.cx += k.cx; n.cy += k.cy; n.cz += k.cz; }
   }
 
   for (let i = 1; i < order.length; i++) {
@@ -374,13 +385,17 @@ function gravity(dt) {
     const r = Math.max(1, Math.min(n.r, p.r));
     const moved = subtree(n);
 
-    // Sag: swing this joint toward straight down, never past it.
-    const cosA = clamp(ex * gx + ey * gy + ez * gz, -1, 1);
-    const sinA = Math.sqrt(1 - cosA * cosA);
-    const ang = Math.min(Math.min(TUNE.bend * s * sinA * n.sub / (r * r * r), TUNE.bendMax) * dt, Math.acos(cosA));
-    if (ang > 1e-6 && sinA > 1e-4) {
-      let kx = ey * gz - ez * gy, ky = ez * gx - ex * gz, kz = ex * gy - ey * gx;
-      const kl = Math.hypot(kx, ky, kz);
+    // Sag: swing the glass beyond this joint until its centre hangs straight
+    // down, never past it. Bending adds up along a leg, so each slice may only
+    // bend in proportion to its length.
+    let ax = n.cx / n.sub - a.x, ay = n.cy / n.sub - a.y, az = n.cz / n.sub - a.z;
+    const arm = Math.hypot(ax, ay, az);
+    let kx = ay * gz - az * gy, ky = az * gx - ax * gz, kz = ax * gy - ay * gx;
+    const kl = Math.hypot(kx, ky, kz);   // = arm × sin(angle from straight down)
+    const toDown = Math.acos(clamp((ax * gx + ay * gy + az * gz) / (arm || 1), -1, 1));
+    const rate = Math.min(TUNE.bend * s * n.sub * kl * L / (r * r * r * r), TUNE.bendMax * L / 100);
+    const ang = Math.min(rate * dt, toDown);
+    if (ang > 1e-6 && kl > 1e-3) {
       kx /= kl; ky /= kl; kz /= kl;
       const c = Math.cos(ang), sn = Math.sin(ang);
       const rot = (vx, vy, vz) => {
@@ -830,9 +845,15 @@ gloryBtn.addEventListener('pointerup', () => setHeating(false));
 gloryBtn.addEventListener('pointercancel', () => setHeating(false));
 
 // Turn and tip: held keys or held buttons.
-const KEYS = { KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
-  KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down' };
-const BUTTONS = { turn: 'right', tipUp: 'up', tipDown: 'down' };
+const KEYS = { KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down' };
+const BUTTONS = { tipUp: 'up', tipDown: 'down' };
+const turnBtn = document.getElementById('turn');
+function setTurning(on) {
+  turning = on;
+  turnBtn.textContent = on ? 'Stop turning' : 'Start turning';
+  turnBtn.classList.toggle('on', on);
+}
+turnBtn.addEventListener('click', () => setTurning(!turning));
 function syncButtons() {
   for (const [id, token] of Object.entries(BUTTONS)) document.getElementById(id).classList.toggle('on', held.has(token));
 }
@@ -847,6 +868,7 @@ window.addEventListener('keydown', e => {
     if (!e.repeat) setHeating(true);
     return;
   }
+  if (e.code === 'KeyT' && !e.repeat) { setTurning(!turning); return; }
   const token = KEYS[e.code];
   if (token) { e.preventDefault(); held.add(token); syncButtons(); }
 });
