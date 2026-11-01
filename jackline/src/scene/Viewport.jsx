@@ -11,7 +11,7 @@ import Vessel from './Vessel.jsx'
 
 const THEMES = {
   // Even and lifted: a bright band behind a near-black sweep made the glass hard to read.
-  dark: { top: '#575b65', horizon: '#6d727d', floor: '#5b5f69', cell: '#646970', section: '#737880' },
+  dark: { top: '#74787f', horizon: '#8a8e96', floor: '#787c84', cell: '#81858c', section: '#8f939a' },
   light: { top: '#fbf9f5', horizon: '#e6dfd3', floor: '#dcd4c6', cell: '#cfc6b8', section: '#bcb2a2' },
 }
 
