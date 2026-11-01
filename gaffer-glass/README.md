@@ -31,7 +31,7 @@ src/
     actions.ts       hold tools, tap actions, canHold/canTap (shared with the buttons)
     physics.ts       one fixed step: tool, cooling, sag, cold-check
     scoring.ts       centered / even / spec → quality, grades, sales
-  studio/            save file, order board, economy (book, TA shift, shop, overnight)
+  studio/            save file, order board, economy (book, teach a class, shop, overnight)
   session/           the 3-hour block: clock, fixed-step loop, messages, keyboard + hold buttons
   render/            canvas: silhouette sampling, heat colors, the bay and stations
   ui/                header, studio, session and results screens
@@ -42,6 +42,7 @@ The session runs the sim in fixed 1/60 s steps inside `requestAnimationFrame`, s
 ## Choices beyond the brief
 
 - **Thin walls blow faster.** Blow rate scales up as the wall thins (`BLOW.thinRef`, `thinMax`), so a blowout is reachable and comes on suddenly, the way a bubble balloons.
+- **Turning re-centers.** Holding Turn on soft glass pulls a droop back on center (`SAG.turnCenterRate`), the way a gaffer uses gravity; the marver and block still re-center faster.
 - **The pipe coasts.** It keeps rolling for `SAG.coastSeconds` (0.35 s) after you let go of a tool, so switching tools doesn't cost centering. Set it to 0 for the strict rule.
 - **The newspaper pad replaces the block.** With the pad, the Block tool becomes the Pad and centers 60% faster.
 - **Color requests are a bonus.** An order asking for a color still takes a clear piece; the matching color adds $15.

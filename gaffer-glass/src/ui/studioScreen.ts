@@ -7,7 +7,7 @@ import { h, money, range } from './dom';
 
 export interface StudioActions {
   book(assistant: boolean): void;
-  taShift(): void;
+  teachClass(): void;
   buyColor(c: keyof typeof COLORS): void;
   buyUpgrade(u: UpgradeId): void;
   reset(): void;
@@ -22,7 +22,7 @@ export function mountStudio(root: HTMLElement, s: Studio, act: StudioActions) {
   const assist = h('input', { type: 'checkbox', id: 'assist', checked: assistantChecked });
   const cost = h('span', { class: 'mono' });
   const bookBtn = h('button', { class: 'btn primary big', type: 'button' }, 'Book the hot shop');
-  const broke = h('p', { class: 'note warn', hidden: true }, `Not enough for rent. Take a TA shift for ${money(ECONOMY.taShiftPay)}.`);
+  const broke = h('p', { class: 'note warn', hidden: true }, `Not enough for rent. Teach a beginner class for ${money(ECONOMY.classPay)}.`);
   const sync = () => {
     assistantChecked = assist.checked;
     const c = sessionCost(assist.checked);
@@ -41,8 +41,8 @@ export function mountStudio(root: HTMLElement, s: Studio, act: StudioActions) {
       h('span', {}, `Bring an assistant (+${money(ECONOMY.assistantFee)}) — keeps the pipe turning when you aren't on a tool`)),
     h('div', { class: 'book-row' }, bookBtn, h('span', { class: 'cost' }, 'Total ', cost)),
     broke,
-    h('div', { class: 'ta' },
-      h('button', { class: 'btn ghost', type: 'button', onclick: () => act.taShift() }, `Take a TA shift (+${money(ECONOMY.taShiftPay)})`),
+    h('div', { class: 'teach' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => act.teachClass() }, `Teach a beginner class (+${money(ECONOMY.classPay)})`),
       h('span', { class: 'note' }, 'Uses up the day.')));
 
   // ── Orders ──
@@ -118,7 +118,7 @@ function howTo() {
     item('Bowl',
       'Same as a tumbler with more glass, opened past 50%. Reheat between opens so the jacks keep moving.'),
     item('Always',
-      'Keep it turning. Anything held counts as turning — but the moment you let go of every tool, hot glass droops. Reheat before it drops under 1150°F; under 850°F the glory hole will crack it.'),
+      'Keep it turning. Anything held counts as turning — but the moment you let go of every tool, hot glass droops. If it droops, keep it soft and hold Turn (or marver or block) to bring it back on center. Reheat before it drops under 1150°F; under 850°F the glory hole will crack it.'),
     h('p', { class: 'note' }, 'Temperatures and timings are simplified for play.'),
     h('h3', {}, 'Keys'),
     h('p', { class: 'keys mono' },

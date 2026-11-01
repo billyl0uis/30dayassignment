@@ -18,7 +18,7 @@ People play it in a browser on a desktop with a keyboard, or on a phone with on-
 
 ## Product Purpose
 
-You run a small glass practice that rents hot shop time. Between sessions, in the studio, you book a 3-hour block (with or without an assistant), read the order board, buy color jars and tool upgrades, or take a TA shift for cash. In a session you make pieces on the pipe by hand: gather, reheat, marver, block, blow, jack a line, transfer to the punty, open the lip, and knock off into the annealer. Overnight the annealer comes down and pieces sell to matching orders or as seconds. The goal is to save $1,000 toward your own furnace.
+You run a small glass practice that rents hot shop time. Between sessions, in the studio, you book a 3-hour block (with or without an assistant), read the order board, buy color jars and tool upgrades, or teach a beginner class for cash. In a session you make pieces on the pipe by hand: gather, reheat, marver, block, blow, jack a line, transfer to the punty, open the lip, and knock off into the annealer. Overnight the annealer comes down and pieces sell to matching orders or as seconds. The goal is to save $1,000 toward your own furnace.
 
 A session succeeds when the player makes something on purpose, understands why anything they lost failed, and wants to book another block.
 
@@ -39,7 +39,7 @@ The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampw
 - **Piece model:** parametric. Volume, length, bubble radius, temperature, sag, jack line, opening, punty, blown, unevenness and color. Geometry comes from a cylinder approximation. Piece types are paperweight, ornament, closed vessel, tumbler and bowl.
 - **Every fail state is reachable** and shows a one-line reason that teaches the real lesson: drooped off center, cold-checked, thermal shock, blowout, dropped at the jack line, lip collapsed, cracked going into the annealer, floppy from overheating, out of time.
 - **Scoring:** centered, even and on-spec combine into a quality score graded A, B, C or Seconds. Pieces sell to the best matching order or as seconds.
-- **Economy:** start with $100. Rent is $45, plus $20 for an assistant. A TA shift pays $35 and uses up the day, so a player can never get stuck broke. Color jars come with 5 uses. Upgrades are smoother jacks, a wet newspaper pad, and a bigger glory hole door. Bowl orders unlock at 3 reputation.
+- **Economy:** start with $100. Rent is $45, plus $20 for an assistant. Teaching a beginner class pays $35 and uses up the day, the way Glassworks pays for finishing a class, so a player can never get stuck broke. Color jars come with 5 uses. Upgrades are smoother jacks, a wet newspaper pad, and a bigger glory hole door. Bowl orders unlock at 3 reputation.
 - **Stack** (from the original brief): Vite + TypeScript, HTML5 canvas for the piece, plain DOM for the UI, no game engine. Deployed as a static site on Vercel.
 - **Architecture:** the simulation is pure functions on a `Piece`, kept separate from rendering and UI. Every tunable constant lives in `src/config.ts`.
 - **Saving:** studio progress (cash, reputation, day, colors, upgrades, orders) saves to localStorage, best effort. A session in progress does not survive a reload.
@@ -62,5 +62,5 @@ The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampw
 1. **Teach through failure.** Every lost piece names its real cause in one line, so failing teaches the next attempt.
 2. **The hands do the work.** Pieces are made by holding tools in time, not by choosing outcomes from menus.
 3. **True to the furnace, honest about simplifying.** Keep the real order of operations and the real reasons for failure. Tune numbers in the open, in one config file.
-4. **Never stuck.** The economy always leaves a way forward (a TA shift), and a bad session costs time, not the run.
+4. **Never stuck.** The economy always leaves a way forward (teaching a class), and a bad session costs time, not the run.
 5. **Both hands and thumbs.** Keyboard and phone play are equal citizens.

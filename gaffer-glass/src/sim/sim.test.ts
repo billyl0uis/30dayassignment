@@ -120,6 +120,14 @@ describe('every fail state is reachable and explains itself', () => {
     const b = new Bench(NO_MODS, true).hold('gather', 2.5).hold(null, 5);
     expect(b.p.s).toBe(0);
   });
+  it('a droop comes back on center with steady turning while it is soft', () => {
+    const b = gathered().hold(null, 0.8);
+    const drooped = b.p.s;
+    expect(drooped).toBeGreaterThan(0.1);
+    b.reheat().hold('turn', 1.5);
+    expect(b.fail).toBeNull();
+    expect(b.p.s).toBeLessThan(drooped / 2);
+  });
   it('floppy in the glory hole', () => {
     const b = gathered().hold('glory', 40);
     expect(b.fail).toMatch(/floppy/);

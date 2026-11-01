@@ -182,7 +182,9 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
       return;
     }
     case 'turn':
-      return; // turning only keeps it centered, which the sag rule handles
+      // Steady turning on soft glass brings a droop back on center, as a gaffer does with gravity.
+      if (f > 0) p.s = Math.max(0, p.s - SAG.turnCenterRate * f * dt);
+      return;
   }
 }
 

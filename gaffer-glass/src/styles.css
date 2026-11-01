@@ -261,7 +261,7 @@ main {
 .cost {
   color: var(--muted);
 }
-.ta {
+.teach {
   display: flex;
   align-items: center;
   gap: 0.75rem;

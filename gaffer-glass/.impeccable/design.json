@@ -476,8 +476,8 @@
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Everyday actions on slate cards: buying a jar or tool, End early, a TA shift (ghost variant).",
-      "html": "<button class=\"ds-btn-secondary\">$12</button> <button class=\"ds-btn-secondary ds-btn-ghost\">Take a TA shift (+$35)</button>",
+      "description": "Everyday actions on slate cards: buying a jar or tool, End early, teaching a class (ghost variant).",
+      "html": "<button class=\"ds-btn-secondary\">$12</button> <button class=\"ds-btn-secondary ds-btn-ghost\">Teach a beginner class (+$35)</button>",
       "css": ".ds-btn-secondary { font: 600 0.95rem var(--sans); border-radius: 8px; border: 1px solid var(--line-hi); background: var(--panel-2); color: var(--text); padding: 0.55rem 1rem; cursor: pointer; } .ds-btn-secondary:hover { border-color: var(--heat); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; } .ds-btn-ghost { background: transparent; }"
     },
     {

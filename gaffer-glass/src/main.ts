@@ -1,6 +1,6 @@
 import './styles.css';
 import { Session } from './session/session';
-import { bookSession, buyColor, buyUpgrade, overnight, taShift } from './studio/economy';
+import { bookSession, buyColor, buyUpgrade, overnight, teachClass } from './studio/economy';
 import { clearStudio, freshStudio, loadStudio, modsOf, saveStudio, type Studio } from './studio/state';
 import { renderHeader } from './ui/header';
 import { mountResults } from './ui/resultsScreen';
@@ -32,8 +32,8 @@ function showStudio() {
       commit(booked);
       startSession(assistant);
     },
-    taShift() {
-      commit(taShift(studio));
+    teachClass() {
+      commit(teachClass(studio));
       showStudio();
     },
     buyColor(c) {

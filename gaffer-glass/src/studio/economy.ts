@@ -11,9 +11,9 @@ export function bookSession(s: Studio, assistant: boolean): Studio | null {
   return s.cash >= cost ? { ...s, cash: s.cash - cost } : null;
 }
 
-/** A TA shift pays a little and uses up the day, so you can never get stuck broke. */
-export function taShift(s: Studio): Studio {
-  return { ...s, cash: s.cash + ECONOMY.taShiftPay, day: s.day + 1 };
+/** Teaching a class pays a little and uses up the day, so you can never get stuck broke. */
+export function teachClass(s: Studio): Studio {
+  return { ...s, cash: s.cash + ECONOMY.classPay, day: s.day + 1 };
 }
 
 export function buyColor(s: Studio, c: ColorId): Studio | null {
