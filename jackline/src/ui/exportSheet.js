@@ -3,7 +3,7 @@ import { CM_PER_IN, fmtLen, fmtMass, fmtVol } from '../model/units.js'
 
 const PAPER = {
   light: { bg: '#f6f2eb', card: '#ebe6dd', ink: '#24211d', muted: '#736c61', line: '#d9d1c4' },
-  dark: { bg: '#1f1b19', card: '#282320', ink: '#f1ebe2', muted: '#a99d8f', line: '#3d3630' },
+  dark: { bg: '#15171c', card: '#1c1f26', ink: '#ece8e0', muted: '#9097a3', line: '#2e333e' },
 }
 const HOT = '#ff8a3d'
 const FONT = '"Bricolage Grotesque", ui-rounded, system-ui, sans-serif'

@@ -35,7 +35,7 @@ function load() {
 export const useStore = create((set, get) => ({
   ...fromPreset('tumbler'),
   units: 'cm',
-  theme: 'light',
+  theme: 'dark',
   ...load(),
   turntable: true,
   cutaway: false,
