@@ -9,11 +9,12 @@ import { download, stamp } from '../download.js'
 import Sheet from './Sheet.jsx'
 import Vessel from './Vessel.jsx'
 
-// Light is a bright morning studio: sky overhead, a warm glow at the
-// horizon. Dark is a soft dusk, warm but not orange, so tints keep their color.
+// A quiet seamless sweep: the three tones sit close together so nothing
+// behind the piece competes with the glass. Light is airy and warm, with
+// only a hint of sky; dark is a soft warm dusk.
 const THEMES = {
-  dark: { top: '#262433', horizon: '#b9a89c', floor: '#3b3531', cell: '#4b4440', section: '#625852' },
-  light: { top: '#8cc0e8', horizon: '#fff2df', floor: '#e2d0b4', cell: '#cdb99a', section: '#b49d7c' },
+  dark: { top: '#3a3640', horizon: '#57504b', floor: '#3e3834', cell: '#4b4440', section: '#5d544e' },
+  light: { top: '#e3e9ec', horizon: '#f3eee6', floor: '#e8e0d4', cell: '#d6cbbb', section: '#c6b8a4' },
 }
 
 export default function Viewport() {
@@ -35,8 +36,9 @@ export default function Viewport() {
   )
 }
 
-// A photo-studio sweep: dark overhead, lit at the horizon. Clear glass shows
-// whatever is behind it, so this band is what makes it glow instead of going black.
+// A photo-studio sweep, blended over a wide band so there's no hard line
+// behind the piece. Clear glass shows whatever is behind it; a busy
+// background makes it hard to see.
 function Backdrop({ theme }) {
   const material = useMemo(
     () =>
@@ -46,8 +48,8 @@ function Backdrop({ theme }) {
         uniforms: { top: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, floor: { value: new THREE.Color() } },
         vertexShader: `varying vec3 vDir; void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
         fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 floor; varying vec3 vDir;
-          void main() { float h = vDir.y + 0.12; // horizon a little low, so the sky shows
-            vec3 c = h > 0.0 ? mix(horizon, top, smoothstep(0.0, 0.3, h)) : mix(horizon, floor, smoothstep(0.0, 0.3, -h));
+          void main() { float h = vDir.y;
+            vec3 c = h > 0.0 ? mix(horizon, top, smoothstep(0.0, 0.8, h)) : mix(horizon, floor, smoothstep(0.0, 0.8, -h));
             gl_FragColor = vec4(c, 1.0);
             #include <tonemapping_fragment>
             #include <colorspace_fragment>
