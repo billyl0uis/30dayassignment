@@ -94,6 +94,14 @@ kbd,
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+.brand-sub {
+  align-self: flex-end;
+  margin-left: -0.15rem;
+  font: 500 0.78rem/1 var(--display);
+  letter-spacing: 0.32em;
+  color: var(--ember-hi);
+  opacity: 0.75;
+}
 .brand .mark {
   width: 14px;
   height: 14px;

@@ -2,11 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "gaffer",
+      "name": "gaffer-glass",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "--prefix",
-        "gaffer",
+        "gaffer-glass",
         "run",
         "dev"
       ],
@@ -23,6 +23,18 @@
         "pony"
       ],
       "port": 5197
+    },
+    {
+      "name": "home-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5198",
+        "--directory",
+        "/private/tmp/claude-501/-Users-baileywheeler-Desktop-Githubsite-30dayassignment/2cd3cdd4-22cb-4e1f-be34-e3c5ae5b91fa/scratchpad/home-wt"
+      ],
+      "port": 5198
     }
   ]
 }

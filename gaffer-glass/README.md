@@ -1,4 +1,4 @@
-# Gaffer
+# Gaffer Glass
 
 A furnace glassblowing game. Rent a 3-hour block of hot shop time, make pieces on the pipe — gather, glory hole, marver, block, blow, jacks, punty transfer — knock them off into the annealer, and sell them the next morning to the order board. Save $1,000 toward your own furnace.
 
@@ -13,7 +13,7 @@ npm run build    # static site in dist/
 
 ## Deploying on Vercel
 
-Import the repo and set **Root Directory** to `gaffer`. `vercel.json` sets the build command and the `dist` output folder.
+Import the repo and set **Root Directory** to `gaffer-glass`. `vercel.json` sets the build command and the `dist` output folder.
 
 ## Tuning
 

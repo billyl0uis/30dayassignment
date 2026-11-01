@@ -5,7 +5,10 @@ import { h, money } from './dom';
 export function renderHeader(el: HTMLElement, s: Studio) {
   const progress = Math.min(1, s.cash / ECONOMY.goal);
   el.replaceChildren(
-    h('div', { class: 'brand' }, h('span', { class: 'mark' }), 'Gaffer'),
+    h('div', { class: 'brand', 'aria-label': 'Gaffer Glass' },
+      h('span', { class: 'mark' }),
+      h('span', { class: 'brand-name' }, 'Gaffer'),
+      h('span', { class: 'brand-sub' }, 'Glass')),
     h('dl', { class: 'stats' },
       h('div', {}, h('dt', {}, 'Day'), h('dd', {}, s.day)),
       h('div', {}, h('dt', {}, 'Cash'), h('dd', {}, money(s.cash))),

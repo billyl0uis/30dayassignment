@@ -1,4 +1,4 @@
-// Every tunable number in Gaffer lives here.
+// Every tunable number in Gaffer Glass lives here.
 // Units: inches, cubic inches, °F, seconds of real time (1 s = 1 studio minute).
 // Temperatures and timings are simplified for play; retune them to match your studio.
 
