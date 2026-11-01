@@ -10,7 +10,6 @@ export const HOLD_KEYS: Record<HoldAction, { code: string; key: string; label: s
   block: { code: 'KeyK', key: 'K', label: 'Block' },
   blow: { code: 'KeyB', key: 'B', label: 'Blow' },
   jacks: { code: 'KeyJ', key: 'J', label: 'Jacks' },
-  turn: { code: 'Space', key: 'Space', label: 'Turn' },
 };
 
 export const TAP_KEYS: Record<TapAction, { code: string; key: string; label: string }> = {
@@ -23,7 +22,7 @@ export const TAP_KEYS: Record<TapAction, { code: string; key: string; label: str
 
 export const COLOR_ORDER = Object.keys(COLORS) as ColorId[];
 
-/** Keyboard: hold keys press while down, tap keys fire once, 1–5 pick a color jar. Returns an unbind. */
+/** Keyboard: hold keys press while down, tap keys fire once, Space starts/stops rotation, 1–5 pick a color jar. Returns an unbind. */
 export function bindKeyboard(session: Session): () => void {
   const holdByCode = new Map(Object.entries(HOLD_KEYS).map(([a, k]) => [k.code, a as HoldAction]));
   const tapByCode = new Map(Object.entries(TAP_KEYS).map(([a, k]) => [k.code, a as TapAction]));
@@ -33,9 +32,11 @@ export function bindKeyboard(session: Session): () => void {
     const hold = holdByCode.get(e.code);
     const tap = tapByCode.get(e.code);
     const digit = /^Digit([1-9])$/.exec(e.code);
-    if (hold || tap || digit) e.preventDefault(); // keeps Space from scrolling the page
+    const space = e.code === 'Space';
+    if (hold || tap || digit || space) e.preventDefault(); // keeps Space from scrolling the page
     if (e.repeat) return;
-    if (hold) session.press(hold);
+    if (space) session.toggleRotation();
+    else if (hold) session.press(hold);
     else if (tap) session.tap(tap);
     else if (digit) {
       const c = COLOR_ORDER[Number(digit[1]) - 1];

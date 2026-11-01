@@ -13,13 +13,13 @@ class Bench {
   p: Piece = newPiece();
   events: SimEvent[] = [];
   finished: FinishedPiece | null = null;
-  constructor(public mods: Mods = NO_MODS, public assistant = false) {}
+  constructor(public mods: Mods = NO_MODS, public rotating = true) {}
 
   hold(a: HoldAction | null, until: number | ((p: Piece) => boolean), max = 30) {
     const done = typeof until === 'number' ? () => false : until;
     const limit = typeof until === 'number' ? until : max;
     for (let t = 0; t < limit && !this.p.failed && !done(this.p); t += DT) {
-      const r = step(this.p, a, DT, { mods: this.mods, assistant: this.assistant, justStarted: t === 0 });
+      const r = step(this.p, a, DT, { mods: this.mods, rotating: this.rotating, justStarted: t === 0 });
       this.p = r.piece;
       this.events.push(...r.events);
     }
@@ -55,7 +55,7 @@ function makeTumbler(b = new Bench()) {
   b.reheat();
   b.tap('transfer');
   b.reheat();
-  b.hold('turn', (p) => p.T < 1950, 5);
+  b.hold(null, (p) => p.T < 1950, 5);
   b.hold('jacks', (p) => p.o >= 0.35, 6);
   b.tap('knockOff');
   return b;
@@ -99,9 +99,9 @@ describe('the other pieces', () => {
     b.hold('blow', (p) => geometry(p).wall <= 0.22, 10);
     b.reheat().hold('block', 1.5);
     b.hold('jacks', (p) => p.n >= 0.6, 6).reheat().tap('transfer').reheat();
-    b.hold('turn', (p) => p.T < 1950, 5);
+    b.hold(null, (p) => p.T < 1950, 5);
     b.hold('jacks', (p) => p.o >= 0.5, 6);
-    b.reheat().hold('turn', (p) => p.T < 1950, 5).hold('jacks', (p) => p.o >= 0.85, 6);
+    b.reheat().hold(null, (p) => p.T < 1950, 5).hold('jacks', (p) => p.o >= 0.85, 6);
     b.tap('knockOff');
     expect(b.fail).toBeNull();
     expect(b.finished!.type).toBe('bowl');
@@ -112,19 +112,20 @@ describe('the other pieces', () => {
 describe('every fail state is reachable and explains itself', () => {
   const gathered = () => new Bench().hold('gather', 2.5);
 
-  it('sag: nothing turning it', () => {
-    const b = gathered().hold(null, 10);
+  it('sag: rotation stopped', () => {
+    const b = new Bench(NO_MODS, false).hold('gather', 2.5).hold(null, 10);
     expect(b.fail).toMatch(/Keep turning/);
   });
-  it('the assistant keeps it turning', () => {
-    const b = new Bench(NO_MODS, true).hold('gather', 2.5).hold(null, 5);
+  it('the pipe rotates by default and stays centered', () => {
+    const b = gathered().hold(null, 5);
     expect(b.p.s).toBe(0);
   });
-  it('a droop comes back on center with steady turning while it is soft', () => {
-    const b = gathered().hold(null, 0.8);
+  it('a droop comes back on center once rotation restarts while it is soft', () => {
+    const b = new Bench(NO_MODS, false).hold('gather', 2.5).hold(null, 0.8);
     const drooped = b.p.s;
     expect(drooped).toBeGreaterThan(0.1);
-    b.reheat().hold('turn', 1.5);
+    b.rotating = true;
+    b.reheat().hold(null, 1.5);
     expect(b.fail).toBeNull();
     expect(b.p.s).toBeLessThan(drooped / 2);
   });
@@ -133,11 +134,11 @@ describe('every fail state is reachable and explains itself', () => {
     expect(b.fail).toMatch(/floppy/);
   });
   it('cold check on the pipe', () => {
-    const b = gathered().hold('turn', 120);
+    const b = gathered().hold(null, 120);
     expect(b.fail).toMatch(/cold-checked/);
   });
   it('thermal shock in the glory hole', () => {
-    const b = gathered().hold('turn', (p) => p.T < 800, 120).hold('glory', 1);
+    const b = gathered().hold(null, (p) => p.T < 800, 120).hold('glory', 1);
     expect(b.fail).toMatch(/Thermal shock/);
   });
   it('blowout', () => {
@@ -154,7 +155,7 @@ describe('every fail state is reachable and explains itself', () => {
     expect(b.fail).toMatch(/lip collapsed/);
   });
   it('cracks going into the annealer when knocked off cold', () => {
-    const b = makeTumblerOnPunty().hold('turn', (p) => p.T < 790, 120);
+    const b = makeTumblerOnPunty().hold(null, (p) => p.T < 790, 120);
     b.tap('knockOff');
     expect(b.fail).toMatch(/Cracked going into the annealer/);
   });
@@ -164,12 +165,12 @@ describe('every fail state is reachable and explains itself', () => {
     expect(b.p.uneven).toBeGreaterThan(0);
   });
   it('color will not stick to cold glass', () => {
-    const b = gathered().hold('turn', (p) => p.T < 1400, 60);
+    const b = gathered().hold(null, (p) => p.T < 1400, 60);
     const r = canTap(b.p, 'color', { selectedColor: 'cobalt', colorCharges: 5 });
     expect(r.ok).toBe(false);
   });
   it('too stiff to shape', () => {
-    const b = gathered().hold('turn', (p) => p.T < 1100, 60).hold('marver', 0.2);
+    const b = gathered().hold(null, (p) => p.T < 1100, 60).hold('marver', 0.2);
     expect(b.events.some((e) => e.text === 'Too stiff — reheat.')).toBe(true);
   });
 });

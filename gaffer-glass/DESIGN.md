@@ -189,7 +189,7 @@ A warm, light, near-neutral room with dark slate instruments over it, one hot or
 - **Panel Text** (text), **Panel Muted** (muted), **Panel Faint** (faint): text on slate, from figures to labels to the Seconds grade.
 
 ### Status
-- **Working Green** (ok), **Amber Warning** (warn), **Crack Red** (bad): readout semantics only. Temperature in the working range, warnings, the low clock and danger marker, A grades and "Owned". They live inside panels and never decorate.
+- **Working Green** (ok), **Amber Warning** (warn), **Crack Red** (bad): readout semantics only. Temperature in the working range, warnings, the danger marker, A grades and "Owned". They live inside panels and never decorate.
 
 ### Named Rules
 **The Lit Shop Rule.** The ground is always light: the painted daylit room during a session, Whitewash on every other screen. Dark is reserved for the floating panels and the header bar.
@@ -215,9 +215,9 @@ The root size is 15px, so 1rem is 15px throughout.
 - **Headline** (600, 1.35rem, 1.2): card and dialog headings ("Hot shop time", "Order board", "Morning, day N").
 - **Title** (600, 1.1rem, 1.2): order types on the order board. Sub-headings inside cards (h3) step down to 600 at 0.95rem in Panel Muted.
 - **Body** (400, 15px, 1.5): card copy, notes (0.875rem, muted), the toast (0.925rem).
-- **Label** (400, 0.75rem): Panel Muted labels beside figures: "Temperature", "Time left", readout names, header stat names.
+- **Label** (400, 0.75rem): Panel Muted labels beside figures: "Temperature", "In annealer", readout names, header stat names.
 - **Control** (600, 0.8rem, 1.1): hold-tool labels; 1.05rem on the two big thumb buttons, 0.875rem on tap pills, 0.95rem on regular buttons.
-- **Readout** (Mono 400, 1.35rem, tabular): the clock and the live temperature, the two numbers watched mid-piece.
+- **Readout** (Mono 400, 1.35rem, tabular): the annealer count and the live temperature.
 - **Numeric** (Mono 500, 0.875rem, tabular): readout values, header stats (1rem), prices, totals, key hints in kbd.
 
 ### Named Rules
@@ -227,12 +227,12 @@ The root size is 15px, so 1rem is 15px throughout.
 
 ## Layout
 
-The session screen is a full-bleed canvas (100dvh under the header, overflow hidden) with absolutely positioned floats over it, inset 12px from the edges on desktop and 8px on phones:
+The session screen is a full-bleed three.js 3D scene (drag to look around, Reset view or double-click to return) (100dvh under the header, overflow hidden) with absolutely positioned floats over it, inset 12px from the edges on desktop and 8px on phones:
 
-- **Top left:** the clock pill (Time left plus End early).
+- **Top left:** the session pill (In annealer count, Reset view, Close up).
 - **Top right:** the readout rail, 250px wide: temperature, gauge, then ten label/value rows. On phones it folds into a compact mono HUD plus a "Details" pill that opens the full rail as a two-column grid.
 - **Lower center:** the toast, a pill 196px above the bottom (290px when the controls wrap below 1100px; pinned near the top on phones).
-- **Bottom:** the thumb controls. Left pad: Glory hole (138px) with Gather and Turn (64px) beside it. Right pad: Marver, Block and Jacks (64px) beside Blow (138px). Centered between them: the jar tray above the row of tap pills. Pads use a 10px gap; the bottom padding respects the safe-area inset.
+- **Bottom:** the thumb controls. Left pad: Glory hole (138px) with Gather and the Rotating toggle (64px) beside it; Rotating wears a green ring while the pipe turns and an amber ring when stopped. Right pad: Marver, Block and Jacks (64px) beside Blow (138px). Centered between them: the jar tray above the row of tap pills. Pads use a 10px gap; the bottom padding respects the safe-area inset.
 
 Below 1100px the jar tray and tap pills move to their own row above the pads. Below 760px the big buttons shrink to 104px, the small ones to 50px, key hints hide, and the right pad stacks its three small tools in a column.
 
@@ -242,7 +242,7 @@ The studio screen is a centered column (max 1280px, 16px gutter) holding an auto
 
 ## Elevation & Depth
 
-Depth comes from dark panels floating over a light, painted room, lifted by one soft, warm drop shadow. There is a single shadow token; panels, cards, buttons, the toast and the jar tray all use it, and states add rings on top of it rather than new shadows. Inside panels, depth is tonal: Slate, Raised marks a surface one step up. Light in the canvas (the furnace door's spill, the window's light on the floor, the piece's glow) is painted, not a UI effect.
+Depth comes from dark panels floating over a light, painted room, lifted by one soft, warm drop shadow. There is a single shadow token; panels, cards, buttons, the toast and the jar tray all use it, and states add rings on top of it rather than new shadows. Inside panels, depth is tonal: Slate, Raised marks a surface one step up. Light in the 3D scene (the furnace door's glow, the window's light on the floor, the piece's own heat light and halo) is real scene lighting, not a UI effect.
 
 ### Shadow Vocabulary
 - **Float** (`box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22)`): every floating panel and control.
@@ -268,7 +268,7 @@ Plain, sturdy studio buttons on dark cards.
 - **Shape:** gently rounded (8px).
 - **Primary:** Working Heat fill, Heat Ink text, 600 weight, 0.55rem by 1rem; the big size (1.05rem, 0.75rem by 1.4rem) is for the screen's one main action.
 - **Hover / Focus:** primary brightens to Working Heat Bright; secondary and ghost keep their fill and take a Working Heat border. Focus everywhere is a 2px Working Heat Bright outline at 2px offset. Disabled drops to 40% opacity.
-- **Secondary:** Slate, Raised with a 1px Rule, Lit border. **Ghost:** the same, transparent. **Small:** 0.3rem by 0.7rem at 0.875rem, for prices on the supply shelf and End early. **Link:** underlined Bench Ink, Muted text on the wall, for destructive escapes like "Start over".
+- **Secondary:** Slate, Raised with a 1px Rule, Lit border. **Ghost:** the same, transparent. **Small:** 0.3rem by 0.7rem at 0.875rem, for prices on the supply shelf, Reset view and Close up. **Link:** underlined Bench Ink, Muted text on the wall, for destructive escapes like "Start over".
 
 ### Hold Tools (signature)
 Round slate buttons under the thumbs, held rather than clicked.

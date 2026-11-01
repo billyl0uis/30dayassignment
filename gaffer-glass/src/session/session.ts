@@ -1,4 +1,4 @@
-import { ECONOMY, LOOP, SAG } from '../config';
+import { LOOP, SAG } from '../config';
 import {
   applyTap, canHold, canTap, type Check, type HoldAction, type Mods, type SimEvent, type TapAction,
 } from '../sim/actions';
@@ -19,13 +19,13 @@ export interface SessionResult {
 
 const RANK: Record<SimEvent['kind'], number> = { hint: 0, info: 1, warn: 2, fail: 3 };
 
-/** One booked block of hot shop time. Owns the piece on the pipe; knows nothing about the DOM. */
+/** One open-ended session at the hot shop, until the player closes up. Owns the piece on the pipe; knows nothing about the DOM. */
 export class Session {
-  timeLeft = ECONOMY.sessionSeconds;
-  clock = 0;
+  clock = 0; // seconds since the shop was fired up
   piece: Piece | null = newPiece();
   held: HoldAction | null = null;
   tool: HoldAction | null = null; // the held tool if it's actually allowed
+  rotating = true; // the pipe rolls unless the player stops it
   turning = false;
   turnPhase = 0;
   annealed: FinishedPiece[] = [];
@@ -40,7 +40,6 @@ export class Session {
 
   constructor(
     public readonly mods: Mods,
-    public readonly assistant: boolean,
     public colors: Record<ColorId, number>,
   ) {
     this.selectedColor = (Object.keys(colors) as ColorId[]).find((c) => colors[c] > 0) ?? null;
@@ -86,12 +85,28 @@ export class Session {
     r.events.forEach((e) => this.say(e, true));
   }
 
+  toggleRotation() {
+    if (this.over) return;
+    this.rotating = !this.rotating;
+    this.say({ kind: 'hint', text: this.rotating ? 'Rotating.' : 'Stopped turning — hot glass will droop.' }, true);
+  }
+
   selectColor(c: ColorId) {
     this.selectedColor = c;
   }
 
-  endEarly() {
-    this.timeLeft = 0;
+  /** Close up for the night. A piece still on the pipe can't go in the annealer half-made, so it goes in the cullet. */
+  closeUp() {
+    if (this.over) return;
+    this.over = true;
+    this.held = this.tool = null;
+    const q = this.piece;
+    if (q && !q.failed && q.V > 0) {
+      this.cullet += 1;
+      this.say({ kind: 'fail', text: 'Closed up — the piece on the pipe goes in the cullet bucket.' }, true);
+    } else {
+      this.say({ kind: 'info', text: 'Closed up. The annealer is loaded for the night.' }, true);
+    }
   }
 
   result(): SessionResult {
@@ -112,12 +127,11 @@ export class Session {
 
   private stepOnce(dt: number) {
     this.clock += dt;
-    this.timeLeft -= dt;
     const p = this.piece;
     this.tool = this.held && canHold(p, this.held).ok ? this.held : null;
     if (p) {
       const coasting = this.clock - this.lastToolAt < SAG.coastSeconds;
-      const r = step(p, this.held, dt, { mods: this.mods, assistant: this.assistant, justStarted: this.justStarted, coasting });
+      const r = step(p, this.held, dt, { mods: this.mods, rotating: this.rotating, justStarted: this.justStarted, coasting });
       if (this.tool) this.lastToolAt = this.clock;
       this.piece = r.piece;
       this.turning = r.turning && !r.piece.failed;
@@ -130,19 +144,6 @@ export class Session {
     }
     this.justStarted = false;
     if (this.turning) this.turnPhase = (this.turnPhase + dt * 0.55) % 1;
-
-    if (this.timeLeft <= 0) {
-      this.timeLeft = 0;
-      this.over = true;
-      this.held = this.tool = null;
-      const q = this.piece;
-      if (q && !q.failed && q.V > 0) {
-        this.cullet += 1;
-        this.say({ kind: 'fail', text: "Time's up — the piece on the pipe goes in the cullet bucket." });
-      } else {
-        this.say({ kind: 'info', text: "Time's up. The annealer is loaded for the night." });
-      }
-    }
   }
 
   /** Fails stay up until something else important happens; hints don't bury warnings. Player actions always speak. */

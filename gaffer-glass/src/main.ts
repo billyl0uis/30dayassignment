@@ -1,6 +1,6 @@
 import './styles.css';
 import { Session } from './session/session';
-import { bookSession, buyColor, buyUpgrade, overnight, teachClass } from './studio/economy';
+import { buyColor, buyUpgrade, overnight } from './studio/economy';
 import { clearStudio, freshStudio, loadStudio, modsOf, saveStudio, type Studio } from './studio/state';
 import { renderHeader } from './ui/header';
 import { mountResults } from './ui/resultsScreen';
@@ -26,15 +26,8 @@ function showStudio() {
   document.body.dataset.screen = 'studio';
   renderHeader(header, studio);
   mountStudio(main, studio, {
-    book(assistant) {
-      const booked = bookSession(studio, assistant);
-      if (!booked) return;
-      commit(booked);
-      startSession(assistant);
-    },
-    teachClass() {
-      commit(teachClass(studio));
-      showStudio();
+    fireUp() {
+      startSession();
     },
     buyColor(c) {
       commit(buyColor(studio, c));
@@ -54,9 +47,9 @@ function showStudio() {
   window.scrollTo(0, 0);
 }
 
-function startSession(assistant: boolean) {
+function startSession() {
   document.body.dataset.screen = 'session';
-  const session = new Session(modsOf(studio), assistant, { ...studio.colors });
+  const session = new Session(modsOf(studio), { ...studio.colors });
   teardown = mountSession(main, session, () => {
     teardown?.();
     teardown = null;

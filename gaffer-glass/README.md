@@ -1,8 +1,8 @@
 # Gaffer Glass
 
-A furnace glassblowing game. Rent a 3-hour block of hot shop time, make pieces on the pipe — gather, glory hole, marver, block, blow, jacks, punty transfer — knock them off into the annealer, and sell them the next morning to the order board. Save $1,000 toward your own furnace.
+A furnace glassblowing game. Fire up the hot shop and work as long as you like, make pieces on the pipe — gather, glory hole, marver, block, blow, jacks, punty transfer — knock them off into the annealer, and sell them the next morning to the order board. Save $1,000 toward your own furnace.
 
-Vite + TypeScript, HTML5 canvas for the piece, plain DOM for the UI. No game engine, no runtime dependencies.
+Vite + TypeScript, a three.js 3D scene for the shop and the piece, plain DOM for the UI. No game engine; three.js is the only runtime dependency.
 
 ```bash
 npm install
@@ -31,9 +31,9 @@ src/
     actions.ts       hold tools, tap actions, canHold/canTap (shared with the buttons)
     physics.ts       one fixed step: tool, cooling, sag, cold-check
     scoring.ts       centered / even / spec → quality, grades, sales
-  studio/            save file, order board, economy (book, teach a class, shop, overnight)
-  session/           the 3-hour block: clock, fixed-step loop, messages, keyboard + hold buttons
-  render/            canvas: silhouette sampling, heat colors, the bay and stations
+  studio/            save file, order board, economy (shop purchases, overnight sales)
+  session/           an open-ended session: fixed-step loop, rotation, close up, messages, keyboard + hold buttons
+  render/            three.js: the piece spun from its profile, heat colors, the shop and stations
   ui/                header, studio, session and results screens
 ```
 
@@ -42,7 +42,9 @@ The session runs the sim in fixed 1/60 s steps inside `requestAnimationFrame`, s
 ## Choices beyond the brief
 
 - **Thin walls blow faster.** Blow rate scales up as the wall thins (`BLOW.thinRef`, `thinMax`), so a blowout is reachable and comes on suddenly, the way a bubble balloons.
-- **Turning re-centers.** Holding Turn on soft glass pulls a droop back on center (`SAG.turnCenterRate`), the way a gaffer uses gravity; the marver and block still re-center faster.
+- **The pipe rotates by default.** Space stops and starts it, like Glassworks' Rotating toggle. While it turns, soft glass drifts back on center (`SAG.turnCenterRate`); stopped, hot glass droops.
+- **No clock.** A session lasts until you close up, like Glassworks; a piece still on the pipe at close-up goes in the cullet.
+- **No rent, no side jobs.** Like Glassworks, you can't get stuck: firing up the shop and clear glass are free, and money goes only on color jars and tools.
 - **The pipe coasts.** It keeps rolling for `SAG.coastSeconds` (0.35 s) after you let go of a tool, so switching tools doesn't cost centering. Set it to 0 for the strict rule.
 - **The newspaper pad replaces the block.** With the pad, the Block tool becomes the Pad and centers 60% faster.
 - **Color requests are a bonus.** An order asking for a color still takes a clear piece; the matching color adds $15.

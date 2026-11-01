@@ -1,49 +1,25 @@
 import { COLOR, COLORS, ECONOMY, ORDER_TYPES, UPGRADES, type OrderSpec } from '../config';
 import { COLOR_ORDER } from '../session/input';
 import type { Order } from '../sim/scoring';
-import { sessionCost } from '../studio/economy';
 import type { Studio, UpgradeId } from '../studio/state';
 import { h, money, range } from './dom';
 
 export interface StudioActions {
-  book(assistant: boolean): void;
-  teachClass(): void;
+  fireUp(): void;
   buyColor(c: keyof typeof COLORS): void;
   buyUpgrade(u: UpgradeId): void;
   reset(): void;
 }
 
-let assistantChecked = false; // remembered between visits to the studio in this tab
-
 export function mountStudio(root: HTMLElement, s: Studio, act: StudioActions) {
   const won = s.cash >= ECONOMY.goal;
 
-  // ── Book ──
-  const assist = h('input', { type: 'checkbox', id: 'assist', checked: assistantChecked });
-  const cost = h('span', { class: 'mono' });
-  const bookBtn = h('button', { class: 'btn primary big', type: 'button' }, 'Book the hot shop');
-  const broke = h('p', { class: 'note warn', hidden: true }, `Not enough for rent. Teach a beginner class for ${money(ECONOMY.classPay)}.`);
-  const sync = () => {
-    assistantChecked = assist.checked;
-    const c = sessionCost(assist.checked);
-    cost.textContent = money(c);
-    bookBtn.disabled = s.cash < c;
-    broke.hidden = s.cash >= c;
-  };
-  assist.addEventListener('change', sync);
-  bookBtn.addEventListener('click', () => act.book(assist.checked));
-  sync();
-
+  // ── The day's session ──
+  const fireBtn = h('button', { class: 'btn primary big', type: 'button', onclick: () => act.fireUp() }, 'Fire up the shop');
   const book = h('section', { class: 'card book' },
-    h('h2', {}, 'Hot shop time'),
-    h('p', {}, `A 3-hour block on the furnace, glory hole and bench. Rent ${money(ECONOMY.rent)}. Pieces go in the annealer and sell in the morning.`),
-    h('label', { class: 'check', for: 'assist' }, assist,
-      h('span', {}, `Bring an assistant (+${money(ECONOMY.assistantFee)}) — keeps the pipe turning when you aren't on a tool`)),
-    h('div', { class: 'book-row' }, bookBtn, h('span', { class: 'cost' }, 'Total ', cost)),
-    broke,
-    h('div', { class: 'teach' },
-      h('button', { class: 'btn ghost', type: 'button', onclick: () => act.teachClass() }, `Teach a beginner class (+${money(ECONOMY.classPay)})`),
-      h('span', { class: 'note' }, 'Uses up the day.')));
+    h('h2', {}, 'Hot shop'),
+    h('p', {}, 'The furnace, glory hole and bench, for as long as you like. Clear glass is free from the furnace; color comes from your jars. Close up when you’re done; the annealer comes down overnight and pieces sell in the morning.'),
+    fireBtn);
 
   // ── Orders ──
   const orders = h('section', { class: 'card orders' },
@@ -118,10 +94,10 @@ function howTo() {
     item('Bowl',
       'Same as a tumbler with more glass, opened past 50%. Reheat between opens so the jacks keep moving.'),
     item('Always',
-      'Keep it turning. Anything held counts as turning — but the moment you let go of every tool, hot glass droops. If it droops, keep it soft and hold Turn (or marver or block) to bring it back on center. Reheat before it drops under 1150°F; under 850°F the glory hole will crack it.'),
+      'The pipe rotates on its own. Stop it (Space) and hot glass droops; start it again while the glass is soft and it comes back on center. Reheat before it drops under 1150°F; under 850°F the glory hole will crack it.'),
     h('p', { class: 'note' }, 'Temperatures and timings are simplified for play.'),
     h('h3', {}, 'Keys'),
     h('p', { class: 'keys mono' },
-      'Hold: F gather · G glory hole · M marver · K block · B blow · J jacks · Space turn', h('br'),
+      'Hold: F gather · G glory hole · M marver · K block · B blow · J jacks · Space start/stop rotating', h('br'),
       'Tap: C color · P transfer · X knock off · N new pipe · Q dump · 1–5 pick a jar'));
 }

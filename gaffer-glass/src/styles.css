@@ -977,3 +977,45 @@ body[data-screen='session'] main {
     display: none;
   }
 }
+
+/* Rotation is a state, not a hold: a calm ring while the pipe rolls. */
+.tool.hold.tool-rotate.active {
+  transform: none;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 0 0 3px var(--ok), var(--shadow);
+}
+.tool.hold.tool-rotate.active kbd {
+  color: var(--muted);
+}
+.tool.tool-rotate:not(.active) {
+  box-shadow: 0 0 0 3px var(--warn), var(--shadow);
+}
+
+/* Which station the piece is at, under the clock. */
+.station-chip {
+  position: absolute;
+  top: 66px;
+  left: 12px;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--heat-hi);
+  font: 600 0.8rem var(--sans);
+  pointer-events: none;
+}
+.station-chip:empty {
+  display: none;
+}
+@media (max-width: 760px) {
+  .station-chip {
+    top: 52px;
+    left: 8px;
+  }
+}
+@media (max-width: 760px) {
+  /* Double-tap the shop resets the view on a phone, so the button gives its room to the readouts. */
+  .view-btn {
+    display: none;
+  }
+}

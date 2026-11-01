@@ -4,7 +4,7 @@ import {
 import { clamp, geometry, type ColorId, type FinishedPiece, type Piece, pieceType } from './piece';
 import { fluid } from './physics';
 
-export type HoldAction = 'gather' | 'glory' | 'marver' | 'block' | 'blow' | 'jacks' | 'turn';
+export type HoldAction = 'gather' | 'glory' | 'marver' | 'block' | 'blow' | 'jacks';
 export type TapAction = 'newPipe' | 'dump' | 'color' | 'transfer' | 'knockOff';
 
 export type Check = { ok: true } | { ok: false; reason: string };
@@ -33,7 +33,6 @@ export function canHold(p: Piece | null, a: HoldAction): Check {
   if (!p) return no('Nothing on the pipe — press N for a new pipe.');
   if (p.failed) return no('That piece is done for — N for a new pipe or Q to dump it.');
   if (a === 'gather') return p.punty ? no('No gathering on the punty.') : OK;
-  if (a === 'turn') return OK;
   if (p.V <= 0) return no('Gather some glass first (F at the furnace).');
   if (a === 'block' && p.punty) return no('Block on the pipe, not the punty.');
   if (a === 'blow' && p.punty) return no("You can't blow through the punty — it's solid.");
@@ -181,10 +180,6 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
         fail(p, 'floor', `Opened past ${pct(JACKS.collapseAt)} — the lip collapsed. Stop opening once it's the shape you want.`, ctx);
       return;
     }
-    case 'turn':
-      // Steady turning on soft glass brings a droop back on center, as a gaffer does with gravity.
-      if (f > 0) p.s = Math.max(0, p.s - SAG.turnCenterRate * f * dt);
-      return;
   }
 }
 

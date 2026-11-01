@@ -1,20 +1,8 @@
-import { COLOR, COLORS, ECONOMY, UPGRADES } from '../config';
+import { COLOR, COLORS, UPGRADES } from '../config';
 import type { ColorId, FinishedPiece } from '../sim/piece';
 import { sellPieces, type Sale } from '../sim/scoring';
 import { refillOrders } from './orders';
 import type { Studio, UpgradeId } from './state';
-
-export const sessionCost = (assistant: boolean) => ECONOMY.rent + (assistant ? ECONOMY.assistantFee : 0);
-
-export function bookSession(s: Studio, assistant: boolean): Studio | null {
-  const cost = sessionCost(assistant);
-  return s.cash >= cost ? { ...s, cash: s.cash - cost } : null;
-}
-
-/** Teaching a class pays a little and uses up the day, so you can never get stuck broke. */
-export function teachClass(s: Studio): Studio {
-  return { ...s, cash: s.cash + ECONOMY.classPay, day: s.day + 1 };
-}
 
 export function buyColor(s: Studio, c: ColorId): Studio | null {
   const price = COLORS[c].price;

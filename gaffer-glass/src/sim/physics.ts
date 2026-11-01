@@ -9,7 +9,7 @@ export const coolingK = (V: number) => COOL.base + COOL.small / (1 + V / COOL.sm
 
 export interface StepContext {
   mods: Mods;
-  assistant: boolean; // an assistant keeps the pipe turning when you aren't using a tool
+  rotating: boolean; // the pipe is rolling on the rails (on by default; Space stops it)
   justStarted: boolean; // first step of the current hold
   coasting?: boolean; // a tool was let go of moments ago and the pipe is still rolling
 }
@@ -28,7 +28,7 @@ export function step(p0: Piece, held: HoldAction | null, dt: number, ctx: StepCo
 
   // A held tool only counts if it's allowed right now; a refused one does nothing at all.
   const tool = held && canHold(p, held).ok ? held : null;
-  const turning = tool !== null || ctx.assistant || !!ctx.coasting;
+  const turning = tool !== null || ctx.rotating || !!ctx.coasting;
   if (p.V <= 0 && tool !== 'gather') return { piece: p, events, turning };
 
   const hctx = { mods: ctx.mods, justStarted: ctx.justStarted, events, floppy: false };
@@ -41,6 +41,9 @@ export function step(p0: Piece, held: HoldAction | null, dt: number, ctx: StepCo
   if (!turning && p.T > SAG.minF) {
     const soft = (p.T - SAG.minF) / SAG.span;
     p.s += dt * SAG.rate * soft * soft * (1 + p.V / SAG.massV);
+  } else if (turning && !hctx.floppy) {
+    // Steady turning lets gravity pull soft glass back on center.
+    p.s = Math.max(0, p.s - SAG.turnCenterRate * fluid(p.T) * dt);
   }
 
   if (p.s >= 1) {

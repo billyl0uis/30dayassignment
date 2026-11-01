@@ -1,5 +1,5 @@
 import { COLORS, COOL, GLORY, LOOP, SAG } from '../config';
-import { Scene } from '../render/scene';
+import { Scene, STATION_LABEL } from '../render/scene';
 import { bindHoldButton, bindKeyboard, COLOR_ORDER, HOLD_KEYS, TAP_KEYS } from '../session/input';
 import { Session } from '../session/session';
 import { canHold, dropAt, type HoldAction, type TapAction } from '../sim/actions';
@@ -23,7 +23,7 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
   // ── Readouts ──
   const val = () => h('span', { class: 'val' });
   const r = {
-    time: val(), temp: val(), V: val(), D: val(), H: val(), wall: val(), centered: val(), even: val(),
+    temp: val(), V: val(), D: val(), H: val(), wall: val(), centered: val(), even: val(),
     neck: val(), neckLabel: h('span', {}, 'Jack line'), color: val(), type: val(), annealed: val(),
   };
   const marker = h('div', { class: 'gauge-marker' });
@@ -72,7 +72,10 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
     tapBtns.set(a, b);
   }
   const hb = (a: HoldAction) => holdBtns.get(a)!;
-  const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), hb('turn'));
+  const rotate = h('button', { class: 'tool hold tool-rotate', type: 'button', 'aria-pressed': 'true' },
+    h('span', { class: 'tl' }, 'Rotating'), h('kbd', {}, 'Space'));
+  rotate.addEventListener('click', () => session.toggleRotation());
+  const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), rotate);
   const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('jacks'));
   const taps = h('div', { class: 'taps' }, ...tapBtns.values());
 
@@ -82,10 +85,17 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
   const hudNeck = h('span', {});
   const hudCenter = h('span', {});
   const hud = h('div', { class: 'hud', 'aria-hidden': 'true' }, hudTemp, hudNeck, hudCenter);
-  const endBtn = h('button', { class: 'btn small', type: 'button' }, 'End early');
-  endBtn.addEventListener('click', () => {
-    if (confirm('End the session now? A piece still on the pipe goes in the cullet.')) session.endEarly();
+  // No clock: you work as long as you like and close up when you're done.
+  const closeBtn = h('button', { class: 'btn small', type: 'button', title: 'Close up for the night; the annealer comes down and pieces sell in the morning' }, 'Close up');
+  closeBtn.addEventListener('click', () => {
+    const p = session.piece;
+    const onPipe = p && !p.failed && p.V > 0;
+    if (!onPipe || confirm('Close up now? The piece still on the pipe goes in the cullet.')) session.closeUp();
   });
+  const kilnCount = h('span', { class: 'val' });
+  const viewBtn = h('button', { class: 'btn small view-btn', type: 'button', title: 'Drag the shop to look around; double-click also resets' }, 'Reset view');
+  viewBtn.addEventListener('click', () => scene.resetView());
+  const chip = h('div', { class: 'station-chip', 'aria-hidden': 'true' });
   const more = h('button', { class: 'more', type: 'button', 'aria-expanded': 'false' }, 'Details');
   more.addEventListener('click', () => {
     const open = rail.classList.toggle('open');
@@ -95,13 +105,14 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
 
   const overlay = h('div', { class: 'overlay', hidden: true },
     h('div', { class: 'overlay-card' },
-      h('h2', {}, "Time's up"),
+      h('h2', {}, 'Closed up'),
       h('p', { class: 'overlay-text' }),
-      h('button', { class: 'btn primary', type: 'button', onclick: () => onClose() }, 'Close up for the night')));
+      h('button', { class: 'btn primary', type: 'button', onclick: () => onClose() }, 'On to the morning')));
 
   const screen = h('section', { class: 'session' },
     canvas,
-    h('div', { class: 'session-bar float' }, h('div', { class: 'clock' }, h('span', { class: 'lbl' }, 'Time left'), r.time), endBtn),
+    h('div', { class: 'session-bar float' }, h('div', { class: 'clock' }, h('span', { class: 'lbl' }, 'In annealer'), kilnCount), viewBtn, closeBtn),
+    chip,
     rail,
     hud,
     msg,
@@ -133,9 +144,7 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
 
   function refresh() {
     const p = session.piece;
-    const mins = Math.ceil(session.timeLeft);
-    r.time.textContent = `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`;
-    r.time.classList.toggle('low', session.timeLeft < 20);
+    kilnCount.textContent = String(session.annealed.length);
     const has = !!p && p.V > 0;
     const g = p ? geometry(p) : null;
     const T = has ? p!.T : null;
@@ -171,6 +180,11 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
       b.classList.toggle('active', session.tool === a);
       b.querySelector('.tl')!.textContent = a === 'block' && session.mods.pad ? 'Pad' : HOLD_KEYS[a].label;
     }
+    const t = session.tool;
+    chip.textContent = t ? (t === 'block' && session.mods.pad ? 'Newspaper pad' : STATION_LABEL[t]) : '';
+    rotate.classList.toggle('active', session.rotating);
+    rotate.setAttribute('aria-pressed', String(session.rotating));
+    rotate.querySelector('.tl')!.textContent = session.rotating ? 'Rotating' : 'Stopped';
     for (const [a, b] of tapBtns) {
       const ok = session.canTap(a);
       b.classList.toggle('off', !ok.ok);
@@ -203,5 +217,6 @@ export function mountSession(root: HTMLElement, session: Session, onClose: () =>
   return () => {
     cancelAnimationFrame(raf);
     unbindKeys();
+    scene.dispose();
   };
 }

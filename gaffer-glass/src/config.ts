@@ -8,10 +8,6 @@ export const ROOM_F = 70;
 export const ECONOMY = {
   startCash: 100,
   goal: 1000, // save this much toward your own furnace
-  rent: 45, // one 3-hour block of hot shop time
-  assistantFee: 20, // optional assistant who keeps the pipe turning
-  classPay: 35, // teaching a beginner class: cash, but uses up the day
-  sessionSeconds: 180, // 3 studio hours at 1 s = 1 min
   repBowlUnlock: 3, // reputation needed before bowl orders appear
   repPerSale: 1,
   repPerGradeA: 2,
@@ -63,7 +59,7 @@ export const SAG = {
   massV: 15,
   centeredK: 1.6, // centered score = 1 − centeredK·s
   coastSeconds: 0.35, // the pipe keeps rolling this long after you let go of a tool
-  turnCenterRate: 0.3, // holding Turn on soft glass lets gravity pull a droop back on center (sag/s, scaled by fluid)
+  turnCenterRate: 0.3, // while the pipe rotates, soft glass drifts back on center (sag/s, scaled by fluid)
 };
 
 // ── Bench tools ──────────────────────────────────────────────────────

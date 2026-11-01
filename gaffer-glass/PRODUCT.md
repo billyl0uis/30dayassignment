@@ -18,18 +18,19 @@ People play it in a browser on a desktop with a keyboard, or on a phone with on-
 
 ## Product Purpose
 
-You run a small glass practice that rents hot shop time. Between sessions, in the studio, you book a 3-hour block (with or without an assistant), read the order board, buy color jars and tool upgrades, or teach a beginner class for cash. In a session you make pieces on the pipe by hand: gather, reheat, marver, block, blow, jack a line, transfer to the punty, open the lip, and knock off into the annealer. Overnight the annealer comes down and pieces sell to matching orders or as seconds. The goal is to save $1,000 toward your own furnace.
+You run a small glass practice. Between sessions, in the studio, you fire up the hot shop, read the order board, and buy color jars and tool upgrades. In a session you make pieces on the pipe by hand: gather, reheat, marver, block, blow, jack a line, transfer to the punty, open the lip, and knock off into the annealer. Overnight the annealer comes down and pieces sell to matching orders or as seconds. The goal is to save $1,000 toward your own furnace.
 
 A session succeeds when the player makes something on purpose, understands why anything they lost failed, and wants to book another block.
 
 ## Positioning
 
-The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampworking studio game with the same loop: make a piece, anneal it, sell it, upgrade. Gaffer Glass is its furnace counterpart. The craft is offhand hot shop work, gathering from a furnace and working a bubble on the pipe and punty. The economy is built around renting hot shop time, which is how most furnace glassblowers actually start out.
+The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampworking studio game with the same loop: make a piece, anneal it, sell it, upgrade. Gaffer Glass is its furnace counterpart. The craft is offhand hot shop work, gathering from a furnace and working a bubble on the pipe and punty. Like Glassworks, studio time and clear glass cost nothing; money comes only from selling work and goes into color and tools.
 
 ## Operating Context
 
-- **Session clock:** 1 real second is 1 studio minute, so a rental block runs 180 s. When time runs out, a piece still on the pipe goes in the cullet bucket.
-- **Hold tools,** one at a time: gather (F), glory hole (G), marver (M), block (K), blow (B), jacks (J), turn (Space). Any held tool also counts as turning, as it does at the bench.
+- **No session clock** (as in Glassworks): you work as long as you like and close up for the night when done. A piece still on the pipe at close-up goes in the cullet bucket.
+- **Hold tools,** one at a time: gather (F), glory hole (G), marver (M), block (K), blow (B), jacks (J).
+- **Rotation is on by default,** as in Glassworks. Space stops and starts it; stopped, hot glass droops, and turning again while it's soft brings it back on center.
 - **Tap actions:** roll in color (C), transfer to punty (P), knock off (X), new pipe (N), dump in cullet (Q).
 - **Order board:** always three orders from generic clients (a café, a wedding registry, a gallery consignment), never real businesses. About 30% ask for a color.
 
@@ -37,10 +38,10 @@ The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampw
 
 - **Realism rule:** real, then tuned. The order of operations, the tool behaviors and every reason a piece fails stay true to furnace practice. Rates, temperatures and tolerances are tuned for play, and the game says so ("Temperatures and timings are simplified for play").
 - **Piece model:** parametric. Volume, length, bubble radius, temperature, sag, jack line, opening, punty, blown, unevenness and color. Geometry comes from a cylinder approximation. Piece types are paperweight, ornament, closed vessel, tumbler and bowl.
-- **Every fail state is reachable** and shows a one-line reason that teaches the real lesson: drooped off center, cold-checked, thermal shock, blowout, dropped at the jack line, lip collapsed, cracked going into the annealer, floppy from overheating, out of time.
+- **Every fail state is reachable** and shows a one-line reason that teaches the real lesson: drooped off center, cold-checked, thermal shock, blowout, dropped at the jack line, lip collapsed, cracked going into the annealer, floppy from overheating.
 - **Scoring:** centered, even and on-spec combine into a quality score graded A, B, C or Seconds. Pieces sell to the best matching order or as seconds.
-- **Economy:** start with $100. Rent is $45, plus $20 for an assistant. Teaching a beginner class pays $35 and uses up the day, the way Glassworks pays for finishing a class, so a player can never get stuck broke. Color jars come with 5 uses. Upgrades are smoother jacks, a wet newspaper pad, and a bigger glory hole door. Bowl orders unlock at 3 reputation.
-- **Stack** (from the original brief): Vite + TypeScript, HTML5 canvas for the piece, plain DOM for the UI, no game engine. Deployed as a static site on Vercel.
+- **Economy:** start with $100. No rent, no assistant and no side jobs: sessions and clear glass are free, so a player can never get stuck broke. Color jars come with 5 uses. Upgrades are smoother jacks, a wet newspaper pad, and a bigger glory hole door. Bowl orders unlock at 3 reputation.
+- **Stack:** Vite + TypeScript, a three.js 3D scene for the shop and the piece (changed from the brief's 2D canvas on 2026-11-01 to match Glassworks' 3D), plain DOM for the UI, no game engine. Deployed as a static site on Vercel.
 - **Architecture:** the simulation is pure functions on a `Piece`, kept separate from rendering and UI. Every tunable constant lives in `src/config.ts`.
 - **Saving:** studio progress (cash, reputation, day, colors, upgrades, orders) saves to localStorage, best effort. A session in progress does not survive a reload.
 - **Input:** both keyboard and phone hold buttons are required. Hold buttons block text selection and long-press menus, and Space must not scroll the page.
@@ -62,5 +63,5 @@ The reference is Glassworks (glassworksgame.com), a realistic borosilicate lampw
 1. **Teach through failure.** Every lost piece names its real cause in one line, so failing teaches the next attempt.
 2. **The hands do the work.** Pieces are made by holding tools in time, not by choosing outcomes from menus.
 3. **True to the furnace, honest about simplifying.** Keep the real order of operations and the real reasons for failure. Tune numbers in the open, in one config file.
-4. **Never stuck.** The economy always leaves a way forward (teaching a class), and a bad session costs time, not the run.
+4. **Never stuck.** Sessions are free, so a bad session costs time, not the run.
 5. **Both hands and thumbs.** Keyboard and phone play are equal citizens.

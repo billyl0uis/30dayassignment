@@ -1,7 +1,9 @@
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { GEOM } from '../config';
 import type { HoldAction, Mods } from '../sim/actions';
 import { clamp, geometry, type Piece } from '../sim/piece';
-import { glassAlpha, glassRGB, glowAmount, heatRGB, mix, rgba, type RGB } from './heat';
+import { glassRGB, glowAmount, heatRGB, type RGB } from './heat';
 import { profile, type Profile } from './profile';
 
 export interface SceneView {
@@ -13,393 +15,282 @@ export interface SceneView {
   time: number; // seconds, for animation
 }
 
-const STATION_LABEL: Record<HoldAction, string> = {
+export const STATION_LABEL: Record<HoldAction, string> = {
   gather: 'Furnace · gather',
   glory: 'Glory hole',
   marver: 'Marver',
   block: 'Block',
   blow: 'Blow',
   jacks: 'Jacks',
-  turn: 'Turning',
 };
 
-const UI_FONT = '"IBM Plex Sans", system-ui, sans-serif';
+// World units are inches. The pipe runs along x, its tip at the origin, the free end toward +x.
+const FLOOR_Y = -26;
+const WALL_Z = -90;
+const SEG = 40; // around the axis
+const ROWS = 64; // must match the profile's sample count
 
-/** Side view of the hot shop bay. Owns only its camera; everything else comes in per frame. */
+const color = ([r, g, b]: RGB) => new THREE.Color(`rgb(${r | 0},${g | 0},${b | 0})`);
+
+/** The hot shop in 3D. Owns its camera and props; the piece arrives fresh every frame. */
 export class Scene {
-  private ctx: CanvasRenderingContext2D;
-  private cam = { x: 1, y: 0, scale: 50 };
+  private renderer: THREE.WebGLRenderer;
+  private scene = new THREE.Scene();
+  private camera = new THREE.PerspectiveCamera(38, 1, 0.5, 600);
   private w = 0;
   private h = 0;
 
+  // Camera: an eased frame around the piece, plus the player's drag offset.
+  private target = new THREE.Vector3(1.5, 0, 0);
+  private dist = 16;
+  private yaw = 0;
+  private pitch = 0;
+  private static readonly HOME = { yaw: 0.22, pitch: 0.14 };
+
+  private pipe: THREE.Mesh;
+  private pipeMark: THREE.Mesh;
+  private punty: THREE.Mesh;
+  private glass: THREE.Mesh<THREE.BufferGeometry, THREE.MeshPhysicalMaterial>;
+  private halo: THREE.Sprite;
+  private heatLight = new THREE.PointLight(0xff8a3d, 0, 0, 2);
+  private puddle: THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
+  private cracks: THREE.LineSegments;
+  private stations: Record<'gather' | 'glory' | 'marver' | 'block' | 'jacks', THREE.Group>;
+  private stationLight = new THREE.PointLight(0xffa040, 0, 0, 2);
+
   constructor(private canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext('2d')!;
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Soft studio reflections for the steel and the glass.
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.scene.environmentIntensity = 0.6;
+    this.scene.background = new THREE.Color('#e9e5dd');
+    this.scene.fog = new THREE.Fog('#e9e5dd', 160, 320);
+    this.buildRoom();
+
+    const steel = new THREE.MeshStandardMaterial({ color: '#8b9399', metalness: 0.85, roughness: 0.35 });
+    this.pipe = new THREE.Mesh(new THREE.CylinderGeometry(GEOM.pipeR, GEOM.pipeR, 60, 24, 1, true), steel);
+    this.pipe.rotation.z = Math.PI / 2;
+    this.pipe.position.x = -30 + 0.3;
+    this.pipe.castShadow = true;
+    // A brass band near the tip, so you can see the pipe roll.
+    this.pipeMark = new THREE.Mesh(
+      new THREE.CylinderGeometry(GEOM.pipeR * 1.04, GEOM.pipeR * 1.04, 0.5, 24, 1, true, 0, Math.PI * 0.5),
+      new THREE.MeshStandardMaterial({ color: '#c9a14a', metalness: 0.8, roughness: 0.3 }),
+    );
+    this.pipeMark.rotation.z = Math.PI / 2;
+    this.pipeMark.position.x = -4;
+    this.punty = new THREE.Mesh(
+      new THREE.CylinderGeometry(GEOM.puntyR, GEOM.puntyR, 60, 16),
+      new THREE.MeshStandardMaterial({ color: '#4a4643', metalness: 0.7, roughness: 0.55 }),
+    );
+    this.punty.rotation.z = Math.PI / 2;
+    this.punty.position.x = -30 + 0.15;
+    this.scene.add(this.pipe, this.pipeMark, this.punty);
+
+    this.glass = new THREE.Mesh(latheGeometry(), new THREE.MeshPhysicalMaterial({
+      color: '#ffffff', roughness: 0.04, metalness: 0, ior: 1.5, transmission: 1, thickness: 0.3,
+      specularIntensity: 1, clearcoat: 1, clearcoatRoughness: 0.05,
+    }));
+    this.glass.castShadow = true;
+    this.scene.add(this.glass);
+
+    this.halo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: haloTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0,
+    }));
+    this.scene.add(this.halo, this.heatLight, this.stationLight);
+
+    this.puddle = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), new THREE.MeshStandardMaterial({ roughness: 0.15 }));
+    this.scene.add(this.puddle);
+
+    this.cracks = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: '#ffffff' }));
+    this.scene.add(this.cracks);
+
+    this.stations = buildStations();
+    for (const g of Object.values(this.stations)) this.scene.add(g);
+
+    this.bindDrag();
+    this.resetView();
+  }
+
+  resetView() {
+    this.yaw = Scene.HOME.yaw;
+    this.pitch = Scene.HOME.pitch;
+  }
+
+  dispose() {
+    this.renderer.dispose();
+  }
+
+  /** Drag to look around the bench; double-click or double-tap puts the view back. */
+  private bindDrag() {
+    let last: { x: number; y: number } | null = null;
+    this.canvas.style.touchAction = 'none';
+    this.canvas.addEventListener('pointerdown', (e) => {
+      last = { x: e.clientX, y: e.clientY };
+      this.canvas.setPointerCapture(e.pointerId);
+    });
+    this.canvas.addEventListener('pointermove', (e) => {
+      if (!last) return;
+      this.yaw = clamp(this.yaw - (e.clientX - last.x) * 0.006, -1.3, 1.3);
+      this.pitch = clamp(this.pitch + (e.clientY - last.y) * 0.005, -0.25, 1.1);
+      last = { x: e.clientX, y: e.clientY };
+    });
+    const end = () => (last = null);
+    this.canvas.addEventListener('pointerup', end);
+    this.canvas.addEventListener('pointercancel', end);
+    this.canvas.addEventListener('dblclick', () => this.resetView());
   }
 
   private fit() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const r = this.canvas.getBoundingClientRect();
-    const w = Math.max(1, Math.round(r.width));
-    const h = Math.max(1, Math.round(r.height));
-    if (w !== this.w || h !== this.h || this.canvas.width !== Math.round(w * dpr)) {
+    const w = Math.max(1, Math.round(this.canvas.clientWidth));
+    const h = Math.max(1, Math.round(this.canvas.clientHeight));
+    if (w !== this.w || h !== this.h) {
       this.w = w;
       this.h = h;
-      this.canvas.width = Math.round(w * dpr);
-      this.canvas.height = Math.round(h * dpr);
+      this.renderer.setSize(w, h, false);
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
     }
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
-
-  // World (inches, y down) → screen (CSS px).
-  private X = (x: number) => this.w * 0.5 + (x - this.cam.x) * this.cam.scale;
-  private Y = (y: number) => this.h * 0.42 + (y - this.cam.y) * this.cam.scale;
-  private S = (d: number) => d * this.cam.scale;
 
   draw(v: SceneView, dt: number) {
     this.fit();
-    const { ctx, w, h } = this;
     const p = v.piece;
     const pr = p && p.V > 0 ? profile(p) : null;
-    const floorY = h * 0.8;
-
-    // Auto-zoom: ease toward a frame that fits the piece, the pipe end, and a station margin.
-    const len = Math.max(pr?.length ?? 0, 3.5);
-    const maxR = Math.max(pr?.maxR ?? 0, 1.5);
-    const maxDrop = pr ? pr.drop[pr.drop.length - 1] : 0;
-    const scale = clamp(Math.min(w / (len + 4.5), (h * 0.62) / (2 * maxR + maxDrop + 1.6)), 8, Math.min(w, h) / 10);
     const k = Math.min(1, dt * 3);
-    this.cam.scale += (scale - this.cam.scale) * k;
-    this.cam.x += (len / 2 - 0.4 - this.cam.x) * k;
-    this.cam.y += (maxDrop / 2 - this.cam.y) * k;
+
+    // Frame the piece: ease the target and the distance toward something that fits it.
+    const len = Math.max(pr?.length ?? 0, 3);
+    const maxR = Math.max(pr?.maxR ?? 0, 1.2);
+    const maxDrop = pr ? pr.drop[pr.drop.length - 1] : 0;
+    const onFloor = p?.failed?.kind === 'floor';
+    const want = onFloor
+      ? new THREE.Vector3(len * 0.7, FLOOR_Y + 2, 0)
+      : new THREE.Vector3(len / 2 - 0.6, -maxDrop / 2, 0);
+    this.target.lerp(want, k);
+    const narrow = this.camera.aspect < 1 ? 1 / this.camera.aspect : 1;
+    const wantDist = onFloor ? 34 : clamp((len + 2 * maxR + 5) * 1.7 * Math.min(narrow, 1.9), 15, 70);
+    this.dist += (wantDist - this.dist) * k;
+    const cp = Math.cos(this.pitch);
+    this.camera.position.set(
+      this.target.x + this.dist * cp * Math.sin(this.yaw),
+      this.target.y + this.dist * Math.sin(this.pitch),
+      this.target.z + this.dist * cp * Math.cos(this.yaw),
+    );
+    this.camera.lookAt(this.target);
+
+    // Pipe or punty.
+    const onPunty = !!p?.punty;
+    this.pipe.visible = !onPunty;
+    this.pipeMark.visible = !onPunty;
+    this.punty.visible = onPunty;
+    const roll = v.turnPhase * Math.PI * 2;
+    this.pipeMark.rotation.x = roll;
 
     const T = p?.T ?? 70;
-    const glow = p && p.V > 0 ? glowAmount(T) : 0;
+    const glow = pr ? glowAmount(T) : 0;
     const heat = heatRGB(T);
 
-    this.background(floorY);
+    this.glass.visible = !!pr && !onFloor;
+    this.puddle.visible = !!pr && onFloor;
+    this.cracks.visible = false;
+    this.halo.material.opacity = 0;
+    this.heatLight.intensity = 0;
 
-    // Floor light under the piece.
-    if (glow > 0) {
-      const fx = this.X(len / 2);
-      const g = ctx.createRadialGradient(fx, floorY, 0, fx, floorY, w * 0.45);
-      g.addColorStop(0, rgba(heat, 0.32 * glow));
-      g.addColorStop(1, rgba(heat, 0));
-      ctx.fillStyle = g;
-      ctx.fillRect(0, floorY - h * 0.1, w, h);
+    if (p && pr && !onFloor) {
+      updateLathe(this.glass.geometry, pr, Math.min(p.uneven, 1), roll);
+      styleGlass(this.glass.material, p, glow, heat);
+      const center = new THREE.Vector3(pr.length / 2, -maxDrop / 2, 0);
+      this.halo.position.copy(center);
+      this.halo.scale.setScalar((pr.length + pr.maxR * 2) * 1.6);
+      this.halo.material.color = color(heat);
+      this.halo.material.opacity = 0.32 * glow;
+      this.heatLight.position.copy(center).add(new THREE.Vector3(0, 0, pr.maxR + 1));
+      this.heatLight.color = color(heat);
+      this.heatLight.intensity = 500 * glow * (0.6 + 0.4 * Math.min(1, p.V / 10));
+      if (p.failed?.kind === 'crack') this.showCracks(pr);
+    } else if (p && pr && onFloor) {
+      const m = this.puddle.material;
+      m.color = color(glassRGB(p.color)).lerp(color(heat), glow);
+      m.emissive = color(heat);
+      m.emissiveIntensity = 1.6 * glow;
+      this.puddle.position.set(pr.length * 0.7, FLOOR_Y + 0.2, 0);
+      this.puddle.scale.set(pr.length * 0.55 + pr.maxR, pr.maxR * 0.35, pr.maxR * 1.4);
     }
 
-    if (v.tool && pr) this.stationBehind(v.tool, pr, v);
-
-    this.rod(p);
-
-    if (p && pr) {
-      if (p.failed?.kind === 'floor') this.puddle(pr, p, floorY, heat, glow);
-      else this.glass(pr, p, v, heat, glow);
-    }
-
-    if (v.tool) {
-      if (pr) this.stationFront(v.tool, pr, p!, v);
-      const label = v.tool === 'block' && v.mods.pad ? 'Newspaper pad' : STATION_LABEL[v.tool];
-      this.chip(label, 12, 12);
-    } else if (v.turning && p && !p.failed) {
-      this.chip('Assistant turning', 12, 12, true);
-    }
+    this.placeStations(v, p, pr);
+    this.renderer.render(this.scene, this.camera);
   }
 
-  private room?: { w: number; h: number; img: HTMLCanvasElement };
-
-  /** The shop itself, in screen space. Painted once per size and reused every frame. */
-  private background(floorY: number) {
-    const { w, h } = this;
-    if (!this.room || this.room.w !== w || this.room.h !== h) {
-      const dpr = this.canvas.width / w;
-      const img = document.createElement('canvas');
-      img.width = this.canvas.width;
-      img.height = this.canvas.height;
-      const c = img.getContext('2d')!;
-      c.scale(dpr, dpr);
-      paintRoom(c, w, h, floorY);
-      this.room = { w, h, img };
-    }
-    this.ctx.drawImage(this.room.img, 0, 0, w, h);
-  }
-
-  /** The blowpipe, or after transfer the thinner solid punty. */
-  private rod(p: Piece | null) {
-    const { ctx } = this;
-    const onPunty = !!p?.punty;
-    const r = onPunty ? GEOM.puntyR : GEOM.pipeR;
-    const end = onPunty ? 0.15 : 0.3;
-    const x0 = -40;
-    const g = ctx.createLinearGradient(0, this.Y(-r), 0, this.Y(r));
-    if (onPunty) {
-      g.addColorStop(0, '#5a5551');
-      g.addColorStop(0.45, '#2c2927');
-      g.addColorStop(1, '#141211');
-    } else {
-      g.addColorStop(0, '#8a8f93');
-      g.addColorStop(0.4, '#4c5054');
-      g.addColorStop(1, '#1b1d1f');
-    }
-    ctx.fillStyle = g;
-    ctx.fillRect(this.X(x0), this.Y(-r), this.X(end) - this.X(x0), this.S(2 * r));
-    if (!onPunty) {
-      // Bore of the pipe, so it reads as a tube.
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.fillRect(this.X(x0), this.Y(-0.06), this.X(end) - this.X(x0), this.S(0.12));
-    }
-    // Heat scale on the end of the rod.
-    if (p && p.V > 0) {
-      const t = ctx.createLinearGradient(this.X(end - 3), 0, this.X(end), 0);
-      t.addColorStop(0, 'rgba(160, 40, 10, 0)');
-      t.addColorStop(1, rgba(heatRGB(Math.min(p.T, 1500)), 0.45));
-      ctx.fillStyle = t;
-      ctx.fillRect(this.X(end - 3), this.Y(-r), this.S(3), this.S(2 * r));
-    }
-  }
-
-  private outline(pr: Profile, radii: number[], from = 0, to = pr.xs.length - 1) {
-    const { ctx } = this;
-    ctx.beginPath();
-    for (let i = from; i <= to; i++) ctx.lineTo(this.X(pr.xs[i]), this.Y(pr.drop[i] - radii[i]));
-    for (let i = to; i >= from; i--) ctx.lineTo(this.X(pr.xs[i]), this.Y(pr.drop[i] + radii[i]));
-    ctx.closePath();
-  }
-
-  private glass(pr: Profile, p: Piece, v: SceneView, heat: RGB, glow: number) {
-    const { ctx } = this;
-    const base = glassRGB(p.color);
-    const a = glassAlpha(p.color);
-    const body = mix(base, heat, glow);
-    const alpha = a + (1 - a) * glow;
-
-    // Body, with a halo of heat around it.
-    ctx.save();
-    this.outline(pr, pr.outer);
-    ctx.shadowColor = rgba(heat, 0.9 * glow);
-    ctx.shadowBlur = 46 * glow;
-    ctx.fillStyle = rgba(body, alpha);
-    ctx.fill();
-    ctx.restore();
-
-    // Shading across the body so it reads as round.
-    ctx.save();
-    this.outline(pr, pr.outer);
-    ctx.clip();
-    const top = this.Y(-pr.maxR);
-    const bot = this.Y(pr.maxR + pr.drop[pr.drop.length - 1]);
-    const sh = ctx.createLinearGradient(0, top, 0, bot);
-    sh.addColorStop(0, `rgba(255,255,255,${0.18 * (1 - glow) + 0.12 * glow})`);
-    sh.addColorStop(0.45, 'rgba(255,255,255,0)');
-    sh.addColorStop(1, `rgba(0,0,0,${0.35 - 0.2 * glow})`);
-    ctx.fillStyle = sh;
-    ctx.fillRect(this.X(-1), top - 4, this.S(pr.length + 2), bot - top + 8);
-
-    // The bubble: darker inside, open at the lip after transfer.
-    const firstIn = pr.inner.findIndex((r) => r > 0.01);
-    if (firstIn >= 0) {
-      let lastIn = firstIn;
-      for (let i = firstIn; i < pr.inner.length; i++) if (pr.inner[i] > 0.01) lastIn = i;
-      this.outline(pr, pr.inner, firstIn, lastIn);
-      const cavity = glow > 0.05 ? mix(heat, [30, 6, 2], 0.62) : mix(base, [8, 8, 10], 0.75);
-      ctx.fillStyle = rgba(cavity, glow > 0.05 ? 0.6 + 0.3 * glow : p.color === 'opal' ? 0.35 : 0.5);
-      ctx.fill();
-    }
-
-    // Turning: highlight stripes riding around the axis.
-    if (v.turning || v.tool) {
-      for (let s = 0; s < 6; s++) {
-        const th = 2 * Math.PI * (s / 6 + v.turnPhase);
-        const front = Math.sin(th);
-        if (front <= 0.05) continue;
-        ctx.beginPath();
-        for (let i = 0; i < pr.xs.length; i++) ctx.lineTo(this.X(pr.xs[i]), this.Y(pr.drop[i] - pr.outer[i] * Math.cos(th)));
-        ctx.lineWidth = Math.max(1, this.S(0.1) * front);
-        ctx.strokeStyle = `rgba(255,255,255,${(0.07 + 0.08 * (1 - glow)) * front})`;
-        ctx.stroke();
-      }
-    }
-
-    if (p.failed?.kind === 'crack') this.cracks(pr);
-    ctx.restore();
-
-    // Rim light.
-    this.outline(pr, pr.outer);
-    ctx.lineWidth = 1.2;
-    ctx.strokeStyle = glow > 0.1 ? rgba(mix(heat, [255, 255, 255], 0.3), 0.6 * glow) : 'rgba(38,52,60,0.55)';
-    ctx.stroke();
-  }
-
-  private cracks(pr: Profile) {
-    const { ctx } = this;
-    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-    ctx.lineWidth = 1.4;
-    let seed = 7;
-    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
-    for (let c = 0; c < 4; c++) {
-      let x = pr.length * (0.15 + 0.7 * rnd());
-      let y = -pr.maxR;
-      ctx.beginPath();
-      ctx.moveTo(this.X(x), this.Y(y));
-      while (y < pr.maxR * 1.2) {
-        x += (rnd() - 0.5) * pr.maxR * 0.5;
-        y += pr.maxR * (0.15 + 0.2 * rnd());
-        ctx.lineTo(this.X(x), this.Y(y));
-      }
-      ctx.stroke();
-    }
-  }
-
-  /** A slumped or dropped piece lying on the shop floor. */
-  private puddle(pr: Profile, p: Piece, floorY: number, heat: RGB, glow: number) {
-    const { ctx } = this;
-    const cx = this.X(pr.length * 0.7);
-    const rx = this.S(pr.length * 0.55 + pr.maxR * 0.5);
-    const ry = Math.max(4, this.S(pr.maxR * 0.45));
-    ctx.save();
-    ctx.shadowColor = rgba(heat, 0.8 * glow);
-    ctx.shadowBlur = 30 * glow;
-    ctx.fillStyle = rgba(mix(glassRGB(p.color), heat, glow), 0.6 + 0.4 * glow);
-    ctx.beginPath();
-    ctx.ellipse(cx, floorY - ry * 0.6, rx, ry, 0, Math.PI, 2 * Math.PI);
-    ctx.lineTo(cx + rx, floorY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  private stationBehind(tool: HoldAction, pr: Profile, v: SceneView) {
-    const { ctx } = this;
+  private placeStations(v: SceneView, p: Piece | null, pr: Profile | null) {
+    for (const g of Object.values(this.stations)) g.visible = false;
+    this.stationLight.intensity = 0;
+    const tool = v.tool;
+    if (!tool || !p || !pr) return;
     const len = pr.length;
     const R = pr.maxR;
     const dropEnd = pr.drop[pr.drop.length - 1];
     switch (tool) {
       case 'gather': {
-        const x0 = this.X(-0.6), x1 = this.X(len + 3.5);
-        const y0 = this.Y(-R - 1.3), y1 = this.Y(R + dropEnd + 1);
-        const g = ctx.createRadialGradient(this.X(len / 2), this.Y(0), 0, this.X(len / 2), this.Y(0), x1 - x0);
-        g.addColorStop(0, '#ffe3a0');
-        g.addColorStop(0.35, '#ff9a2e');
-        g.addColorStop(1, '#5c1804');
-        ctx.fillStyle = g;
-        roundRect(ctx, x0, y0, x1 - x0, y1 - y0, this.S(1.2));
-        ctx.fill();
-        // Pool of molten glass in the crucible.
-        ctx.fillStyle = 'rgba(255, 236, 170, 0.75)';
-        ctx.fillRect(x0, this.Y(R * 0.35), x1 - x0, y1 - this.Y(R * 0.35));
-        ctx.lineWidth = this.S(0.45);
-        ctx.strokeStyle = '#2a1d17';
-        roundRect(ctx, x0, y0, x1 - x0, y1 - y0, this.S(1.2));
-        ctx.stroke();
+        const g = this.stations.gather;
+        g.visible = true;
+        g.position.set(len / 2 + 1, -dropEnd / 2, 0);
+        g.scale.setScalar(Math.max(1, (len + 2 * R) / 7));
+        this.stationLight.position.set(len / 2, R + 2, 2);
+        this.stationLight.intensity = 1400;
         return;
       }
       case 'glory': {
-        const cx = this.X(len * 0.6), cy = this.Y(dropEnd / 2);
-        const rr = this.S(R + 1.4 + len * 0.25);
-        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
-        g.addColorStop(0, '#ffd27a');
-        g.addColorStop(0.6, '#ff6a14');
-        g.addColorStop(1, '#4a1203');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(cx, cy, rr, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.lineWidth = this.S(0.6);
-        ctx.strokeStyle = '#2b211c';
-        ctx.stroke();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(255, 190, 110, 0.6)';
-        ctx.beginPath();
-        ctx.arc(cx, cy, rr - this.S(0.3), 0, Math.PI * 2);
-        ctx.stroke();
+        const g = this.stations.glory;
+        g.visible = true;
+        g.position.set(len * 0.55, -dropEnd / 2, 0);
+        g.scale.set(Math.max(1, len / 4), Math.max(1, (R + 1.6) / 3), Math.max(1, (R + 1.6) / 3));
+        this.stationLight.position.set(len * 0.55, 0, 2);
+        this.stationLight.intensity = 1100;
         return;
       }
       case 'marver': {
-        const y = this.Y(R + dropEnd * 0.5 + 0.02);
-        const x0 = this.X(-1.5), x1 = this.X(len + 2.5);
-        const g = ctx.createLinearGradient(0, y, 0, y + this.S(0.9));
-        g.addColorStop(0, '#9aa1a6');
-        g.addColorStop(0.15, '#5f666b');
-        g.addColorStop(1, '#22262a');
-        ctx.fillStyle = g;
-        ctx.fillRect(x0, y, x1 - x0, this.S(0.9));
-        // Legs.
-        ctx.fillStyle = '#1c1f22';
-        ctx.fillRect(x0 + this.S(0.6), y + this.S(0.9), this.S(0.3), this.h);
-        ctx.fillRect(x1 - this.S(0.9), y + this.S(0.9), this.S(0.3), this.h);
+        const g = this.stations.marver;
+        g.visible = true;
+        g.position.set(len / 2, -(R + dropEnd * 0.5) - 0.02, 0);
         return;
       }
-      case 'blow': {
-        // Breath puffs at the pipe mouth, off to the left.
-        for (let i = 0; i < 4; i++) {
-          const t = (v.time * 0.9 + i / 4) % 1;
-          ctx.fillStyle = `rgba(150, 160, 175, ${0.3 * (1 - t)})`;
-          ctx.beginPath();
-          ctx.arc(14 + t * 46, this.Y(0) - t * 16, 5 + t * 12, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        return;
-      }
-      default:
-        return;
-    }
-  }
-
-  private stationFront(tool: HoldAction, pr: Profile, p: Piece, v: SceneView) {
-    const { ctx } = this;
-    const len = pr.length;
-    switch (tool) {
       case 'block': {
-        // A wet cherrywood cup cradling the free end, steaming.
-        const g = geometry(p);
-        const cx = this.X(Math.max(len - g.R, len * 0.5));
-        const cy = this.Y(pr.drop[pr.drop.length - 1] * 0.8);
-        const rr = this.S(Math.max(g.R, 0.6) + 0.25);
-        ctx.lineWidth = this.S(0.32);
-        ctx.strokeStyle = v.mods.pad ? '#cfc6b4' : '#6b4325';
-        ctx.beginPath();
-        ctx.arc(cx, cy, rr, Math.PI * 0.08, Math.PI * 0.92);
-        ctx.stroke();
-        ctx.lineWidth = this.S(0.18);
-        ctx.strokeStyle = v.mods.pad ? '#a39985' : '#4d2f19';
-        ctx.beginPath();
-        ctx.moveTo(cx + rr * 0.5, cy + rr * 0.85);
-        ctx.lineTo(cx + rr * 1.6, cy + rr * 2.2);
-        ctx.stroke();
-        for (let i = 0; i < 3; i++) {
-          const t = (v.time * 0.7 + i / 3) % 1;
-          ctx.fillStyle = `rgba(160, 165, 172, ${0.28 * (1 - t)})`;
-          ctx.beginPath();
-          ctx.arc(cx + (i - 1) * rr * 0.6, cy - this.S(g.R) - t * 40, 6 + t * 10, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        const g = this.stations.block;
+        const r = Math.max(geometry(p).R, 0.6) + 0.25;
+        g.visible = true;
+        g.position.set(Math.max(len - r, len * 0.5), -dropEnd * 0.8, 0);
+        g.scale.setScalar(r);
+        const cup = g.children[0] as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+        cup.material.color.set(v.mods.pad ? '#cfc6b4' : '#6b4325');
         return;
       }
       case 'jacks': {
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#b8bec3';
-        ctx.lineWidth = Math.max(2, this.S(0.09));
+        const g = this.stations.jacks;
+        g.visible = true;
+        const [upper, lower] = g.children;
         if (!p.punty) {
-          const i = Math.round((pr.neckX / Math.max(len, 1e-3)) * (pr.xs.length - 1));
-          const rN = pr.outer[Math.max(0, Math.min(i, pr.outer.length - 1))];
-          const d = pr.drop[Math.max(0, Math.min(i, pr.drop.length - 1))];
-          for (const sgn of [-1, 1]) {
-            ctx.beginPath();
-            ctx.moveTo(this.X(pr.neckX - 1.2), this.Y(d + sgn * (rN + 2.2)));
-            ctx.lineTo(this.X(pr.neckX), this.Y(d + sgn * rN));
-            ctx.stroke();
-          }
+          const i = clamp(Math.round((pr.neckX / Math.max(len, 1e-3)) * (ROWS - 1)), 0, ROWS - 1);
+          const rN = pr.outer[i];
+          g.position.set(pr.neckX, -pr.drop[i], 0);
+          upper.position.set(-0.6, rN + 1.1, 0);
+          upper.rotation.z = 0.5;
+          lower.position.set(-0.6, -rN - 1.1, 0);
+          lower.rotation.z = -0.5;
         } else {
-          const last = pr.outer.length - 1;
-          const lip = pr.outer[last];
-          const d = pr.drop[last];
-          const depth = Math.min(1.2, len * 0.3);
-          for (const sgn of [-1, 1]) {
-            ctx.beginPath();
-            ctx.moveTo(this.X(len + 1.6), this.Y(d + sgn * (lip + 1.3)));
-            ctx.lineTo(this.X(len - depth), this.Y(d + sgn * Math.max(lip - 0.15, 0.1)));
-            ctx.stroke();
-          }
+          const lip = Math.max(pr.outer[ROWS - 1] - 0.6, 0.1);
+          g.position.set(len, -pr.drop[ROWS - 1], 0);
+          upper.position.set(0.4, lip, 0);
+          upper.rotation.z = -0.45;
+          lower.position.set(0.4, -lip, 0);
+          lower.rotation.z = 0.45;
         }
         return;
       }
@@ -408,147 +299,281 @@ export class Scene {
     }
   }
 
-  private chip(text: string, x: number, y: number, quiet = false) {
-    const { ctx } = this;
-    ctx.font = `600 13px ${UI_FONT}`;
-    const label = text;
-    const tw = ctx.measureText(label).width;
-    ctx.fillStyle = 'rgba(28, 32, 40, 0.88)';
-    roundRect(ctx, x, y, tw + 20, 26, 8);
-    ctx.fill();
-    ctx.fillStyle = quiet ? '#9aa4b2' : '#ffb067';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, x + 10, y + 13.5);
+  private showCracks(pr: Profile) {
+    const pts: number[] = [];
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+    for (let c = 0; c < 5; c++) {
+      let i = Math.floor(ROWS * (0.2 + 0.6 * rnd()));
+      let th = -0.4 + rnd() * 0.8;
+      let prev: THREE.Vector3 | null = null;
+      for (let s = 0; s < 8; s++) {
+        i = clamp(i + Math.round((rnd() - 0.5) * 6), 0, ROWS - 1);
+        th += 0.2 + rnd() * 0.15;
+        const r = pr.outer[i] * 1.01;
+        const pt = new THREE.Vector3(pr.xs[i], -pr.drop[i] + r * Math.sin(th), r * Math.cos(th));
+        if (prev) pts.push(prev.x, prev.y, prev.z, pt.x, pt.y, pt.z);
+        prev = pt;
+      }
+    }
+    this.cracks.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    this.cracks.visible = true;
+  }
+
+  /** The daylit shop: block wall, a big window, concrete floor, the furnace and glory hole, a shelf of jars. */
+  private buildRoom() {
+    const s = this.scene;
+    s.add(new THREE.HemisphereLight('#f4f1ea', '#a39b8e', 1.6));
+    const sun = new THREE.DirectionalLight('#fff4e0', 2.2);
+    sun.position.set(25, 70, -40);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    const sc = sun.shadow.camera;
+    sc.left = -40;
+    sc.right = 40;
+    sc.top = 40;
+    sc.bottom = -40;
+    sc.near = 10;
+    sc.far = 200;
+    s.add(sun);
+    const fill = new THREE.DirectionalLight('#e8eef5', 0.8);
+    fill.position.set(-20, 20, 60);
+    s.add(fill);
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), new THREE.MeshStandardMaterial({ color: '#bfb9ae', roughness: 0.92 }));
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = FLOOR_Y;
+    floor.receiveShadow = true;
+    s.add(floor);
+    // The window's light on the floor.
+    const patch = new THREE.Mesh(new THREE.PlaneGeometry(60, 50), new THREE.MeshBasicMaterial({ color: '#fffbf0', transparent: true, opacity: 0.35 }));
+    patch.rotation.x = -Math.PI / 2;
+    patch.position.set(10, FLOOR_Y + 0.05, -30);
+    s.add(patch);
+
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 160), new THREE.MeshStandardMaterial({ map: blockTexture(), roughness: 0.95 }));
+    wall.position.set(0, FLOOR_Y + 80, WALL_Z);
+    wall.receiveShadow = true;
+    s.add(wall);
+
+    // Window: sky glass and a steel sash.
+    const sky = new THREE.Mesh(new THREE.PlaneGeometry(64, 36), new THREE.MeshBasicMaterial({ color: '#cfe4ef' }));
+    sky.position.set(4, 34, WALL_Z + 0.1);
+    s.add(sky);
+    const sash = new THREE.MeshStandardMaterial({ color: '#4f585f', metalness: 0.6, roughness: 0.5 });
+    const bar = (w: number, h: number, x: number, y: number) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 1), sash);
+      m.position.set(x, y, WALL_Z + 0.6);
+      s.add(m);
+    };
+    bar(66, 1.5, 4, 52);
+    bar(66, 1.5, 4, 16);
+    bar(66, 1, 4, 34);
+    for (let i = 0; i <= 4; i++) bar(i === 0 || i === 4 ? 1.5 : 1, 36, 4 - 32 + i * 16, 34);
+
+    // Furnace, back left: steel box on legs with a glowing door.
+    const steel = new THREE.MeshStandardMaterial({ color: '#6f777e', metalness: 0.5, roughness: 0.55 });
+    const furnace = new THREE.Mesh(new THREE.BoxGeometry(38, 44, 34), steel);
+    furnace.position.set(-84, FLOOR_Y + 32, WALL_Z + 30);
+    furnace.castShadow = true;
+    furnace.receiveShadow = true;
+    s.add(furnace);
+    for (const dx of [-15, 15]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(3, 10, 3), steel);
+      leg.position.set(-84 + dx, FLOOR_Y + 5, WALL_Z + 44);
+      s.add(leg);
+    }
+    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(20, 15, 0.8), new THREE.MeshStandardMaterial({ color: '#9c4a2a', roughness: 0.8 }));
+    doorFrame.position.set(-80, FLOOR_Y + 34, WALL_Z + 47.4);
+    s.add(doorFrame);
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(16, 11), new THREE.MeshBasicMaterial({ color: '#ffb257' }));
+    door.position.set(-80, FLOOR_Y + 34, WALL_Z + 47.9);
+    s.add(door);
+    const furnaceGlow = new THREE.PointLight('#ff9a3c', 900, 0, 2);
+    furnaceGlow.position.set(-80, FLOOR_Y + 34, WALL_Z + 52);
+    s.add(furnaceGlow);
+
+    // Glory hole, back right: a drum on a stand with its round port.
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 22, 32), steel);
+    drum.rotation.x = Math.PI / 2;
+    drum.position.set(80, FLOOR_Y + 30, WALL_Z + 38);
+    drum.castShadow = true;
+    s.add(drum);
+    const port = new THREE.Mesh(new THREE.CircleGeometry(6, 32), new THREE.MeshBasicMaterial({ color: '#ffa04a' }));
+    port.position.set(80, FLOOR_Y + 30, WALL_Z + 49.2);
+    s.add(port);
+    const stand = new THREE.Mesh(new THREE.BoxGeometry(3, 17, 3), steel);
+    stand.position.set(80, FLOOR_Y + 8.5, WALL_Z + 38);
+    s.add(stand);
+
+    // Shelf of color jars on the wall.
+    const wood = new THREE.MeshStandardMaterial({ color: '#8a6a4a', roughness: 0.8 });
+    const shelf = new THREE.Mesh(new THREE.BoxGeometry(34, 1.2, 6), wood);
+    shelf.position.set(46, 52, WALL_Z + 3);
+    s.add(shelf);
+    ['#2646c4', '#cd801e', '#28a06e', '#ece8dc', '#c81c4c', '#2646c4'].forEach((c, i) => {
+      const h = 5 + (i % 3);
+      const jar = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, h, 20), new THREE.MeshStandardMaterial({ color: c, roughness: 0.3 }));
+      jar.position.set(46 - 14 + i * 5.6, 52.6 + h / 2, WALL_Z + 3);
+      jar.castShadow = true;
+      s.add(jar);
+    });
   }
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2));
-}
+// ── The piece as a solid of revolution ──────────────────────────────
 
-/**
- * A daylit hot shop: whitewashed block wall, a big steel-sash window throwing light across the
- * concrete, the furnace at the left, the glory hole at the right and a shelf of color jars.
- */
-function paintRoom(c: CanvasRenderingContext2D, w: number, h: number, floorY: number) {
-  const wall = c.createLinearGradient(0, 0, 0, floorY);
-  wall.addColorStop(0, '#f1eee8');
-  wall.addColorStop(1, '#dcd7ce');
-  c.fillStyle = wall;
-  c.fillRect(0, 0, w, floorY);
-  // Block coursing.
-  c.strokeStyle = 'rgba(120, 110, 95, 0.09)';
-  c.lineWidth = 1;
-  const course = Math.max(18, h / 28);
-  for (let y = course, row = 0; y < floorY; y += course, row++) {
-    c.beginPath();
-    c.moveTo(0, y);
-    c.lineTo(w, y);
-    c.stroke();
-    for (let x = (row % 2) * course; x < w; x += course * 2) {
-      c.beginPath();
-      c.moveTo(x, y - course);
-      c.lineTo(x, y);
-      c.stroke();
+/** A fixed grid: the outer skin out to the tip, then the inner skin back, so a blown piece is a real shell. */
+function latheGeometry() {
+  const g = new THREE.BufferGeometry();
+  const rows = ROWS * 2;
+  const cols = SEG + 1;
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(rows * cols * 3), 3));
+  const idx: number[] = [];
+  for (let r = 0; r < rows - 1; r++) {
+    for (let c = 0; c < SEG; c++) {
+      const a = r * cols + c;
+      const d = a + cols;
+      idx.push(a, d, a + 1, a + 1, d, d + 1);
     }
   }
+  g.setIndex(idx);
+  return g;
+}
 
-  // Window, high and centered, with its light falling across the floor.
-  const ww = Math.min(w * 0.34, 420), wh = floorY * 0.36;
-  const wx = w * 0.5 - ww / 2, wy = floorY * 0.08;
-  const sky = c.createLinearGradient(0, wy, 0, wy + wh);
-  sky.addColorStop(0, '#bcd9ea');
-  sky.addColorStop(1, '#e4f0f4');
-  c.fillStyle = sky;
-  c.fillRect(wx, wy, ww, wh);
-  c.strokeStyle = '#59626a';
-  c.lineWidth = 4;
-  c.strokeRect(wx, wy, ww, wh);
-  c.lineWidth = 2;
-  for (let i = 1; i < 4; i++) {
-    c.beginPath();
-    c.moveTo(wx + (ww * i) / 4, wy);
-    c.lineTo(wx + (ww * i) / 4, wy + wh);
-    c.stroke();
+function updateLathe(g: THREE.BufferGeometry, pr: Profile, uneven: number, roll: number) {
+  const pos = g.getAttribute('position') as THREE.BufferAttribute;
+  const cols = SEG + 1;
+  const wobble = uneven * 0.12;
+  let v = 0;
+  const put = (i: number, radius: number) => {
+    for (let c = 0; c < cols; c++) {
+      const th = (c / SEG) * Math.PI * 2;
+      // An uneven piece is out of round; the lump rolls with the pipe.
+      const r = radius * (1 + wobble * Math.cos(th - roll));
+      pos.setXYZ(v++, pr.xs[i], -pr.drop[i] + r * Math.cos(th), r * Math.sin(th));
+    }
+  };
+  for (let i = 0; i < ROWS; i++) put(i, pr.outer[i]);
+  for (let i = ROWS - 1; i >= 0; i--) put(i, pr.inner[i]);
+  pos.needsUpdate = true;
+  g.computeVertexNormals();
+  g.computeBoundingSphere();
+}
+
+/** Cold glass shows its color and lets light through; hot glass glows and the glow hides the color. */
+function styleGlass(m: THREE.MeshPhysicalMaterial, p: Piece, glow: number, heat: RGB) {
+  const base = color(glassRGB(p.color));
+  const opal = p.color === 'opal';
+  m.color = (p.color ? base.clone() : new THREE.Color('#f2fbfc')).lerp(color(heat).multiplyScalar(0.8), glow * 0.8);
+  m.attenuationColor = p.color ? base : new THREE.Color('#d8eef0');
+  m.attenuationDistance = p.color ? 0.9 : 6;
+  m.transmission = (opal ? 0.1 : 1) * (1 - glow * 0.75);
+  m.roughness = p.failed?.kind === 'crack' ? 0.4 : opal ? 0.3 : 0.06;
+  m.emissive = color(heat);
+  m.emissiveIntensity = 0.9 * glow * glow + 0.25 * glow;
+}
+
+// ── Props that appear when a tool is working ─────────────────────────
+
+function buildStations() {
+  const fire = new THREE.MeshBasicMaterial({ color: '#ffb056', side: THREE.DoubleSide });
+  const brick = new THREE.MeshStandardMaterial({ color: '#7d3a22', roughness: 0.9, side: THREE.DoubleSide });
+  const steel = new THREE.MeshStandardMaterial({ color: '#7f878d', metalness: 0.8, roughness: 0.35, side: THREE.DoubleSide });
+
+  // Furnace: a cutaway of the glowing chamber with the pot of glass below the pipe.
+  const gather = new THREE.Group();
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(14, 10), fire);
+  back.position.set(0, 0.5, -3.5);
+  const pool = new THREE.Mesh(new THREE.BoxGeometry(14, 2.2, 7), new THREE.MeshBasicMaterial({ color: '#ffe7a6' }));
+  pool.position.set(0, -3.4, 0);
+  const crown = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 14, 32, 1, true, Math.PI / 2, Math.PI), brick); // top, back and bottom
+  crown.rotation.z = Math.PI / 2;
+  crown.position.y = -0.5;
+  gather.add(back, pool, crown);
+
+  // Glory hole: a drum around the piece, cut away toward you, glowing inside.
+  const glory = new THREE.Group();
+  const arc: [number, number] = [Math.PI * 0.25, Math.PI * 1.5]; // open toward the camera (+z)
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 4, 40, 1, true, ...arc), steel);
+  shell.rotation.z = Math.PI / 2;
+  const lining = new THREE.Mesh(new THREE.CylinderGeometry(2.85, 2.85, 4, 40, 1, true, ...arc),
+    new THREE.MeshBasicMaterial({ color: '#ff8a2a', side: THREE.BackSide }));
+  lining.rotation.z = Math.PI / 2;
+  glory.add(shell, lining);
+
+  // Marver: a long polished steel table under the piece.
+  const marver = new THREE.Group();
+  const top = new THREE.Mesh(new THREE.BoxGeometry(18, 0.9, 10), steel);
+  top.position.y = -0.45;
+  top.receiveShadow = true;
+  const legMat = new THREE.MeshStandardMaterial({ color: '#3a3f44', metalness: 0.6, roughness: 0.6 });
+  for (const [x, z] of [[-8, -4], [8, -4], [-8, 4], [8, 4]]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.8, 30, 0.8), legMat);
+    leg.position.set(x, -15.5, z);
+    marver.add(leg);
   }
-  c.beginPath();
-  c.moveTo(wx, wy + wh / 2);
-  c.lineTo(wx + ww, wy + wh / 2);
-  c.stroke();
+  marver.add(top);
 
-  // Shelf of color jars, upper right.
-  const sx = w * 0.74, sy = floorY * 0.3, sw = Math.min(w * 0.22, 260);
-  c.fillStyle = '#8a6a4a';
-  c.fillRect(sx, sy, sw, 6);
-  const jars = ['#2646c4', '#cd801e', '#28a06e', '#ece8dc', '#c81c4c', '#2646c4', '#cd801e'];
-  const jw = sw / jars.length;
-  jars.forEach((col, i) => {
-    const jh = 20 + ((i * 7) % 3) * 6;
-    c.fillStyle = col;
-    c.globalAlpha = 0.85;
-    c.fillRect(sx + i * jw + 4, sy - jh, jw - 8, jh);
-    c.globalAlpha = 1;
-    c.fillStyle = '#3a3f46';
-    c.fillRect(sx + i * jw + 3, sy - jh - 4, jw - 6, 5);
-  });
+  // Block: a wet wooden cup cradling the end, with its handle.
+  const block = new THREE.Group();
+  const cup = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+    new THREE.MeshStandardMaterial({ color: '#6b4325', roughness: 0.8, side: THREE.DoubleSide }));
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 4, 12),
+    new THREE.MeshStandardMaterial({ color: '#4d2f19', roughness: 0.8 }));
+  handle.position.set(0.8, -2.6, 0);
+  handle.rotation.z = 0.5;
+  block.add(cup, handle);
 
-  // Furnace, left: a steel box on legs with the glowing door.
-  const fw = Math.min(w * 0.2, 240), fh = floorY * 0.62;
-  const fx = -fw * 0.25, fy = floorY - fh;
-  c.fillStyle = '#6f777e';
-  c.fillRect(fx, fy, fw, fh * 0.82);
-  c.fillStyle = '#4e555b';
-  c.fillRect(fx, fy, fw, 8);
-  c.fillRect(fx + 10, fy + fh * 0.82, 10, fh * 0.18);
-  c.fillRect(fx + fw - 20, fy + fh * 0.82, 10, fh * 0.18);
-  const dx = fx + fw * 0.32, dy = fy + fh * 0.3, dw = fw * 0.55, dh = fh * 0.3;
-  c.fillStyle = '#9c4a2a';
-  c.fillRect(dx - 6, dy - 6, dw + 12, dh + 12);
-  const door = c.createRadialGradient(dx + dw / 2, dy + dh / 2, 0, dx + dw / 2, dy + dh / 2, dw * 0.7);
-  door.addColorStop(0, '#fff1c4');
-  door.addColorStop(0.5, '#ffa23a');
-  door.addColorStop(1, '#d4521a');
-  c.fillStyle = door;
-  c.fillRect(dx, dy, dw, dh);
-  const spill = c.createRadialGradient(dx + dw / 2, dy + dh / 2, 0, dx + dw / 2, dy + dh / 2, fw * 1.2);
-  spill.addColorStop(0, 'rgba(255, 150, 60, 0.22)');
-  spill.addColorStop(1, 'rgba(255, 150, 60, 0)');
-  c.fillStyle = spill;
-  c.fillRect(0, 0, fx + fw * 2.4, h);
+  // Jacks: two steel blades.
+  const jacks = new THREE.Group();
+  const blade = () => new THREE.Mesh(new THREE.BoxGeometry(3, 0.12, 0.5), steel);
+  jacks.add(blade(), blade());
 
-  // Glory hole, right: a drum on a stand with its round port.
-  const gr = Math.min(w * 0.09, 110);
-  const gx = w + gr * 0.15, gy = floorY - gr * 2.1;
-  c.fillStyle = '#4e555b';
-  c.fillRect(gx - gr * 0.5, gy + gr * 0.8, 12, floorY - gy - gr * 0.8);
-  c.fillStyle = '#7b838a';
-  c.beginPath();
-  c.arc(gx, gy, gr * 1.1, 0, Math.PI * 2);
-  c.fill();
-  const port = c.createRadialGradient(gx - gr * 0.2, gy, 0, gx - gr * 0.2, gy, gr * 0.6);
-  port.addColorStop(0, '#fff0c0');
-  port.addColorStop(0.6, '#ff8a2a');
-  port.addColorStop(1, '#b8400f');
-  c.fillStyle = port;
-  c.beginPath();
-  c.arc(gx - gr * 0.2, gy, gr * 0.55, 0, Math.PI * 2);
-  c.fill();
+  return { gather, glory, marver, block, jacks };
+}
 
-  // Concrete floor, lighter where the window lands.
-  const floor = c.createLinearGradient(0, floorY, 0, h);
-  floor.addColorStop(0, '#bdb7ac');
-  floor.addColorStop(1, '#cfcac0');
-  c.fillStyle = floor;
-  c.fillRect(0, floorY, w, h - floorY);
-  c.fillStyle = 'rgba(255, 252, 240, 0.4)';
-  c.beginPath();
-  c.moveTo(wx + ww * 0.1, floorY);
-  c.lineTo(wx + ww * 1.1, floorY);
-  c.lineTo(wx + ww * 1.5, h);
-  c.lineTo(wx + ww * 0.3, h);
-  c.closePath();
-  c.fill();
-  c.fillStyle = 'rgba(70, 64, 56, 0.25)';
-  c.fillRect(0, floorY, w, 2);
+function haloTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const x = c.getContext('2d')!;
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,255,255,0.9)');
+  g.addColorStop(0.35, 'rgba(255,255,255,0.35)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g;
+  x.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/** Whitewashed concrete block coursing for the back wall. */
+function blockTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 256;
+  const x = c.getContext('2d')!;
+  x.fillStyle = '#ece8e0';
+  x.fillRect(0, 0, 512, 256);
+  x.strokeStyle = 'rgba(120,110,95,0.22)';
+  x.lineWidth = 2;
+  for (let row = 0; row < 8; row++) {
+    const y = row * 32;
+    x.beginPath();
+    x.moveTo(0, y);
+    x.lineTo(512, y);
+    x.stroke();
+    for (let bx = (row % 2) * 32; bx < 512; bx += 64) {
+      x.beginPath();
+      x.moveTo(bx, y);
+      x.lineTo(bx, y + 32);
+      x.stroke();
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(5, 2.5);
+  return t;
 }
