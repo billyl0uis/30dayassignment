@@ -5,6 +5,7 @@ import type { HoldAction, Mods } from '../sim/actions';
 import { clamp, geometry, type Piece } from '../sim/piece';
 import { glassRGB, glowAmount, heatRGB, type RGB } from './heat';
 import { profile, type Profile } from './profile';
+import { buildShop, FLOOR_Y, type Shop } from './room';
 
 export interface SceneView {
   piece: Piece | null;
@@ -26,8 +27,6 @@ export const STATION_LABEL: Record<HoldAction, string> = {
 };
 
 // World units are inches. The pipe runs along x, its tip at the origin, the free end toward +x.
-const FLOOR_Y = -26;
-const WALL_Z = -90;
 const SEG = 40; // around the axis
 const ROWS = 64; // must match the profile's sample count
 const PIVOT_X = -24; // the gaffer's hands on the pipe: tipping swings the pipe about here
@@ -38,7 +37,7 @@ export const color = ([r, g, b]: RGB) => new THREE.Color(`rgb(${r | 0},${g | 0},
 export class Scene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(38, 1, 0.5, 600);
+  private camera = new THREE.PerspectiveCamera(52, 1, 0.5, 600); // wide enough to see the shop around the bench
   private w = 0;
   private h = 0;
 
@@ -59,6 +58,7 @@ export class Scene {
   private cracks: THREE.LineSegments;
   private stations: Record<'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'jacks', THREE.Group>;
   // The pipe, the piece and the station props swing together when the pipe is tipped.
+  private shop: Shop;
   private rig = new THREE.Group();
   private arm = new THREE.Group();
   private stationLight = new THREE.PointLight(0xffa040, 0, 0, 2);
@@ -77,7 +77,7 @@ export class Scene {
     this.scene.environmentIntensity = 0.6;
     this.scene.background = new THREE.Color('#c3c8cb');
     this.scene.fog = new THREE.Fog('#c3c8cb', 160, 320);
-    this.buildRoom();
+    this.shop = buildShop(this.scene);
 
     const steel = new THREE.MeshStandardMaterial({ color: '#8b9399', metalness: 0.85, roughness: 0.35 });
     this.pipe = new THREE.Mesh(blowpipeGeometry(), steel);
@@ -191,7 +191,7 @@ export class Scene {
     }
     this.target.lerp(want, k);
     const narrow = this.camera.aspect < 1 ? 1 / this.camera.aspect : 1;
-    const wantDist = onFloor ? 34 : clamp((len + 2 * maxR + 5) * 1.7 * Math.min(narrow, 1.9), 15, 70);
+    const wantDist = onFloor ? 26 : clamp((len + 2 * maxR + 5) * 1.2 * Math.min(narrow, 1.9), 11, 52);
     this.dist += (wantDist - this.dist) * k;
     const cp = Math.cos(this.pitch);
     this.camera.position.set(
@@ -246,6 +246,7 @@ export class Scene {
     }
 
     this.placeStations(v, p, pr);
+    this.shop.update(v.time, dt);
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -348,105 +349,7 @@ export class Scene {
     this.cracks.visible = true;
   }
 
-  /** The daylit shop: block wall, a big window, concrete floor, the furnace and glory hole, a shelf of jars. */
-  private buildRoom() {
-    const s = this.scene;
-    s.add(new THREE.HemisphereLight('#f4f1ea', '#a39b8e', 1.25));
-    const sun = new THREE.DirectionalLight('#fff4e0', 2.2);
-    sun.position.set(25, 70, -40);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
-    const sc = sun.shadow.camera;
-    sc.left = -40;
-    sc.right = 40;
-    sc.top = 40;
-    sc.bottom = -40;
-    sc.near = 10;
-    sc.far = 200;
-    s.add(sun);
-    const fill = new THREE.DirectionalLight('#e8eef5', 0.8);
-    fill.position.set(-20, 20, 60);
-    s.add(fill);
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), new THREE.MeshStandardMaterial({ color: '#8f8a82', roughness: 0.92 }));
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = FLOOR_Y;
-    floor.receiveShadow = true;
-    s.add(floor);
-    // The window's light on the floor.
-    const patch = new THREE.Mesh(new THREE.PlaneGeometry(60, 50), new THREE.MeshBasicMaterial({ color: '#fffbf0', transparent: true, opacity: 0.18 }));
-    patch.rotation.x = -Math.PI / 2;
-    patch.position.set(10, FLOOR_Y + 0.05, -30);
-    s.add(patch);
-
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 160), new THREE.MeshStandardMaterial({ map: blockTexture(), roughness: 0.95 }));
-    wall.position.set(0, FLOOR_Y + 80, WALL_Z);
-    wall.receiveShadow = true;
-    s.add(wall);
-
-    // Window: sky glass and a steel sash.
-    const sky = new THREE.Mesh(new THREE.PlaneGeometry(64, 36), new THREE.MeshBasicMaterial({ color: '#cfe4ef' }));
-    sky.position.set(4, 34, WALL_Z + 0.1);
-    s.add(sky);
-    const sash = new THREE.MeshStandardMaterial({ color: '#4f585f', metalness: 0.6, roughness: 0.5 });
-    const bar = (w: number, h: number, x: number, y: number) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 1), sash);
-      m.position.set(x, y, WALL_Z + 0.6);
-      s.add(m);
-    };
-    bar(66, 1.5, 4, 52);
-    bar(66, 1.5, 4, 16);
-    bar(66, 1, 4, 34);
-    for (let i = 0; i <= 4; i++) bar(i === 0 || i === 4 ? 1.5 : 1, 36, 4 - 32 + i * 16, 34);
-
-    // Furnace, back left: steel box on legs with a glowing door.
-    const steel = new THREE.MeshStandardMaterial({ color: '#6f777e', metalness: 0.5, roughness: 0.55 });
-    const furnace = new THREE.Mesh(new THREE.BoxGeometry(38, 44, 34), steel);
-    furnace.position.set(-84, FLOOR_Y + 32, WALL_Z + 30);
-    furnace.castShadow = true;
-    furnace.receiveShadow = true;
-    s.add(furnace);
-    for (const dx of [-15, 15]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(3, 10, 3), steel);
-      leg.position.set(-84 + dx, FLOOR_Y + 5, WALL_Z + 44);
-      s.add(leg);
-    }
-    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(20, 15, 0.8), new THREE.MeshStandardMaterial({ color: '#9c4a2a', roughness: 0.8 }));
-    doorFrame.position.set(-80, FLOOR_Y + 34, WALL_Z + 47.4);
-    s.add(doorFrame);
-    const door = new THREE.Mesh(new THREE.PlaneGeometry(16, 11), new THREE.MeshBasicMaterial({ color: '#ffb257' }));
-    door.position.set(-80, FLOOR_Y + 34, WALL_Z + 47.9);
-    s.add(door);
-    const furnaceGlow = new THREE.PointLight('#ff9a3c', 900, 0, 2);
-    furnaceGlow.position.set(-80, FLOOR_Y + 34, WALL_Z + 52);
-    s.add(furnaceGlow);
-
-    // Glory hole, back right: a drum on a stand with its round port.
-    const drum = new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 22, 32), steel);
-    drum.rotation.x = Math.PI / 2;
-    drum.position.set(80, FLOOR_Y + 30, WALL_Z + 38);
-    drum.castShadow = true;
-    s.add(drum);
-    const port = new THREE.Mesh(new THREE.CircleGeometry(6, 32), new THREE.MeshBasicMaterial({ color: '#ffa04a' }));
-    port.position.set(80, FLOOR_Y + 30, WALL_Z + 49.2);
-    s.add(port);
-    const stand = new THREE.Mesh(new THREE.BoxGeometry(3, 17, 3), steel);
-    stand.position.set(80, FLOOR_Y + 8.5, WALL_Z + 38);
-    s.add(stand);
-
-    // Shelf of color jars on the wall.
-    const wood = new THREE.MeshStandardMaterial({ color: '#8a6a4a', roughness: 0.8 });
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(34, 1.2, 6), wood);
-    shelf.position.set(46, 52, WALL_Z + 3);
-    s.add(shelf);
-    ['#2646c4', '#cd801e', '#28a06e', '#ece8dc', '#c81c4c', '#2646c4'].forEach((c, i) => {
-      const h = 5 + (i % 3);
-      const jar = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, h, 20), new THREE.MeshStandardMaterial({ color: c, roughness: 0.3 }));
-      jar.position.set(46 - 14 + i * 5.6, 52.6 + h / 2, WALL_Z + 3);
-      jar.castShadow = true;
-      s.add(jar);
-    });
-  }
 }
 
 /**
@@ -837,32 +740,3 @@ function haloTexture() {
   return t;
 }
 
-/** Whitewashed concrete block coursing for the back wall. */
-function blockTexture() {
-  const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 256;
-  const x = c.getContext('2d')!;
-  x.fillStyle = '#7b8489'; // cool gray block: hot glass is warm and bright, so it stands off this
-  x.fillRect(0, 0, 512, 256);
-  x.strokeStyle = 'rgba(60,66,72,0.28)';
-  x.lineWidth = 2;
-  for (let row = 0; row < 8; row++) {
-    const y = row * 32;
-    x.beginPath();
-    x.moveTo(0, y);
-    x.lineTo(512, y);
-    x.stroke();
-    for (let bx = (row % 2) * 32; bx < 512; bx += 64) {
-      x.beginPath();
-      x.moveTo(bx, y);
-      x.lineTo(bx, y + 32);
-      x.stroke();
-    }
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(5, 2.5);
-  return t;
-}
