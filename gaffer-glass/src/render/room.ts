@@ -100,7 +100,7 @@ export function buildShop(scene: THREE.Scene): Shop {
   add(box(70, 1.6, 5, std('#5e676d', 0.7), 4, 15.2, WALL_Z + 2.5));
 
   // ── Annealer, against the back wall: a white box on legs, its controller reading 960°F ──
-  const ax = 58, az = WALL_Z + 11;
+  const ax = -100, az = WALL_Z + 11;
   add(box(24, 22, 18, std('#c9c7c0', 0.6, 0.1), ax, FLOOR_Y + 10 + 11, az));
   for (const dx of [-10, 10]) add(box(2, 10, 2, DARK_STEEL, ax + dx, FLOOR_Y + 5, az + 7));
   add(box(22.5, 0.5, 0.4, std('#8f8d86', 0.6), ax, FLOOR_Y + 26, az + 9.1, false));
@@ -166,12 +166,12 @@ export function buildShop(scene: THREE.Scene): Shop {
   }
 
   // ── Cullet barrel: a steel drum half full of broken glass ──
-  add(new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 16, 32, 1, true), new THREE.MeshStandardMaterial({ color: '#41606b', roughness: 0.55, metalness: 0.5, side: THREE.DoubleSide })).translateX(70).translateY(FLOOR_Y + 8).translateZ(-72));
+  add(new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 16, 32, 1, true), new THREE.MeshStandardMaterial({ color: '#41606b', roughness: 0.55, metalness: 0.5, side: THREE.DoubleSide })).translateX(100).translateY(FLOOR_Y + 8).translateZ(-60));
   const cullet = new THREE.MeshStandardMaterial({ color: '#bcd6d2', roughness: 0.1, transparent: true, opacity: 0.75 });
   for (let i = 0; i < 26; i++) {
     const a = i * 2.39, r = 5.5 * Math.sqrt((i + 0.5) / 26);
     const shard = new THREE.Mesh(new THREE.TetrahedronGeometry(0.9 + (i % 3) * 0.4), i % 5 === 0 ? std('#2646c4', 0.15) : cullet);
-    shard.position.set(70 + r * Math.cos(a), FLOOR_Y + 13 + (i % 4) * 0.4, -72 + r * Math.sin(a));
+    shard.position.set(100 + r * Math.cos(a), FLOOR_Y + 13 + (i % 4) * 0.4, -60 + r * Math.sin(a));
     shard.rotation.set(i, i * 1.7, i * 0.6);
     add(shard);
   }
@@ -207,7 +207,7 @@ export function buildShop(scene: THREE.Scene): Shop {
   const peg = new THREE.Mesh(new THREE.PlaneGeometry(30, 20), new THREE.MeshStandardMaterial({ map: pegboardTexture(), roughness: 0.9 }));
   peg.position.set(-80, 40, WALL_Z + 0.3);
   const chart = new THREE.Mesh(new THREE.PlaneGeometry(14, 18), new THREE.MeshStandardMaterial({ map: chartTexture(), roughness: 0.8 }));
-  chart.position.set(76, 30, WALL_Z + 0.3);
+  chart.position.set(104, 30, WALL_Z + 0.3);
   add(peg, chart);
 
   // ── Hanging shop lamps, warm ──

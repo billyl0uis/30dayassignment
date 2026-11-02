@@ -53,7 +53,7 @@ export class Session {
     if (this.paused || this.held === a) return;
     this.held = a;
     this.justStarted = true;
-    const ok = canHold(this.piece, a);
+    const ok = canHold(this.piece, a, this.mods);
     if (!ok.ok) this.say({ kind: 'hint', text: ok.reason }, true);
   }
 
@@ -113,7 +113,7 @@ export class Session {
     this.tilt += (this.tiltTarget - this.tilt) * Math.min(1, TILT.ease * dt);
     if (Math.abs(this.tilt) < 0.01 && this.tiltTarget === 0) this.tilt = 0;
     const p = this.piece;
-    this.tool = this.held && canHold(p, this.held).ok ? this.held : null;
+    this.tool = this.held && canHold(p, this.held, this.mods).ok ? this.held : null;
     if (p) {
       const coasting = this.clock - this.lastToolAt < SAG.coastSeconds;
       const r = step(p, this.held, dt, { mods: this.mods, rotating: this.rotating, justStarted: this.justStarted, coasting, pressure: this.pressure, tilt: this.tilt, roll: this.turnPhase * Math.PI * 2 });

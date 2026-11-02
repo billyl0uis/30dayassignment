@@ -8,6 +8,7 @@ export const HOLD_KEYS: Record<HoldAction, { code: string; key: string; label: s
   glory: { code: 'KeyG', key: 'G', label: 'Glory hole' },
   marver: { code: 'KeyM', key: 'M', label: 'Marver' },
   block: { code: 'KeyK', key: 'K', label: 'Block' },
+  pad: { code: 'KeyD', key: 'D', label: 'Pad' },
   blow: { code: 'KeyB', key: 'B', label: 'Blow' },
   jacks: { code: 'KeyJ', key: 'J', label: 'Jacks' },
 };

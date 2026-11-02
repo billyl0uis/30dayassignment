@@ -226,7 +226,7 @@ export const CLEAR_RGB: [number, number, number] = [205, 228, 232];
 
 /** Tools. Some unlock a new kind of piece, and only once you've sold or delivered enough of another. */
 export const UPGRADES = {
-  pad: { label: 'Wet newspaper pad', price: 20, blurb: 'Centers 60% faster than the block.' },
+  pad: { label: 'Wet newspaper pad', price: 20, blurb: 'A second shaping tool (D): centers 60% faster than the block, and works on the punty too.' },
   jacks: {
     label: 'Smoother jacks', price: 55, blurb: 'Slower, steadier jacks; the neck holds to 115%. Unlocks bowls.',
     requires: { type: 'tumbler', count: 2 },

@@ -4,7 +4,7 @@ import {
 import { clamp, geometry, setSag, type ColorId, type FinishedPiece, type Piece, pieceType } from './piece';
 import { fluid } from './physics';
 
-export type HoldAction = 'gather' | 'glory' | 'marver' | 'block' | 'blow' | 'jacks';
+export type HoldAction = 'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'blow' | 'jacks';
 export type TapAction = 'newPipe' | 'dump' | 'color' | 'transfer' | 'knockOff';
 
 export type Check = { ok: true } | { ok: false; reason: string };
@@ -29,7 +29,8 @@ export const dropAt = (mods: Mods) => (mods.smoothJacks ? JACKS.smoothDropAt : J
 
 // ── Can I do this? (shared by the sim, the buttons, and the message line) ──
 
-export function canHold(p: Piece | null, a: HoldAction): Check {
+export function canHold(p: Piece | null, a: HoldAction, mods?: Mods): Check {
+  if (a === 'pad' && !mods?.pad) return no('Buy the wet newspaper pad in the Shop to use it.');
   if (!p) return no('Nothing on the pipe — press N for a new pipe.');
   if (p.failed) return no('That piece is done for — N for a new pipe or Q to dump it.');
   if (a === 'gather') {
@@ -136,7 +137,8 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
       return;
     }
     case 'marver':
-    case 'block': {
+    case 'block':
+    case 'pad': {
       const c = a === 'marver' ? MARVER : BLOCK;
       p.T -= c.coolRate * dt;
       if (f <= 0) return void ctx.events.push({ kind: 'hint', text: STIFF });
@@ -144,7 +146,7 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
         const R = geometry(p).R;
         p.L += (c.lengthRatio * R - p.L) * c.shapeK * f * dt;
       }
-      const boost = a === 'block' && ctx.mods.pad ? BLOCK.padBoost : 1;
+      const boost = a === 'pad' ? BLOCK.padBoost : 1; // the pad works like a block, only faster
       setSag(p, Math.max(0, p.s - c.centerRate * boost * f * dt));
       return;
     }

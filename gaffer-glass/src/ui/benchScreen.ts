@@ -96,7 +96,7 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
   const tipUp = tipBtn(-1, 'Tip up', '↑');
   const tipDown = tipBtn(1, 'Tip down', '↓');
   const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), rotate, tipUp, tipDown);
-  const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('jacks'));
+  const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('pad'), hb('jacks'));
   // Breath pressure: harder blows faster and tears at a thicker wall.
   const pressureVal = h('span', { class: 'val' });
   const pressure = h('input', {
@@ -206,14 +206,13 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
     r.type.textContent = has && !p!.failed ? PRODUCTS[pieceType(p!)].label : '—';
 
     for (const [a, b] of holdBtns) {
-      const ok = canHold(p, a);
+      const ok = canHold(p, a, session.mods);
       b.classList.toggle('off', !ok.ok);
       b.title = ok.ok ? `${HOLD_KEYS[a].label} — hold ${HOLD_KEYS[a].key}` : ok.reason;
       b.classList.toggle('active', session.tool === a);
-      b.querySelector('.tl')!.textContent = a === 'block' && session.mods.pad ? 'Pad' : HOLD_KEYS[a].label;
     }
     const t = session.tool;
-    chip.textContent = t ? (t === 'block' && session.mods.pad ? 'Newspaper pad' : STATION_LABEL[t]) : '';
+    chip.textContent = t ? STATION_LABEL[t] : '';
     tipUp.classList.toggle('active', session.tiltTarget < 0);
     tipDown.classList.toggle('active', session.tiltTarget > 0);
     rotate.classList.toggle('active', session.rotating);

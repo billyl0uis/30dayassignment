@@ -30,7 +30,7 @@ export function step(p0: Piece, held: HoldAction | null, dt: number, ctx: StepCo
   const p = { ...p0 };
 
   // A held tool only counts if it's allowed right now; a refused one does nothing at all.
-  const tool = held && canHold(p, held).ok ? held : null;
+  const tool = held && canHold(p, held, ctx.mods).ok ? held : null;
   const turning = tool !== null || ctx.rotating || !!ctx.coasting;
   if (p.V <= 0 && tool !== 'gather') return { piece: p, events, turning };
 
