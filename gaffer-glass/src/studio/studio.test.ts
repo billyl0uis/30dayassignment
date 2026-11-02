@@ -4,7 +4,7 @@ import { NO_MODS } from '../sim/actions';
 import { step } from '../sim/physics';
 import { geometry, newPiece, type FinishedPiece, type Piece } from '../sim/piece';
 import { unlockedKinds } from './commissions';
-import { anneal, buyUpgrade, deliver, fits, setPrice, shelve, unloadAnnealer, upgradeBlock, visit } from './economy';
+import { anneal, buyUpgrade, deliver, fits, notes, rename, saleOdds, setPrice, shelve, unloadAnnealer, upgradeBlock, visit } from './economy';
 import { goalState } from './goals';
 import { freshStudio, type Studio } from './state';
 
@@ -107,5 +107,31 @@ describe('blow pressure', () => {
   };
   it('harder breath blows the bubble faster', () => {
     expect(blowFor(0.9, 1).r).toBeGreaterThan(blowFor(0.3, 1).r * 2);
+  });
+});
+
+describe('the out-of-the-annealer card', () => {
+  it('notes what a buyer would notice, good and bad', () => {
+    const good = notes(tumbler);
+    expect(good.every((n) => n.good)).toBe(true);
+    const off = notes({ ...tumbler, D: 4.6, centered: 0.6, color: 'cobalt' });
+    expect(off.find((n) => n.text.startsWith('Diameter'))).toMatchObject({ good: false });
+    expect(off.find((n) => n.text.startsWith('Off center'))).toMatchObject({ good: false });
+    expect(off.find((n) => n.text.startsWith('Colored'))).toMatchObject({ good: true });
+  });
+
+  it('reads a price against what the piece is worth', () => {
+    const s = withTumbler();
+    const p = s.pieces[0];
+    expect(saleOdds(s, p, Math.round(p.value * 0.7))).toMatch(/bargain/i);
+    expect(saleOdds(s, p, p.value)).toMatch(/fair/i);
+    expect(saleOdds(s, p, p.value * 3)).toMatch(/overpriced/i);
+  });
+
+  it('keeps the name you give it, trimmed, and ignores a blank one', () => {
+    const s = withTumbler();
+    const id = s.pieces[0].id;
+    expect(rename(s, id, '  Morning cup  ').pieces[0].name).toBe('Morning cup');
+    expect(rename(s, id, '   ').pieces[0].name).toBe(s.pieces[0].name);
   });
 });

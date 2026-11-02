@@ -246,5 +246,6 @@ export function finish(p: Piece): FinishedPiece {
     centered: clamp(1 - SAG.centeredK * p.s, 0, 1),
     even: clamp(1 - p.uneven, 0, 1),
     color: p.color,
+    shape: { ...p, T: 70, failed: null },
   };
 }

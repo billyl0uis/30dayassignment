@@ -170,5 +170,49 @@ export function buyUpgrade(s: Studio, u: UpgradeId): Studio | null {
   return log({ ...next, commissions: refillCommissions(next) }, `Bought ${UPGRADES[u].label.toLowerCase()}.`);
 }
 
+export function rename(s: Studio, id: number, name: string): Studio {
+  const n = name.trim().slice(0, 40);
+  return n ? { ...s, pieces: s.pieces.map((x) => (x.id === id ? { ...x, name: n } : x)) } : s;
+}
+
+export interface Note {
+  text: string;
+  good: boolean;
+}
+
+/** What a buyer would notice: each of the kind's specs, centering, evenness, and color. */
+export function notes(fp: FinishedPiece): Note[] {
+  const spec = PRODUCTS[fp.type] as { D?: [number, number]; H?: [number, number]; wall?: [number, number]; HD?: [number, number] };
+  const out: Note[] = [];
+  const range = (label: string, x: number, r: [number, number] | undefined, unit = '"') => {
+    if (!r) return;
+    const show = (v: number) => `${v.toFixed(2)}${unit}`;
+    if (x >= r[0] && x <= r[1]) out.push({ text: `${label} on spec (${show(x)})`, good: true });
+    else out.push({ text: `${label} ${x < r[0] ? 'short' : 'over'}: ${show(x)}, wants ${r[0]}–${r[1]}${unit}`, good: false });
+  };
+  range('Diameter', fp.D, spec.D);
+  range('Height', fp.H, spec.H);
+  range('Wall', fp.wall, spec.wall);
+  range('Roundness', fp.HD, spec.HD, '');
+  out.push(fp.centered >= 0.9
+    ? { text: 'Sits true on center', good: true }
+    : { text: `Off center (${pct(fp.centered)}): it drooped while the pipe was still`, good: false });
+  out.push(fp.even >= 0.9
+    ? { text: 'Even wall all the way round', good: true }
+    : { text: `Uneven (${pct(fp.even)}): worked or blown too hot`, good: false });
+  if (fp.color) out.push({ text: 'Colored glass adds value', good: true });
+  return out;
+}
+
+/** How a visitor is likely to see this price, as a short phrase. */
+export function saleOdds(s: Studio, p: StoredPiece, price: number): string {
+  const ratio = price / (p.value * Math.min(VISITORS.maxRegard, 1 + s.rep * VISITORS.repValue));
+  if (ratio <= 0.8) return 'A bargain: it should go to the next visitor who wants one.';
+  if (ratio <= 1) return 'Fair: likely to sell soon.';
+  if (ratio <= 1.25) return 'A little high: it may sit a while.';
+  if (ratio <= 1.6) return 'Pricey: few visitors will pay this.';
+  return 'Overpriced: almost nobody will pay this.';
+}
+
 export const pct = (q: number) => `${Math.round(q * 100)}%`;
 const article = (w: string) => `${/^[aeiou]/i.test(w) ? 'an' : 'a'} ${w.toLowerCase()}`;

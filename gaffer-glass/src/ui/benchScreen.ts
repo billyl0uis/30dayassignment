@@ -21,8 +21,8 @@ export interface Bench {
   onResume: () => void;
   /** Show a studio event (a sale, a piece out of the annealer) on the ticker. */
   notify(text: string): void;
-  /** Freeze or unfreeze the bench, with a veil over it while paused. */
-  setPaused(paused: boolean): void;
+  /** Freeze or unfreeze the bench; the Paused veil shows only when asked for. */
+  setPaused(paused: boolean, veil?: boolean): void;
   dispose(): void;
 }
 
@@ -253,11 +253,11 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
   refresh();
   raf = requestAnimationFrame(frame);
   return {
-    setPaused(paused: boolean) {
+    setPaused(paused: boolean, veil = true) {
       session.paused = paused;
       if (paused && session.held) session.release(session.held);
       session.tiltTarget = 0;
-      pauseVeil.hidden = !paused;
+      pauseVeil.hidden = !(paused && veil);
     },
     set onResume(fn: () => void) {
       onResume = fn;

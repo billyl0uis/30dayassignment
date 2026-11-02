@@ -32,7 +32,7 @@ const SEG = 40; // around the axis
 const ROWS = 64; // must match the profile's sample count
 const PIVOT_X = -24; // the gaffer's hands on the pipe: tipping swings the pipe about here
 
-const color = ([r, g, b]: RGB) => new THREE.Color(`rgb(${r | 0},${g | 0},${b | 0})`);
+export const color = ([r, g, b]: RGB) => new THREE.Color(`rgb(${r | 0},${g | 0},${b | 0})`);
 
 /** The hot shop in 3D. Owns its camera and props; the piece arrives fresh every frame. */
 export class Scene {
@@ -469,7 +469,7 @@ function blowpipeGeometry() {
 // ── The piece as a solid of revolution ──────────────────────────────
 
 /** A fixed grid: the outer skin out to the tip, then the inner skin back, so a blown piece is a real shell. */
-function latheGeometry() {
+export function latheGeometry() {
   const g = new THREE.BufferGeometry();
   const rows = ROWS * 2;
   const cols = SEG + 1;
@@ -486,7 +486,7 @@ function latheGeometry() {
   return g;
 }
 
-function updateLathe(g: THREE.BufferGeometry, pr: Profile, uneven: number, roll: number, [dy, dz]: [number, number]) {
+export function updateLathe(g: THREE.BufferGeometry, pr: Profile, uneven: number, roll: number, [dy, dz]: [number, number]) {
   const pos = g.getAttribute('position') as THREE.BufferAttribute;
   const cols = SEG + 1;
   const wobble = uneven * 0.12;
@@ -507,7 +507,7 @@ function updateLathe(g: THREE.BufferGeometry, pr: Profile, uneven: number, roll:
 }
 
 /** Cold glass shows its color and lets light through; hot glass glows and the glow hides the color. */
-function styleGlass(m: THREE.MeshPhysicalMaterial, p: Piece, glow: number, heat: RGB) {
+export function styleGlass(m: THREE.MeshPhysicalMaterial, p: Piece, glow: number, heat: RGB) {
   const base = color(glassRGB(p.color));
   const opal = p.color === 'opal';
   m.color = (p.color ? base.clone() : new THREE.Color('#f2fbfc')).lerp(color(heat).multiplyScalar(0.8), glow * 0.8);

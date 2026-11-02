@@ -77,6 +77,7 @@ export interface FinishedPiece {
   centered: number; // 0–1
   even: number; // 0–1
   color: ColorId | null;
+  shape?: Piece; // the piece as it left the pipe, for showing it in 3D afterward
 }
 
 /** Set how far off center the piece is, keeping the direction it has drooped. */
