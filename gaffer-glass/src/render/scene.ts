@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { GEOM, TILT } from '../config';
 import type { HoldAction, Mods } from '../sim/actions';
 import { clamp, geometry, type Piece } from '../sim/piece';
@@ -21,7 +22,7 @@ export interface SceneView {
   tilt?: number; // −1 tip up … +1 tip down
 }
 
-type StationKey = 'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'jacks';
+type StationKey = 'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'paddle' | 'jacks';
 
 export const STATION_LABEL: Record<HoldAction, string> = {
   gather: 'Furnace · gather',
@@ -29,6 +30,7 @@ export const STATION_LABEL: Record<HoldAction, string> = {
   marver: 'Marver',
   block: 'Block',
   pad: 'Newspaper pad',
+  paddle: 'Paddle',
   blow: 'Blow',
   jacks: 'Jacks',
 };
@@ -36,6 +38,8 @@ export const STATION_LABEL: Record<HoldAction, string> = {
 // World units are inches. The pipe runs along x, its tip at the origin, the free end toward +x.
 const SEG = 40; // around the axis
 const ROWS = 64; // must match the profile's sample count
+const PIPE_LEN = 40; // a short studio blowpipe, tip to mouthpiece (in)
+const PUNTY_LEN = 36;
 const PIVOT_X = -13; // where the pipe rests on the bench's near arm: tipping rocks the pipe on it
 
 // Where the furnace, glory hole and marver stand in the shop. Using one carries the pipe there.
@@ -69,6 +73,7 @@ export class Scene {
   private pipeMark: THREE.Mesh;
   private punty: THREE.Mesh;
   private glass: THREE.Mesh<THREE.BufferGeometry, THREE.MeshPhysicalMaterial>;
+  private backflow: THREE.Mesh; // glass that has run back over the pipe when tipped up
   private halo: THREE.Sprite;
   private heatLight = new THREE.PointLight(0xff8a3d, 0, 0, 2);
   private puddle: THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
@@ -120,11 +125,11 @@ export class Scene {
     this.pipeMark.rotation.z = Math.PI / 2;
     this.pipeMark.position.x = -4;
     this.punty = new THREE.Mesh(
-      new THREE.CylinderGeometry(GEOM.puntyR, GEOM.puntyR, 60, 16),
+      new THREE.CylinderGeometry(GEOM.puntyR, GEOM.puntyR, PUNTY_LEN, 16),
       new THREE.MeshStandardMaterial({ color: '#4a4643', metalness: 0.7, roughness: 0.55 }),
     );
     this.punty.rotation.z = Math.PI / 2;
-    this.punty.position.x = -30 + 0.15;
+    this.punty.position.x = -PUNTY_LEN / 2 + 0.15;
     this.rig.position.x = PIVOT_X;
     this.arm.position.x = -PIVOT_X;
     this.rig.add(this.arm);
@@ -140,6 +145,13 @@ export class Scene {
     // Hot glass never glows perfectly evenly: a soft mottle that rolls round with the pipe shows it turning.
     this.glass.material.emissiveMap = this.mottle;
     this.arm.add(this.glass);
+    // A sleeve of the same glass, rounded at its back end, creeping along the pipe.
+    const sleeve = new THREE.CylinderGeometry(1, 1, 1, 28, 1, false);
+    sleeve.translate(0, -0.5, 0); // from the pipe's tip (0) back along it
+    this.backflow = new THREE.Mesh(sleeve, this.glass.material);
+    this.backflow.rotation.z = -Math.PI / 2; // its length runs back along −x
+    this.backflow.visible = false;
+    this.arm.add(this.backflow);
 
     this.halo = new THREE.Sprite(new THREE.SpriteMaterial({
       map: haloTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0,
@@ -270,6 +282,7 @@ export class Scene {
     const heat = heatRGB(T);
 
     this.glass.visible = !!pr && !onFloor;
+    this.backflow.visible = false;
     this.puddle.visible = !!pr && onFloor;
     this.cracks.visible = false;
     this.halo.material.opacity = 0;
@@ -293,6 +306,12 @@ export class Scene {
       this.heatLight.color = color(heat);
       this.heatLight.intensity = 500 * glow * (0.6 + 0.4 * Math.min(1, p.V / 10));
       if (p.failed?.kind === 'crack') this.showCracks(pr);
+      this.backflow.visible = p.back > 0.02 && !p.punty;
+      if (this.backflow.visible) {
+        const thick = GEOM.pipeR + 0.1 + 0.12 * Math.min(1, p.back);
+        this.backflow.scale.set(thick, p.back, thick);
+        this.backflow.position.set(0.25, 0, 0);
+      }
     } else if (p && pr && onFloor) {
       const m = this.puddle.material;
       m.color = color(glassRGB(p.color)).lerp(color(heat), glow);
@@ -386,6 +405,13 @@ export class Scene {
         }
         break;
       }
+      case 'paddle': {
+        // The paddle's face pressed square against the far end of the piece.
+        const g = this.stations.paddle;
+        g.position.set(len + 0.12, -dropEnd, 0);
+        g.scale.setScalar(Math.max(R, 0.8));
+        break;
+      }
       case 'jacks': {
         const g = this.stations.jacks;
         const [upper, lower] = g.children;
@@ -448,7 +474,7 @@ function blowpipeGeometry() {
   const nose = R * 1.2;
   const bore = R * 0.32;
   const pts = [
-    [bore, -60], [R, -60], // the mouthpiece end, far off to the left
+    [bore, -PIPE_LEN], [R, -PIPE_LEN], // the mouthpiece end
     [R, -1.6], [nose, -1.1], // the tube swells into the nose
     [nose, 0.05], [nose * 0.88, 0.3], // a small chamfer at the tip
     [bore, 0.3], [bore, -3], [0, -3], // the bore, open at the tip
@@ -525,6 +551,13 @@ function flicker(g: THREE.Object3D, time: number) {
     const n = 0.85 + 0.15 * Math.sin(time * 13 + f * 7) * Math.sin(time * 5.3 + f * 3);
     if (o instanceof THREE.PointLight) o.intensity = (o.userData.base as number) * (0.9 + 0.1 * n);
     else o.scale.set(1, n, 1);
+  });
+  g.traverse((o) => {
+    const k = o.userData.shimmer as number | undefined;
+    if (k === undefined || !(o instanceof THREE.Mesh)) return;
+    const base = (o.userData.color as THREE.Color | undefined) ?? (o.userData.color = (o.material as THREE.MeshBasicMaterial).color.clone());
+    const n = 0.94 + 0.06 * Math.sin(time * 2.1 + k) * Math.sin(time * 0.9 + k * 2);
+    (o.material as THREE.MeshBasicMaterial).color.copy(base).multiplyScalar(n);
   });
 }
 
@@ -693,7 +726,7 @@ function buildFurnace() {
   const melt = new THREE.Mesh(new THREE.CircleGeometry(9.8, 40), new THREE.MeshBasicMaterial({ color: '#d8722a' }));
   melt.rotation.x = -Math.PI / 2;
   melt.position.set(0, -2.6, -14);
-  melt.userData.flame = 5;
+  melt.userData.shimmer = 5; // the melt's surface glows a little brighter and dimmer; it never moves
   g.add(chamber, pot, melt, fireLight(900, 1, 8));
   return g;
 }
@@ -761,31 +794,56 @@ function buildPad() {
 }
 
 /**
- * Wooden block: a turned cherrywood head with a round cup carved into it, on a handle. Soaked dark
- * from the bucket, steaming against the hot glass. Modeled at unit cup radius; scaled to the piece.
+ * Wooden block: a ladle of wet cherrywood. A squat rounded head with a round cup carved into its top,
+ * and a handle coming off the side toward the gaffer, held so the cup cradles the glass from below.
+ * Modeled at unit cup radius; scaled to the piece.
  */
 function buildBlock() {
   const g = new THREE.Group();
-  const wood = new THREE.MeshStandardMaterial({ color: '#5e3a22', roughness: 0.85 });
-  const charred = new THREE.MeshStandardMaterial({ color: '#2a1810', roughness: 0.95, side: THREE.BackSide });
-  // The head: a short thick cylinder whose top is hollowed into a cup the glass sits in.
+  const wood = new THREE.MeshStandardMaterial({ color: '#4e2a1a', roughness: 0.8 }); // soaked cherry
+  const charred = new THREE.MeshStandardMaterial({ color: '#22140c', roughness: 0.95, side: THREE.BackSide });
+  // The head: a squat block with softened shoulders, the cup's rim flush with its top.
   const head = new THREE.Mesh(new THREE.LatheGeometry([
-    [0.0, -1.55], [1.55, -1.55], [1.62, -1.4], [1.62, -0.05], [1.5, 0.05], [1.12, 0.05],
-  ].map(([r, y]) => new THREE.Vector2(r, y)), 32), wood);
-  const cup = new THREE.Mesh(new THREE.SphereGeometry(1.12, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), charred);
-  cup.position.y = 0.05;
+    [0.0, -1.0], [1.15, -1.0], [1.5, -0.8], [1.62, -0.35], [1.6, 0.0], [1.42, 0.1], [1.14, 0.1],
+  ].map(([r, y]) => new THREE.Vector2(r, y)), 36), wood);
   head.castShadow = true;
-  g.add(head, cup);
-  // The handle, turned with a collar where it meets the head.
+  const cup = new THREE.Mesh(new THREE.SphereGeometry(1.14, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), charred);
+  cup.position.y = 0.1;
+  cup.scale.y = 0.85; // a shallow bowl, not a full hemisphere
+  // The handle: out of the head's side, toward the gaffer and a little down, like a ladle's.
   const handle = new THREE.Mesh(new THREE.LatheGeometry([
-    [0.0, 0], [0.42, 0], [0.42, 0.4], [0.26, 0.7], [0.24, 5.6], [0.3, 5.9], [0.0, 6.0],
-  ].map(([r, y]) => new THREE.Vector2(r, y)), 18), wood);
-  handle.rotation.z = Math.PI; // hangs down from the head
-  handle.position.y = -1.5;
-  handle.rotation.x = 0.35;
-  g.add(handle);
-  // The cup sits under the glass: the whole block below the piece's axis.
-  for (const c of [head, cup, handle]) c.position.y -= 0.55;
+    [0.0, 0], [0.34, 0], [0.3, 0.6], [0.26, 6.2], [0.32, 6.6], [0.0, 6.8],
+  ].map(([r, y]) => new THREE.Vector2(r, y)), 16), wood);
+  handle.rotation.x = Math.PI / 2 + 0.22; // lay it toward +z, tipped slightly down
+  handle.position.set(0, -0.45, 1.3);
+  handle.castShadow = true;
+  g.add(head, cup, handle);
+  // The cup sits just under the glass's lowest point.
+  for (const c of [head, cup, handle]) c.position.y -= 0.72;
+  addSteam(g);
+  return g;
+}
+
+/**
+ * Paddle: a flat board of wet cherrywood with a turned handle, its face held square to the end of
+ * the piece. Modeled at unit piece radius; scaled to the piece.
+ */
+function buildPaddle() {
+  const g = new THREE.Group();
+  const wood = new THREE.MeshStandardMaterial({ color: '#5a3320', roughness: 0.8 });
+  const board = new THREE.Mesh(new RoundedBoxGeometry(0.28, 3.4, 2.6, 2, 0.08), wood);
+  board.position.set(0.14, -0.3, 0);
+  board.castShadow = true;
+  // A scorched patch where the hot glass meets the face.
+  const scorch = new THREE.Mesh(new THREE.CircleGeometry(0.85, 24), new THREE.MeshStandardMaterial({ color: '#1f120b', roughness: 1 }));
+  scorch.rotation.y = -Math.PI / 2;
+  scorch.position.set(-0.005, 0, 0);
+  const handle = new THREE.Mesh(new THREE.LatheGeometry([
+    [0.0, 0], [0.22, 0], [0.2, 0.4], [0.17, 4.6], [0.22, 4.9], [0.0, 5.0],
+  ].map(([r, y]) => new THREE.Vector2(r, y)), 14), wood);
+  handle.position.set(0.2, -1.9, 0.2);
+  handle.rotation.x = Math.PI - 0.55; // down from the board and out toward the gaffer
+  g.add(board, scorch, handle);
   addSteam(g);
   return g;
 }
@@ -822,7 +880,7 @@ function buildStations() {
   const blade = () => new THREE.Mesh(new THREE.BoxGeometry(3, 0.12, 0.5), steel);
   jacks.add(blade(), blade());
 
-  return { gather: buildFurnace(), glory: buildGloryHole(), marver, block, pad: buildPad(), jacks };
+  return { gather: buildFurnace(), glory: buildGloryHole(), marver, block, pad: buildPad(), paddle: buildPaddle(), jacks };
 }
 
 /** A vertical glow: bright at the burner end (v = 0), darker toward the port. */

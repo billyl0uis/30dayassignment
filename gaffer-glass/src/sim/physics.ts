@@ -47,9 +47,26 @@ export function step(p0: Piece, held: HoldAction | null, dt: number, ctx: StepCo
     const f = fluid(p.T);
     if (f > 0) {
       const R = geometry(p).R;
-      const L = p.L + tilt * TILT.rate * f * f * (1 + p.V / TILT.massV) * dt;
-      // Never pushes a piece past the limits it is already outside of; only stops it going further.
-      p.L = clamp(L, Math.min(p.L, TILT.minLR * 2 * R), Math.max(p.L, TILT.maxLR * 2 * R));
+      const flow = tilt * TILT.rate * f * f * (1 + p.V / TILT.massV) * dt;
+      const minL = Math.min(p.L, TILT.minLR * 2 * R);
+      const L = p.L + flow;
+      if (flow < 0 && p.back <= 0 && L >= minL) {
+        p.L = L; // tipped up: it slumps back toward the pipe, short and fat
+      } else if (flow < 0 && !p.punty) {
+        // Already squat: the rest runs back over the end of the pipe, chilling against the steel.
+        p.L = minL;
+        const creep = Math.min(-flow * TILT.backShare, TILT.maxBack - p.back);
+        const before = p.back;
+        p.back += creep;
+        p.uneven += creep * TILT.backUneven;
+        if (before < TILT.warnBack && p.back >= TILT.warnBack)
+          events.push({ kind: 'warn', text: 'Tipped up too far: the glass is running back onto the pipe. Tip it down to bring it forward.' });
+      } else if (flow > 0 && p.back > 0) {
+        p.back = Math.max(0, p.back - flow); // tipped down: what ran back comes forward first
+      } else {
+        // Never pushes a piece past the limits it is already outside of; only stops it going further.
+        p.L = clamp(L, minL, Math.max(p.L, TILT.maxLR * 2 * R));
+      }
     }
   }
 

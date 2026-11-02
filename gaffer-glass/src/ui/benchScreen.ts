@@ -96,7 +96,7 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
   const tipUp = tipBtn(-1, 'Tip up', '↑');
   const tipDown = tipBtn(1, 'Tip down', '↓');
   const padLeft = h('div', { class: 'pad pad-left' }, hb('glory'), hb('gather'), rotate, tipUp, tipDown);
-  const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('pad'), hb('jacks'));
+  const padRight = h('div', { class: 'pad pad-right' }, hb('blow'), hb('marver'), hb('block'), hb('pad'), hb('paddle'), hb('jacks'));
   // Breath pressure: harder blows faster and tears at a thicker wall.
   const pressureVal = h('span', { class: 'val' });
   const pressure = h('input', {

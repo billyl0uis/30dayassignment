@@ -1448,3 +1448,67 @@ body[data-screen='session'] main {
   pointer-events: none;
   background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(18, 20, 24, 0.38) 100%);
 }
+
+/* Lost a piece: the reason, plainly, in a calm card. */
+.fail-card {
+  width: min(460px, 100%);
+}
+.fail-card h2 {
+  color: var(--bad);
+}
+.fail-reason {
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+/* Right pad: Blow plus five shaping tools (marver, block, pad, paddle, jacks). */
+.pad-right {
+  grid-template-columns: 64px 64px 64px 138px;
+}
+.pad-right .tool-blow {
+  grid-column: 4;
+}
+@media (max-width: 760px) {
+  .pad {
+    gap: 5px;
+  }
+  .pad .tool.big {
+    width: 82px;
+    height: 82px;
+  }
+  .tool.hold {
+    width: 40px;
+    height: 40px;
+    font-size: 0.56rem;
+  }
+  .pad-left {
+    grid-template-columns: 82px 40px 40px;
+    grid-template-rows: 40px 40px;
+  }
+  .pad-right {
+    grid-template-columns: 40px 40px 40px 82px;
+    grid-template-rows: 40px 40px;
+  }
+  .pad-right .tool-blow {
+    grid-column: 4;
+    grid-row: 1 / span 2;
+  }
+  .pad-right .tool-marver,
+  .pad-right .tool-block,
+  .pad-right .tool-jacks {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+@media (max-width: 760px) {
+  /* Six tools on a phone: two columns of three beside Blow, so both pads fit side by side. */
+  .pad-right {
+    grid-template-columns: 40px 40px 82px;
+    grid-template-rows: 40px 40px 40px;
+  }
+  .pad-right .tool-blow {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    align-self: center;
+  }
+}

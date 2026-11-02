@@ -69,7 +69,8 @@ const RECIPE: Record<PieceType, (g: Gaffer) => Gaffer> = {
     g.hold('blow', (p) => geometry(p).wall <= 0.24, 8);
     if (g.p.T < 1400) g.reheat();
     g.hold('blow', (p) => geometry(p).wall <= 0.2, 8).reheat();
-    g.hold('marver', (p) => p.L >= 4.2, 4).hold('jacks', (p) => p.n >= 0.6, 6);
+    g.hold('marver', (p) => p.L >= 4.2, 4).reheat().hold('paddle', (p) => p.flat >= 0.7, 4);
+    g.reheat().hold('jacks', (p) => p.n >= 0.6, 6);
     g.reheat().tap('transfer').reheat().hold(null, (p) => p.T < 1950, 5);
     return g.hold('jacks', (p) => p.o >= 0.35, 6).tap('knockOff');
   },
@@ -77,7 +78,7 @@ const RECIPE: Record<PieceType, (g: Gaffer) => Gaffer> = {
     g.hold('gather', 3).hold('marver', (p) => p.T < 1880, 4);
     g.hold('blow', (p) => geometry(p).wall <= 0.22, 10);
     // Bowls need the smoother jacks, which move at 60% speed: allow for it, reheating as a player would.
-    g.reheat().hold('block', 1.5);
+    g.reheat().hold('block', 1.5).hold('paddle', (p) => p.flat >= 0.7, 4);
     for (let i = 0; i < 3 && g.p.n < 0.6; i++) g.reheat().hold('jacks', (p) => p.n >= 0.6, 6);
     g.reheat().tap('transfer').reheat();
     for (let i = 0; i < 4 && g.p.o < 0.85; i++) g.reheat().hold(null, (p) => p.T < 1950, 5).hold('jacks', (p) => p.o >= 0.85, 6);
@@ -87,6 +88,7 @@ const RECIPE: Record<PieceType, (g: Gaffer) => Gaffer> = {
     g.hold('gather', 2.5).hold('marver', (p) => p.T < 1880, 4);
     g.hold('blow', (p) => geometry(p).wall <= 0.24, 10);
     for (let i = 0; i < 4 && g.p.L < 5.5; i++) g.reheat().hold('marver', (p) => p.L >= 5.5, 3);
+    g.reheat().hold('paddle', (p) => p.flat >= 0.7, 4);
     g.reheat().hold('jacks', (p) => p.n >= 0.6, 6).reheat().tap('transfer').reheat();
     g.hold(null, (p) => p.T < 1950, 5).hold('jacks', (p) => p.o >= 0.1, 6);
     return g.tap('knockOff');
@@ -159,6 +161,28 @@ describe('the science holds together', () => {
     expect(tip(1)).toBeGreaterThan(tip(0) + 0.5);
     expect(tip(-1)).toBeLessThan(tip(0) - 0.3);
     expect(tip(1, 1100)).toBeCloseTo(tip(0, 1100), 5); // stiff glass doesn't care which way the pipe points
+  });
+
+  it('tipped up past squat, soft glass runs back onto the pipe; tipped down, it comes forward', () => {
+    const run = (p: Piece, tilt: number, seconds: number) => {
+      for (let t = 0; t < seconds; t += DT) p = step(p, null, DT, { mods: NO_MODS, rotating: true, justStarted: false, tilt }).piece;
+      return p;
+    };
+    let p: Piece = { ...newPiece(), V: 5, L: 2.2, T: 2050 };
+    p = run(p, -1, 4);
+    expect(p.back).toBeGreaterThan(0.3);
+    expect(p.uneven).toBeGreaterThan(0);
+    p = { ...p, T: 2050 };
+    p = run(p, 1, 3);
+    expect(p.back).toBe(0);
+  });
+
+  it('the paddle flattens the bottom on the pipe, and is refused on the punty', () => {
+    let p: Piece = { ...newPiece(), V: 4, L: 3, T: 2000, blown: true, r: 0.6 };
+    for (let t = 0; t < 1.5; t += DT) p = step(p, 'paddle', DT, { mods: NO_MODS, rotating: true, justStarted: t === 0 }).piece;
+    expect(p.flat).toBeGreaterThan(0.6);
+    expect(p.L).toBeLessThan(3);
+    expect(canHold({ ...p, punty: true }, 'paddle').ok).toBe(false);
   });
 
   it('a pipe only carries so much glass: gathering stops at the limit', () => {

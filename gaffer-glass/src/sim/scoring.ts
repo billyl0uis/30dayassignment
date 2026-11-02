@@ -1,4 +1,4 @@
-import { ECONOMY, PRODUCTS, SCORE, type OrderSpec, type Range } from '../config';
+import { ECONOMY, PADDLE, PRODUCTS, SCORE, type OrderSpec, type Range } from '../config';
 import { clamp, type FinishedPiece } from './piece';
 
 /** 1 inside the range, falling smoothly to 0 the further outside it you are. */
@@ -16,6 +16,7 @@ export function specScore(fp: FinishedPiece, spec: OrderSpec): number {
   if (spec.H) fits.push(rangeFit(fp.H, spec.H));
   if (spec.wall) fits.push(rangeFit(fp.wall, spec.wall));
   if (spec.HD) fits.push(rangeFit(fp.HD, spec.HD));
+  if (spec.flat) fits.push(Math.min(1, (fp.flat ?? 0) / PADDLE.flatEnough)); // rocks unless it was paddled flat
   return fits.length ? fits.reduce((a, b) => a + b, 0) / fits.length : 0;
 }
 

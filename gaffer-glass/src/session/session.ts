@@ -15,6 +15,8 @@ export interface Message {
 export interface BenchHooks {
   onFinished(fp: FinishedPiece): void;
   onColorUsed(c: ColorId): void;
+  /** A piece was lost: dropped, cracked, blown out. The reason teaches the lesson. */
+  onFail?(reason: string): void;
 }
 
 const RANK: Record<SimEvent['kind'], number> = { hint: 0, info: 1, warn: 2, fail: 3 };
@@ -83,7 +85,10 @@ export class Session {
     if (a === 'color' && this.selectedColor) this.hooks.onColorUsed(this.selectedColor);
     this.piece = r.piece;
     if (r.finished) this.hooks.onFinished(r.finished);
-    r.events.forEach((e) => this.say(e, true));
+    r.events.forEach((e) => {
+      this.say(e, true);
+      if (e.kind === 'fail') this.hooks.onFail?.(e.text);
+    });
   }
 
   toggleRotation() {
@@ -120,7 +125,10 @@ export class Session {
       if (this.tool) this.lastToolAt = this.clock;
       this.piece = r.piece;
       this.turning = r.turning && !r.piece.failed;
-      for (const e of r.events) this.say(e);
+      for (const e of r.events) {
+        this.say(e);
+        if (e.kind === 'fail') this.hooks.onFail?.(e.text);
+      }
     } else {
       this.turning = false;
     }

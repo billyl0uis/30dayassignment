@@ -13,6 +13,8 @@ export interface Piece {
   s: number; // how far off center it has drooped (the length of cx, cy)
   cx: number; // the droop as a direction in the pipe's own frame: it turns with the pipe,
   cy: number; // so stopping with the droop on top lets gravity pull it back
+  back: number; // glass that has run back over the pipe end when tipped up (in)
+  flat: number; // how flat the far end has been paddled, 0–1: it becomes the base
   n: number; // jack line depth, 0–1+
   o: number; // opening after transfer, 0–1.25
   punty: boolean;
@@ -25,7 +27,7 @@ export interface Piece {
 
 export function newPiece(): Piece {
   return {
-    V: 0, L: 0, r: 0, T: ROOM_F, s: 0, cx: 0, cy: 0, n: 0, o: 0,
+    V: 0, L: 0, r: 0, T: ROOM_F, s: 0, cx: 0, cy: 0, back: 0, flat: 0, n: 0, o: 0,
     punty: false, blown: false, uneven: 0, color: null, gathers: 0, failed: null,
   };
 }
@@ -76,6 +78,7 @@ export interface FinishedPiece {
   HD: number;
   centered: number; // 0–1
   even: number; // 0–1
+  flat: number; // how flat its base is, 0–1
   color: ColorId | null;
   shape?: Piece; // the piece as it left the pipe, for showing it in 3D afterward
 }

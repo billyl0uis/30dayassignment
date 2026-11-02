@@ -1,4 +1,4 @@
-import { PRODUCTS } from '../config';
+import { PADDLE, PRODUCTS } from '../config';
 import { geometry, type Piece, type PieceType } from '../sim/piece';
 
 export interface Step {
@@ -9,6 +9,7 @@ export interface Step {
 const g = (p: Piece) => geometry(p);
 const wallUnder = (w: number) => (p: Piece) => p.blown && g(p).wall <= w;
 const neck = (p: Piece) => p.n >= 0.55 || p.punty;
+const paddled = (p: Piece) => p.flat >= PADDLE.flatEnough;
 
 /**
  * The order of work for each kind of piece, with the sim's own numbers as the checks.
@@ -31,6 +32,7 @@ export const RECIPES: Record<PieceType, Step[]> = {
     { label: 'Gather 3–4 in³', done: (p) => p.V >= 3 },
     { label: 'Blow to about a 0.2" wall', done: wallUnder(0.25) },
     { label: 'Marver it long: 4.2" or more', done: (p) => p.punty || (p.blown && p.L >= 4.2) },
+    { label: 'Paddle the bottom flat (A)', done: paddled },
     { label: 'Jack a line to about 60%', done: neck },
     { label: 'Transfer to the punty', done: (p) => p.punty },
     { label: 'Open the lip to 20–50%', done: (p) => p.punty && p.o >= 0.2 && p.o < 0.5 },
@@ -39,6 +41,7 @@ export const RECIPES: Record<PieceType, Step[]> = {
   bowl: [
     { label: 'Gather 6 in³ or more', done: (p) => p.V >= 6 },
     { label: 'Blow to under a 0.3" wall', done: wallUnder(0.3) },
+    { label: 'Paddle the bottom flat (A)', done: paddled },
     { label: 'Jack a line to about 60%', done: neck },
     { label: 'Transfer to the punty', done: (p) => p.punty },
     { label: 'Open the lip past 50%, reheating between opens', done: (p) => p.punty && p.o >= 0.5 },
@@ -48,6 +51,7 @@ export const RECIPES: Record<PieceType, Step[]> = {
     { label: 'Gather 5 in³ or more', done: (p) => p.V >= 5 },
     { label: 'Blow to under a 0.3" wall', done: wallUnder(0.3) },
     { label: 'Marver it tall: 5" or more', done: (p) => p.punty || (p.blown && p.L >= 5) },
+    { label: 'Paddle the bottom flat (A)', done: paddled },
     { label: 'Jack a line to about 60%', done: neck },
     { label: 'Transfer to the punty', done: (p) => p.punty },
     { label: 'Open just a narrow mouth, under 20%', done: (p) => p.punty && p.o > 0.03 && p.o < 0.2 },

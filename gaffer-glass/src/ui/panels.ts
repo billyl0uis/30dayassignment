@@ -208,7 +208,7 @@ export class Panels {
       h('p', { class: 'note' }, 'Temperatures and timings are simplified for play.'),
       h('h3', {}, 'Keys'),
       h('p', { class: 'keys mono' },
-        'Hold: F gather · G glory hole · M marver · K block · B blow · J jacks', h('br'),
+        'Hold: F gather · G glory hole · M marver · K block · D pad · A paddle · B blow · J jacks', h('br'),
         'Space start/stop rotating · ↑/↓ tip the pipe · Tap: C color · P transfer · X knock off · N new pipe · Q dump · 1–5 pick a jar · Drag to look around'),
       h('footer', { class: 'foot' }, reset));
   }

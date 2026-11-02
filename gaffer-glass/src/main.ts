@@ -8,6 +8,7 @@ import { clearStudio, freshStudio, loadStudio, modsOf, saveStudio, type Studio }
 import { mountBench } from './ui/benchScreen';
 import { renderHeader, type PanelId } from './ui/header';
 import { Panels } from './ui/panels';
+import { showFail } from './ui/failCard';
 import { showResult } from './ui/resultCard';
 
 // One studio, always open: the bench in front, the shop and gallery as panels over it.
@@ -23,6 +24,20 @@ const session = new Session(modsOf(studio), studio.colors, {
   },
   onColorUsed(c) {
     commit({ ...studio, colors: { ...studio.colors, [c]: Math.max(0, studio.colors[c] - 1) } });
+  },
+  onFail(reason) {
+    // Stop the shop and say what went wrong, so the lesson lands before you carry on.
+    if (frozenBy.has('fail')) return;
+    freeze('fail', true);
+    let fresh = false;
+    const close = showFail(main, reason, {
+      newPipe: () => (fresh = true),
+      close: () => {
+        close();
+        freeze('fail', false);
+        if (fresh) session.tap('newPipe');
+      },
+    });
   },
 });
 
@@ -50,9 +65,9 @@ const panels = new Panels({
 });
 
 // ── Freezing: Pause, or a finished piece's card, holds the bench, the visitors and the annealer ──
-const frozenBy = new Set<'pause' | 'card'>();
+const frozenBy = new Set<'pause' | 'card' | 'fail'>();
 let frozenAt = 0;
-function freeze(reason: 'pause' | 'card', on: boolean) {
+function freeze(reason: 'pause' | 'card' | 'fail', on: boolean) {
   const was = frozenBy.size > 0;
   if (on) frozenBy.add(reason);
   else frozenBy.delete(reason);
@@ -67,7 +82,7 @@ function freeze(reason: 'pause' | 'card', on: boolean) {
 }
 const togglePause = () => freeze('pause', !frozenBy.has('pause'));
 window.addEventListener('keydown', (e) => {
-  if (e.code !== 'Escape' || frozenBy.has('card')) return;
+  if (e.code !== 'Escape' || frozenBy.has('card') || frozenBy.has('fail')) return;
   if (panels.current && !frozenBy.has('pause')) panels.hide();
   else togglePause();
 });

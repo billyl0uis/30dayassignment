@@ -8,7 +8,7 @@ import { anneal, buyUpgrade, deliver, fits, notes, rename, saleOdds, setPrice, s
 import { goalState } from './goals';
 import { freshStudio, type Studio } from './state';
 
-const tumbler: FinishedPiece = { type: 'tumbler', V: 3.4, D: 3.4, H: 4.2, wall: 0.18, HD: 1.24, centered: 1, even: 1, color: null };
+const tumbler: FinishedPiece = { type: 'tumbler', V: 3.4, D: 3.4, H: 4.2, wall: 0.18, HD: 1.24, centered: 1, even: 1, flat: 1, color: null };
 const T0 = 1_000_000;
 
 /** A fresh studio with one finished tumbler out of the annealer. */
@@ -93,6 +93,8 @@ describe('step goals', () => {
     expect(goalState('tumbler', p).next).toMatch(/Blow/);
     p = { ...p, blown: true, r: 0.6, L: 4.5 };
     expect(geometry(p).wall).toBeLessThan(0.25);
+    expect(goalState('tumbler', p).next).toMatch(/Paddle/);
+    p = { ...p, flat: 0.7 };
     expect(goalState('tumbler', p).next).toMatch(/Jack/);
     p = { ...p, n: 0.6, punty: true, o: 0.3 };
     expect(goalState('tumbler', p).next).toMatch(/Knock off/);

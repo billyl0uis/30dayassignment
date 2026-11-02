@@ -104,6 +104,10 @@ export const TILT = {
   maxDegrees: 14, // how far the pipe tips on screen at full tilt
   minLR: 0.9, // shortest: L ≥ minLR × 2R (a squat ball)
   maxLR: 3.4, // longest: L ≤ maxLR × 2R before it's a drip, not a piece
+  backShare: 0.7, // tipped up past squat, this share of the flow runs back over the pipe (in of creep per in of shortening)
+  maxBack: 3, // glass runs back along the pipe this far at most (in)
+  backUneven: 0.12, // unevenness per inch of glass that runs back onto the cooler pipe
+  warnBack: 0.3, // creep this far and the bench warns you
 };
 
 // ── Bench tools ──────────────────────────────────────────────────────
@@ -135,6 +139,14 @@ export const BLOW = {
   pressure: 0.55, // default breath pressure (0–1); the slider sets it
   pressureMin: 0.2,
   pressureBlowout: 0.4, // blowout wall × (1 + pressureBlowout·(pressure/default − 1)): harder breath tears at a thicker wall
+};
+
+// A flat wooden paddle pressed on the end of the piece on the pipe: it becomes the base.
+export const PADDLE = {
+  coolRate: 30, // °F/s into the wood
+  flatRate: 0.9, // flatness gained per second at full softness
+  shorten: 0.08, // the end pushes in a little as it flattens: L × (1 − shorten·dflat)
+  flatEnough: 0.6, // a base this flat sits without rocking
 };
 
 export const JACKS = {
@@ -192,6 +204,7 @@ export const SCORE = {
 export type Range = [number, number];
 /** What a buyer expects of a kind of piece; anything outside a range costs quality. */
 export interface OrderSpec {
+  flat?: boolean; // must stand on a flat base
   D?: Range;
   H?: Range;
   wall?: Range;
@@ -202,9 +215,9 @@ export interface OrderSpec {
 export const PRODUCTS = {
   paperweight: { label: 'Paperweight', base: 30, D: [2.5, 3.5], HD: [0.85, 1.15] },
   ornament: { label: 'Ornament', base: 26, D: [2, 3.5], wall: [0.05, 0.2] },
-  tumbler: { label: 'Tumbler', base: 42, D: [3, 3.9], H: [3.2, 5], wall: [0.08, 0.25] },
-  bowl: { label: 'Bowl', base: 72, D: [5, 7.5], H: [1.8, 3.2], wall: [0.08, 0.3], unlock: 'jacks' },
-  'closed vessel': { label: 'Vase', base: 64, D: [2.8, 4.5], H: [4.5, 8], wall: [0.08, 0.3], unlock: 'door' },
+  tumbler: { label: 'Tumbler', base: 42, D: [3, 3.9], H: [3.2, 5], wall: [0.08, 0.25], flat: true },
+  bowl: { label: 'Bowl', base: 72, D: [5, 7.5], H: [1.8, 3.2], wall: [0.08, 0.3], flat: true, unlock: 'jacks' },
+  'closed vessel': { label: 'Vase', base: 64, D: [2.8, 4.5], H: [4.5, 8], wall: [0.08, 0.3], flat: true, unlock: 'door' },
 } satisfies Record<string, OrderSpec & { label: string; base: number; unlock?: string }>;
 
 // Generic first names for visitors and commission customers.

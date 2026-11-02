@@ -1,4 +1,4 @@
-import { ANNEAL, CABINET, COLOR, COLORS, CUSTOMERS, PRODUCTS, UPGRADES, VISITORS } from '../config';
+import { ANNEAL, CABINET, COLOR, COLORS, CUSTOMERS, PADDLE, PRODUCTS, UPGRADES, VISITORS } from '../config';
 import type { ColorId, FinishedPiece, PieceType } from '../sim/piece';
 import { quality, worth } from '../sim/scoring';
 import { refillCommissions, unlockedKinds } from './commissions';
@@ -182,7 +182,7 @@ export interface Note {
 
 /** What a buyer would notice: each of the kind's specs, centering, evenness, and color. */
 export function notes(fp: FinishedPiece): Note[] {
-  const spec = PRODUCTS[fp.type] as { D?: [number, number]; H?: [number, number]; wall?: [number, number]; HD?: [number, number] };
+  const spec = PRODUCTS[fp.type] as { D?: [number, number]; H?: [number, number]; wall?: [number, number]; HD?: [number, number]; flat?: boolean };
   const out: Note[] = [];
   const range = (label: string, x: number, r: [number, number] | undefined, unit = '"') => {
     if (!r) return;
@@ -194,6 +194,9 @@ export function notes(fp: FinishedPiece): Note[] {
   range('Height', fp.H, spec.H);
   range('Wall', fp.wall, spec.wall);
   range('Roundness', fp.HD, spec.HD, '');
+  if (spec.flat) out.push((fp.flat ?? 0) >= PADDLE.flatEnough
+    ? { text: 'Sits flat on its base', good: true }
+    : { text: 'Rocks on its base: paddle the bottom flat before the transfer', good: false });
   out.push(fp.centered >= 0.9
     ? { text: 'Sits true on center', good: true }
     : { text: `Off center (${pct(fp.centered)}): it drooped while the pipe was still`, good: false });

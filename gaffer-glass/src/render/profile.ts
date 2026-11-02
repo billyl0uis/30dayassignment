@@ -42,12 +42,17 @@ export function profile(p: Piece): Profile {
       const cyl = d >= cap ? g.R : g.R * Math.sqrt(Math.max(0, 1 - (1 - d / cap) ** 2));
       const b = smoothstep((len / (2 * g.R) - 1) / 1.2);
       body = ellipse + (cyl - ellipse) * b;
+      // A paddled end is pressed flat: the body holds its width almost to the end, then stops.
+      if (p.flat > 0 && u > 0.5) {
+        const flatBody = g.R * (1 - 0.1 * smoothstep((u - 0.92) / 0.08)); // a slight round at the edge of the face
+        body += (flatBody - body) * p.flat * smoothstep((u - 0.5) / 0.3);
+      }
       // The glass wraps the pipe tip as a collar.
       const collar = (GEOM.pipeR + 0.1) * (1 - smoothstep((x - 0.25) / 0.35));
       body = Math.max(body, collar);
     } else {
       // Rounded bottom at the punty, then the wall runs out to the lip.
-      const cap = Math.min(0.8 * g.R, len / 2);
+      const cap = Math.min(0.8 * g.R, len / 2) * (1 - 0.75 * p.flat); // a paddled base is flat, not round
       body = x < cap ? g.R * Math.sqrt(Math.max(0, 1 - (1 - x / cap) ** 2)) : g.R;
       body = Math.max(body, (GEOM.puntyR + 0.08) * (1 - smoothstep((x - 0.15) / 0.3)));
       body += (g.lipR - g.R) * smoothstep((u - 0.35) / 0.65);

@@ -51,6 +51,7 @@ function makeTumbler(b = new Bench()) {
   b.hold('blow', (p) => geometry(p).wall <= 0.2, 8);
   b.reheat();
   b.hold('marver', (p) => p.L >= 4.2, 4);
+  b.reheat().hold('paddle', (p) => p.flat >= 0.7, 4);
   b.hold('jacks', (p) => p.n >= 0.6, 6);
   b.reheat();
   b.tap('transfer');
@@ -92,7 +93,7 @@ describe('the other pieces', () => {
     const b = new Bench();
     b.hold('gather', 3).hold('marver', (p) => p.T < 1880, 4);
     b.hold('blow', (p) => geometry(p).wall <= 0.22, 10);
-    b.reheat().hold('block', 1.5);
+    b.reheat().hold('block', 1.5).hold('paddle', (p) => p.flat >= 0.7, 4).reheat();
     b.hold('jacks', (p) => p.n >= 0.6, 6).reheat().tap('transfer').reheat();
     b.hold(null, (p) => p.T < 1950, 5);
     b.hold('jacks', (p) => p.o >= 0.5, 6);

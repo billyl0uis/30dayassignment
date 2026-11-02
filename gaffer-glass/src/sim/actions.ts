@@ -1,10 +1,10 @@
 import {
-  BLOCK, BLOW, COLOR, GATHER, GLORY, JACKS, KNOCKOFF, MARVER, PRODUCTS, SAG, TRANSFER,
+  BLOCK, BLOW, COLOR, GATHER, GLORY, JACKS, KNOCKOFF, MARVER, PADDLE, PRODUCTS, SAG, TRANSFER,
 } from '../config';
 import { clamp, geometry, setSag, type ColorId, type FinishedPiece, type Piece, pieceType } from './piece';
 import { fluid } from './physics';
 
-export type HoldAction = 'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'blow' | 'jacks';
+export type HoldAction = 'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'paddle' | 'blow' | 'jacks';
 export type TapAction = 'newPipe' | 'dump' | 'color' | 'transfer' | 'knockOff';
 
 export type Check = { ok: true } | { ok: false; reason: string };
@@ -40,6 +40,7 @@ export function canHold(p: Piece | null, a: HoldAction, mods?: Mods): Check {
   }
   if (p.V <= 0) return no('Gather some glass first (F at the furnace).');
   if (a === 'block' && p.punty) return no('Block on the pipe, not the punty.');
+  if (a === 'paddle' && p.punty) return no('Paddle the bottom on the pipe, before the transfer: on the punty that end is the opening.');
   if (a === 'blow' && p.punty) return no("You can't blow through the punty — it's solid.");
   return OK;
 }
@@ -150,6 +151,15 @@ export function applyHold(p: Piece, a: HoldAction, dt: number, ctx: HoldContext)
       setSag(p, Math.max(0, p.s - c.centerRate * boost * f * dt));
       return;
     }
+    case 'paddle': {
+      // Press the far end flat: it becomes the base the piece stands on.
+      p.T -= PADDLE.coolRate * dt;
+      if (f <= 0) return void ctx.events.push({ kind: 'hint', text: STIFF });
+      const before = p.flat;
+      p.flat = Math.min(1, p.flat + PADDLE.flatRate * f * dt);
+      p.L *= 1 - PADDLE.shorten * (p.flat - before);
+      return;
+    }
     case 'blow': {
       p.T -= BLOW.coolRate * dt;
       if (f <= 0) return void ctx.events.push({ kind: 'hint', text: STIFF });
@@ -247,6 +257,7 @@ export function finish(p: Piece): FinishedPiece {
     HD: g.HD,
     centered: clamp(1 - SAG.centeredK * p.s, 0, 1),
     even: clamp(1 - p.uneven, 0, 1),
+    flat: p.flat,
     color: p.color,
     shape: { ...p, T: 70, failed: null },
   };
