@@ -1440,3 +1440,11 @@ body[data-screen='session'] main {
 .stepper .price-label {
   margin-right: 0;
 }
+
+/* A soft darkening at the edges, so the eye settles on the work. */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(18, 20, 24, 0.38) 100%);
+}

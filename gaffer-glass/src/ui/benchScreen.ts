@@ -140,6 +140,7 @@ export function mountBench(root: HTMLElement, session: Session, making: () => Pi
 
   const screen = h('section', { class: 'session' },
     canvas,
+    h('div', { class: 'vignette', 'aria-hidden': 'true' }),
     goal,
     chip,
     ticker,

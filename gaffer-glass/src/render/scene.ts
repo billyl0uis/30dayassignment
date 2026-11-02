@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { GEOM, TILT } from '../config';
 import type { HoldAction, Mods } from '../sim/actions';
 import { clamp, geometry, type Piece } from '../sim/piece';
@@ -17,6 +21,8 @@ export interface SceneView {
   tilt?: number; // −1 tip up … +1 tip down
 }
 
+type StationKey = 'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'jacks';
+
 export const STATION_LABEL: Record<HoldAction, string> = {
   gather: 'Furnace · gather',
   glory: 'Glory hole',
@@ -29,13 +35,21 @@ export const STATION_LABEL: Record<HoldAction, string> = {
 // World units are inches. The pipe runs along x, its tip at the origin, the free end toward +x.
 const SEG = 40; // around the axis
 const ROWS = 64; // must match the profile's sample count
-const PIVOT_X = -24; // the gaffer's hands on the pipe: tipping swings the pipe about here
+const PIVOT_X = -13; // where the pipe rests on the bench's near arm: tipping rocks the pipe on it
+
+// Where the furnace, glory hole and marver stand in the shop. Using one carries the pipe there.
+const FURNACE = { at: new THREE.Vector3(26, 0, -40), scale: 1.6, portY: 0.4 };
+const GLORY = { at: new THREE.Vector3(26, 0, -8), scale: 1.5 };
+const MARVER_AT = new THREE.Vector3(6, -7, -26); // the center of the table's top
+const FIXED: StationKey[] = ['gather', 'glory', 'marver'];
 
 export const color = ([r, g, b]: RGB) => new THREE.Color(`rgb(${r | 0},${g | 0},${b | 0})`);
 
 /** The hot shop in 3D. Owns its camera and props; the piece arrives fresh every frame. */
 export class Scene {
   private renderer: THREE.WebGLRenderer;
+  private composer: EffectComposer;
+  private bloom: UnrealBloomPass;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(52, 1, 0.5, 600); // wide enough to see the shop around the bench
   private w = 0;
@@ -56,9 +70,13 @@ export class Scene {
   private heatLight = new THREE.PointLight(0xff8a3d, 0, 0, 2);
   private puddle: THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
   private cracks: THREE.LineSegments;
-  private stations: Record<'gather' | 'glory' | 'marver' | 'block' | 'pad' | 'jacks', THREE.Group>;
+  private stations: Record<StationKey, THREE.Group>;
+  private presence: Partial<Record<StationKey, number>> = {};
   // The pipe, the piece and the station props swing together when the pipe is tipped.
   private shop: Shop;
+  private mottle = mottleTexture();
+  private carry = new THREE.Group(); // walks the pipe from the bench to a station and back
+  private carryTo = new THREE.Vector3();
   private rig = new THREE.Group();
   private arm = new THREE.Group();
   private stationLight = new THREE.PointLight(0xffa040, 0, 0, 2);
@@ -74,10 +92,17 @@ export class Scene {
     // Soft studio reflections for the steel and the glass.
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    this.scene.environmentIntensity = 0.6;
+    this.scene.environmentIntensity = 0.45;
     this.scene.background = new THREE.Color('#c3c8cb');
     this.scene.fog = new THREE.Fog('#c3c8cb', 160, 320);
     this.shop = buildShop(this.scene);
+
+    // Bloom: only what's brighter than daylit surfaces (hot glass, open fires) spills light past its edge.
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.32, 0.4, 0.92);
+    this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
 
     const steel = new THREE.MeshStandardMaterial({ color: '#8b9399', metalness: 0.85, roughness: 0.35 });
     this.pipe = new THREE.Mesh(blowpipeGeometry(), steel);
@@ -99,7 +124,8 @@ export class Scene {
     this.rig.position.x = PIVOT_X;
     this.arm.position.x = -PIVOT_X;
     this.rig.add(this.arm);
-    this.scene.add(this.rig);
+    this.carry.add(this.rig);
+    this.scene.add(this.carry);
     this.arm.add(this.pipe, this.pipeMark, this.punty);
 
     this.glass = new THREE.Mesh(latheGeometry(), new THREE.MeshPhysicalMaterial({
@@ -107,6 +133,8 @@ export class Scene {
       specularIntensity: 1, clearcoat: 1, clearcoatRoughness: 0.05,
     }));
     this.glass.castShadow = true;
+    // Hot glass never glows perfectly evenly: a soft mottle that rolls round with the pipe shows it turning.
+    this.glass.material.emissiveMap = this.mottle;
     this.arm.add(this.glass);
 
     this.halo = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -121,7 +149,20 @@ export class Scene {
     this.arm.add(this.cracks);
 
     this.stations = buildStations();
-    for (const g of Object.values(this.stations)) this.arm.add(g);
+    for (const [key, g] of Object.entries(this.stations) as [StationKey, THREE.Group][]) {
+      if (!FIXED.includes(key)) {
+        this.arm.add(g); // hand tools come to the piece
+        continue;
+      }
+      this.scene.add(g); // the fires and the marver stand in the shop
+      g.visible = true;
+      g.traverse((o) => (o.castShadow = o.receiveShadow = true));
+    }
+    this.stations.gather.position.copy(FURNACE.at);
+    this.stations.gather.scale.setScalar(FURNACE.scale);
+    this.stations.glory.position.copy(GLORY.at);
+    this.stations.glory.scale.setScalar(GLORY.scale);
+    this.stations.marver.position.copy(MARVER_AT);
 
     this.bindDrag();
     this.resetView();
@@ -163,7 +204,12 @@ export class Scene {
       this.w = w;
       this.h = h;
       this.renderer.setSize(w, h, false);
+      this.composer.setPixelRatio(this.renderer.getPixelRatio());
+      this.composer.setSize(w, h);
       this.camera.aspect = w / h;
+      // On a tall phone screen the thumb controls cover the bottom half: frame the work higher up.
+      if (w / h < 0.8) this.camera.setViewOffset(w, h, 0, h * 0.2, w, h);
+      else this.camera.clearViewOffset();
       this.camera.updateProjectionMatrix();
     }
   }
@@ -189,15 +235,22 @@ export class Scene {
       const dx = want.x - PIVOT_X;
       want.set(PIVOT_X + dx * Math.cos(tip) - want.y * Math.sin(tip), dx * Math.sin(tip) + want.y * Math.cos(tip), 0);
     }
+    want.add(this.carry.position);
     this.target.lerp(want, k);
     const narrow = this.camera.aspect < 1 ? 1 / this.camera.aspect : 1;
     const wantDist = onFloor ? 26 : clamp((len + 2 * maxR + 5) * 1.2 * Math.min(narrow, 1.9), 11, 52);
     this.dist += (wantDist - this.dist) * k;
-    const cp = Math.cos(this.pitch);
+    // At the furnace or the glory hole, look down the pipe into the port, as the gaffer does.
+    const atFire = Math.max(this.presence.gather ?? 0, this.presence.glory ?? 0);
+    const f = atFire * atFire * (3 - 2 * atFire);
+    const yaw = this.yaw + (-0.95 - this.yaw) * f;
+    const pitch = this.pitch + (0.16 - this.pitch) * f;
+    const dist = this.dist + (clamp(26 + maxR * 3, 28, 44) - this.dist) * f;
+    const cp = Math.cos(pitch);
     this.camera.position.set(
-      this.target.x + this.dist * cp * Math.sin(this.yaw),
-      this.target.y + this.dist * Math.sin(this.pitch),
-      this.target.z + this.dist * cp * Math.cos(this.yaw),
+      this.target.x + dist * cp * Math.sin(yaw),
+      this.target.y + dist * Math.sin(pitch),
+      this.target.z + dist * cp * Math.cos(yaw),
     );
     this.camera.lookAt(this.target);
 
@@ -227,6 +280,7 @@ export class Scene {
         : [-1, 0];
       updateLathe(this.glass.geometry, pr, Math.min(p.uneven, 1), roll, dir);
       styleGlass(this.glass.material, p, glow, heat);
+      this.mottle.offset.x = -v.turnPhase;
       const center = new THREE.Vector3(pr.length / 2, -maxDrop / 2, 0);
       this.halo.position.copy(center);
       this.halo.scale.setScalar((pr.length + pr.maxR * 2) * 1.6);
@@ -245,51 +299,74 @@ export class Scene {
       this.puddle.scale.set(pr.length * 0.55 + pr.maxR, pr.maxR * 0.35, pr.maxR * 1.4);
     }
 
-    this.placeStations(v, p, pr);
+    this.placeStations(v, p, pr, dt);
     this.shop.update(v.time, dt);
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 
-  private placeStations(v: SceneView, p: Piece | null, pr: Profile | null) {
-    for (const g of Object.values(this.stations)) g.visible = false;
-    this.stationLight.intensity = 0;
+  /**
+   * Stations ease in and out instead of popping: the furnace and glory hole slide in from the side,
+   * the marver and block rise from below, the jacks swing in. Each keeps its last placement while it leaves.
+   */
+  private placeStations(v: SceneView, p: Piece | null, pr: Profile | null, dt: number) {
     const tool = v.tool;
-    if (!tool || !p || !pr) return;
+    const active: StationKey | null = !tool || !p || !pr || tool === 'blow' ? null
+      : tool === 'block' ? (v.mods.pad ? 'pad' : 'block') : tool;
+    this.stationLight.intensity = 0;
+    this.carryTo.set(0, 0, 0);
+    if (tool && p && pr) this.placeActive(v, p, pr, tool);
+    // Walk the pipe over (or back to the bench), easing in and out.
+    this.carry.position.lerp(this.carryTo, Math.min(1, dt * 3.2));
+    flicker(this.stations.gather, v.time);
+    flicker(this.stations.glory, v.time);
+    const k = Math.min(1, dt * 9);
+    for (const key of Object.keys(this.stations) as StationKey[]) {
+      const g = this.stations[key];
+      const was = this.presence[key] ?? 0;
+      const now = was + ((key === active ? 1 : 0) - was) * k;
+      this.presence[key] = now;
+      if (FIXED.includes(key)) continue;
+      g.visible = now > 0.02;
+      if (!g.visible) continue;
+      if (key === active) g.userData.base = g.position.clone();
+      const base = (g.userData.base as THREE.Vector3 | undefined) ?? g.position.clone();
+      const e = 1 - (1 - now) ** 3; // ease out
+      const away = 1 - e;
+      g.position.copy(base);
+      if (key === 'block' || key === 'pad') g.position.y -= away * 7;
+      else if (key === 'jacks') g.position.z += away * 8;
+      if (key === active) this.stationLight.intensity *= e;
+    }
+  }
+
+  private placeActive(v: SceneView, p: Piece, pr: Profile, tool: HoldAction) {
     const len = pr.length;
     const R = pr.maxR;
     const dropEnd = pr.drop[pr.drop.length - 1];
     switch (tool) {
       case 'gather': {
-        const g = this.stations.gather;
-        g.visible = true;
-        g.position.set(len / 2, -dropEnd / 2, 0);
-        g.scale.setScalar(Math.max(1, (R + 1.5) / 3.2, (len + 3) / 9));
-        flicker(g, v.time);
-        this.stationLight.position.set(len / 2, R + 2, 2);
-        this.stationLight.intensity = 450;
-        return;
+        // Into the furnace's port, the gather down in the melt.
+        this.carryTo.set(FURNACE.at.x + 1.6, FURNACE.portY * FURNACE.scale + dropEnd / 2, FURNACE.at.z);
+        this.stationLight.position.set(-3, 0.5, 0);
+        this.stationLight.intensity = 260;
+        break;
       }
       case 'glory': {
-        const g = this.stations.glory;
-        g.visible = true;
-        g.position.set(len * 0.5, -dropEnd / 2, 0);
-        g.scale.setScalar(Math.max(1, (R + 1.4) / 3, (len + 2) / 7));
-        flicker(g, v.time);
-        this.stationLight.position.set(len * 0.55, 0, 2);
-        this.stationLight.intensity = 380;
-        return;
+        // Into the glory hole's port.
+        this.carryTo.set(GLORY.at.x + 1.4, dropEnd / 2, GLORY.at.z);
+        this.stationLight.position.set(-3, 0, 0);
+        this.stationLight.intensity = 220;
+        break;
       }
       case 'marver': {
-        const g = this.stations.marver;
-        g.visible = true;
-        g.position.set(len / 2, -(R + dropEnd * 0.5) - 0.02, 0);
-        return;
+        // Down onto the steel, the piece centered over the table.
+        this.carryTo.set(MARVER_AT.x - len / 2, MARVER_AT.y + R + dropEnd * 0.5, MARVER_AT.z);
+        break;
       }
       case 'block': {
         // The wet pad takes the block's place once you own it.
         const g = v.mods.pad ? this.stations.pad : this.stations.block;
         const r = Math.max(geometry(p).R, 0.6) + 0.12;
-        g.visible = true;
         g.position.set(Math.max(len - r, len * 0.5), -dropEnd * 0.8, 0);
         g.scale.setScalar(r);
         // Steam off the wet wood or paper, rising and fading.
@@ -299,11 +376,10 @@ export class Scene {
           puff.scale.setScalar(0.6 + t * 1.4);
           puff.material.opacity = 0.35 * (1 - t);
         }
-        return;
+        break;
       }
       case 'jacks': {
         const g = this.stations.jacks;
-        g.visible = true;
         const [upper, lower] = g.children;
         if (!p.punty) {
           const i = clamp(Math.round((pr.neckX / Math.max(len, 1e-3)) * (ROWS - 1)), 0, ROWS - 1);
@@ -313,6 +389,9 @@ export class Scene {
           upper.rotation.z = 0.5;
           lower.position.set(-0.6, -rN - 1.1, 0);
           lower.rotation.z = -0.5;
+          const squeeze = 0.08 * Math.sin(v.time * 7); // the blades bite and ease as the pipe rolls
+          upper.position.y -= squeeze;
+          lower.position.y += squeeze;
         } else {
           const lip = Math.max(pr.outer[ROWS - 1] - 0.6, 0.1);
           g.position.set(len, -pr.drop[ROWS - 1], 0);
@@ -321,10 +400,10 @@ export class Scene {
           lower.position.set(0.4, -lip, 0);
           lower.rotation.z = 0.45;
         }
-        return;
+        break;
       }
       default:
-        return;
+        break;
     }
   }
 
@@ -377,6 +456,10 @@ export function latheGeometry() {
   const rows = ROWS * 2;
   const cols = SEG + 1;
   g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(rows * cols * 3), 3));
+  // u runs around the axis, v along it, so a texture can roll with the pipe.
+  const uv = new Float32Array(rows * cols * 2);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) uv.set([c / SEG, r / (rows - 1)], (r * cols + c) * 2);
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   const idx: number[] = [];
   for (let r = 0; r < rows - 1; r++) {
     for (let c = 0; c < SEG; c++) {
@@ -425,7 +508,6 @@ export function styleGlass(m: THREE.MeshPhysicalMaterial, p: Piece, glow: number
 // ── Props that appear when a tool is working ─────────────────────────
 // Each is a unit model around the piece's center, scaled to the piece. The pipe comes in from −x.
 
-const STEEL = () => new THREE.MeshStandardMaterial({ color: '#7f878d', metalness: 0.8, roughness: 0.38 });
 
 /** Flames and glow that breathe a little, so the furnace and glory hole feel lit. */
 function flicker(g: THREE.Object3D, time: number) {
@@ -437,144 +519,152 @@ function flicker(g: THREE.Object3D, time: number) {
   });
 }
 
-/** A flat strip showing a cut wall's thickness, from radius r0 to r1 at angle th around the x axis. */
-function cutEdge(r0: number, r1: number, length: number, th: number, mat: THREE.Material) {
-  const radial = new THREE.Vector3(0, Math.sin(th), Math.cos(th));
-  const along = new THREE.Vector3(1, 0, 0);
-  const normal = new THREE.Vector3().crossVectors(radial, along);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(r1 - r0, length), mat);
-  m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(radial, along, normal));
-  m.position.copy(radial.multiplyScalar((r0 + r1) / 2));
-  return m;
+
+// Both fires are modeled whole, as you'd meet them: closed equipment with a round port facing the
+// gaffer (−x). Local x = 0 is the face of the port; the body runs off toward +x around the piece.
+// You see the glass the way a gaffer does, by looking down the pipe into the glowing port.
+
+/** A glow that's bright at the back of a chamber (v = 0) and darker toward the port. */
+function chamberMaterial(hot: string, cool: string) {
+  return new THREE.MeshBasicMaterial({ map: gradientTexture(hot, cool), side: THREE.BackSide });
 }
 
 /**
- * Glory hole: a steel drum lying on its side, lined with ceramic fiber, a burner roaring in the back
- * and the round port facing you. A window is cut out of the near side so you can watch the piece.
+ * Glory hole: a steel drum on its side on a welded stand, a burner on the back, the port in a
+ * thick front plate, and a fiber-lined chamber glowing inside.
  */
 function buildGloryHole() {
   const g = new THREE.Group();
-  const Ro = 3, Ri = 2.55, L = 7;
-  const open = THREE.MathUtils.degToRad(58); // half-width of the viewing cut, centered on the camera side
-  const start = open, sweep = Math.PI * 2 - 2 * open;
-  const steel = STEEL();
-  const fiber = new THREE.MeshStandardMaterial({ color: '#d9d0c2', roughness: 0.95, side: THREE.DoubleSide });
-
-  const shell = new THREE.Mesh(new THREE.CylinderGeometry(Ro, Ro, L, 48, 1, true, start, sweep), steel);
-  const lining = new THREE.Mesh(new THREE.CylinderGeometry(Ri, Ri, L, 48, 1, true, start, sweep),
-    new THREE.MeshBasicMaterial({ map: gradientTexture('#a8441a', '#4a170a'), side: THREE.BackSide }));
-  for (const m of [shell, lining]) m.rotation.z = Math.PI / 2;
-  g.add(shell, lining, cutEdge(Ri, Ro, L, start, fiber), cutEdge(Ri, Ro, L, start + sweep, fiber));
-
-  // Steel bands around the drum.
-  for (const x of [-L / 2 + 0.4, 0, L / 2 - 0.4]) {
-    const band = new THREE.Mesh(new THREE.CylinderGeometry(Ro + 0.06, Ro + 0.06, 0.25, 48, 1, true, start, sweep), steel);
-    band.rotation.z = Math.PI / 2;
+  const Ro = 4.2, Ri = 3.4, L = 9, port = 2.4;
+  const steel = new THREE.MeshStandardMaterial({ color: '#6c747a', metalness: 0.75, roughness: 0.42 });
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(Ro, Ro, L, 48, 1, true), steel);
+  shell.rotation.z = Math.PI / 2;
+  shell.position.x = L / 2;
+  shell.castShadow = true;
+  const lining = new THREE.Mesh(new THREE.CylinderGeometry(Ri, Ri, L - 0.1, 48, 1, true), chamberMaterial('#d8641e', '#6a200c'));
+  lining.rotation.z = -Math.PI / 2; // so the gradient's hot end sits at the back
+  lining.position.x = L / 2;
+  g.add(shell, lining);
+  // Rolled steel bands.
+  for (const x of [0.5, L / 2, L - 0.5]) {
+    const band = new THREE.Mesh(new THREE.TorusGeometry(Ro + 0.05, 0.14, 8, 48), steel);
+    band.rotation.y = Math.PI / 2;
     band.position.x = x;
     g.add(band);
   }
-
-  // Front plate with the port, facing the gaffer (−x), cut to match.
-  const plate = new THREE.Mesh(new THREE.RingGeometry(1.9, Ro + 0.06, 48, 1, open, Math.PI * 2 - 2 * open),
-    new THREE.MeshStandardMaterial({ color: '#5f676d', metalness: 0.7, roughness: 0.45, side: THREE.DoubleSide }));
+  // The front plate with its port, and the hot ring of refractory showing round the opening.
+  const plate = new THREE.Mesh(new THREE.RingGeometry(port, Ro + 0.25, 48), new THREE.MeshStandardMaterial({ color: '#4c5358', metalness: 0.6, roughness: 0.5, side: THREE.DoubleSide }));
   plate.rotation.y = -Math.PI / 2;
-  plate.position.x = -L / 2;
-  const portRim = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.12, 8, 48, Math.PI * 2 - 2 * open),
-    new THREE.MeshBasicMaterial({ color: '#c8642a' }));
-  portRim.rotation.set(0, -Math.PI / 2, open);
-  portRim.position.x = -L / 2 - 0.02;
-  g.add(plate, portRim);
-
-  // Back wall, glowing, with the burner firing in through it.
-  const back = new THREE.Mesh(new THREE.CircleGeometry(Ri, 48), new THREE.MeshBasicMaterial({ color: '#8c3412' }));
+  const throat = new THREE.Mesh(new THREE.CylinderGeometry(port, port, Ro - Ri + 0.6, 48, 1, true), chamberMaterial('#d8641e', '#8a3010'));
+  throat.rotation.z = Math.PI / 2;
+  throat.position.x = (Ro - Ri + 0.6) / 2;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(port, 0.16, 10, 48), new THREE.MeshBasicMaterial({ color: '#e07a34' }));
+  rim.rotation.y = Math.PI / 2;
+  rim.position.x = -0.02;
+  const fill = new THREE.Mesh(new THREE.RingGeometry(Ri - 0.01, Ro, 48), new THREE.MeshBasicMaterial({ color: '#5a1a0a', side: THREE.DoubleSide }));
+  fill.rotation.y = -Math.PI / 2;
+  fill.position.x = 0.3;
+  g.add(plate, throat, rim, fill);
+  // The back wall, brightest where the burner fires in, and the burner itself outside.
+  const back = new THREE.Mesh(new THREE.CircleGeometry(Ri, 48), new THREE.MeshBasicMaterial({ color: '#e8742a' }));
   back.rotation.y = -Math.PI / 2;
-  back.position.x = L / 2 - 0.01;
+  back.position.x = L - 0.06;
   const cap = new THREE.Mesh(new THREE.CircleGeometry(Ro, 48), steel);
   cap.rotation.y = Math.PI / 2;
-  cap.position.x = L / 2;
+  cap.position.x = L;
   g.add(back, cap);
-  const flameMat = new THREE.MeshBasicMaterial({ color: '#ff8a32', transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
-  [[0, 1.4, 0.55], [0.35, 1.0, 0.35], [-0.3, 1.1, 0.4]].forEach(([z, len, r], i) => {
+  const flameMat = new THREE.MeshBasicMaterial({ color: '#ffb25a', transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+  [[0, 2.6, 0.7], [0.5, 1.8, 0.45], [-0.45, 2, 0.5]].forEach(([z, len, r], i) => {
     const flame = new THREE.Mesh(new THREE.ConeGeometry(r, len, 16, 1, true), flameMat);
-    flame.geometry.translate(0, len / 2, 0); // grow from the base
+    flame.geometry.translate(0, len / 2, 0);
     const holder = new THREE.Group();
     holder.add(flame);
-    holder.rotation.z = Math.PI / 2; // point toward −x, into the chamber
-    holder.position.set(L / 2 - 0.05, -1.4 + i * 0.15, z);
+    holder.rotation.z = Math.PI / 2;
+    holder.position.set(L - 0.1, -1.8 + i * 0.2, z);
     flame.userData.flame = i;
     g.add(holder);
   });
-  const burner = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 2.2, 20), steel);
+  const burner = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 3, 20), steel);
   burner.rotation.z = Math.PI / 2;
-  burner.position.set(L / 2 + 1.1, -1.4, 0);
-  const gasLine = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 4, 12), new THREE.MeshStandardMaterial({ color: '#c9a14a', metalness: 0.7, roughness: 0.35 }));
-  gasLine.position.set(L / 2 + 2.1, -3.3, 0);
-  g.add(burner, gasLine);
-
-  // A stand down to the floor.
-  for (const x of [-L / 2 + 1, L / 2 - 1]) {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.35, 20, 0.35), new THREE.MeshStandardMaterial({ color: '#3a3f44', metalness: 0.6, roughness: 0.6 }));
-    leg.position.set(x, -Ro - 10, -1.2);
+  burner.position.set(L + 1.5, -1.8, 0);
+  const gas = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 6, 12), new THREE.MeshStandardMaterial({ color: '#c9a14a', metalness: 0.7, roughness: 0.35 }));
+  gas.position.set(L + 2.8, -4.8, 0);
+  g.add(burner, gas);
+  // Welded stand to the floor.
+  const legMat = new THREE.MeshStandardMaterial({ color: '#32373c', metalness: 0.6, roughness: 0.6 });
+  for (const x of [1.5, L - 1.5]) for (const z of [-2.6, 2.6]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 24, 0.4), legMat);
+    leg.position.set(x, -Ro - 12 + 0.6, z);
     g.add(leg);
   }
+  const cradle = new THREE.Mesh(new THREE.BoxGeometry(L - 1, 0.5, 6), legMat);
+  cradle.position.set(L / 2, -Ro - 0.2, 0);
+  g.add(cradle);
   return g;
 }
 
 /**
- * Furnace: a steel-clad box of refractory brick with its gathering port facing the gaffer and a
- * pot of molten glass inside. The near wall and the front of the crown are cut away.
+ * Furnace: a brick-faced box with a steel frame, the gathering port in its face, a hood over the
+ * door, and inside, a glowing chamber with the pot of molten glass the gather dips into.
  */
 function buildFurnace() {
   const g = new THREE.Group();
-  const X0 = -6.5, X1 = 6.5, Y0 = -6, Y1 = 5, Z0 = -5.5, Z1 = 5.5, T = 0.9;
-  const steel = new THREE.MeshStandardMaterial({ color: '#4f565c', metalness: 0.6, roughness: 0.5, side: THREE.DoubleSide });
-  const inside = new THREE.MeshBasicMaterial({ map: brickTexture(), side: THREE.DoubleSide });
-  const box = (w: number, h: number, d: number, x: number, y: number, z: number, m: THREE.Material) => {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
-    b.position.set(x, y, z);
-    g.add(b);
-    return b;
-  };
-  const W = X1 - X0, H = Y1 - Y0;
-  // Back wall, floor, far end, and the back half of the crown: steel outside, glowing brick inside.
-  box(W, H, T, 0, (Y0 + Y1) / 2, Z0, steel);
-  box(W - 2 * T, H - 2 * T, 0.05, 0, (Y0 + Y1) / 2, Z0 + T / 2 + 0.03, inside);
-  box(W, T, Z1 - Z0, 0, Y0, 0, steel);
-  box(T, H, Z1 - Z0, X1, (Y0 + Y1) / 2, 0, steel);
-  box(0.05, H - 2 * T, Z1 - Z0 - T, X1 - T / 2 - 0.03, (Y0 + Y1) / 2, 0, inside);
-  box(W, T, (Z1 - Z0) / 2, 0, Y1, Z0 + (Z1 - Z0) / 4, steel);
-  box(W - 2 * T, 0.05, (Z1 - Z0) / 2 - T, 0, Y1 - T / 2 - 0.03, Z0 + (Z1 - Z0) / 4 + T / 2, inside);
-
-  // Front face with the gathering port the pipe comes through.
+  const W = 14, H = 14, D = 14, port = 2.7, base = -6.5; // the melt's surface sits just under the pipe
+  const brick = new THREE.MeshStandardMaterial({ map: brickTexture(), roughness: 0.9 });
+  const frame = new THREE.MeshStandardMaterial({ color: '#3d4449', metalness: 0.6, roughness: 0.5 });
+  // The body: a box behind the face.
+  const body = new THREE.Mesh(new THREE.BoxGeometry(D, H, W), frame);
+  body.position.set(D / 2 + 0.5, base + H / 2, 0);
+  body.castShadow = true;
+  g.add(body);
+  // The brick face with the round gathering port cut through it.
   const face = new THREE.Shape();
-  face.moveTo(Z0, Y0);
-  face.lineTo(Z1, Y0);
-  face.lineTo(Z1, Y1);
-  face.lineTo(Z0, Y1);
-  face.lineTo(Z0, Y0);
-  const port = new THREE.Path();
-  port.absarc(0, 0.3, 2.6, 0, Math.PI * 2, false);
-  face.holes.push(port);
-  const front = new THREE.Mesh(new THREE.ExtrudeGeometry(face, { depth: T, bevelEnabled: false }), steel);
-  front.rotation.y = -Math.PI / 2; // shape x → world z, extrude → world −x
-  front.position.x = X0 + T;
+  face.moveTo(-W / 2, base);
+  face.lineTo(W / 2, base);
+  face.lineTo(W / 2, base + H);
+  face.lineTo(-W / 2, base + H);
+  face.lineTo(-W / 2, base);
+  const hole = new THREE.Path();
+  hole.absarc(0, 0.4, port, 0, Math.PI * 2, false);
+  face.holes.push(hole);
+  const front = new THREE.Mesh(new THREE.ExtrudeGeometry(face, { depth: 0.9, bevelEnabled: false, curveSegments: 40 }), brick);
+  front.rotation.y = -Math.PI / 2;
+  front.position.x = 0.9;
   g.add(front);
-  const lip = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.18, 10, 48), new THREE.MeshStandardMaterial({ color: '#8a3a1e', roughness: 0.85 }));
+  // Steel angle framing the face.
+  for (const [w, h, y, z] of [[0.5, H + 0.5, base + H / 2, -W / 2 - 0.1], [0.5, H + 0.5, base + H / 2, W / 2 + 0.1], [0.5, 0.5, base + H, 0], [0.5, 0.5, base, 0]] as const) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, h, w === 0.5 && h === 0.5 ? W + 0.6 : w), frame);
+    m.position.set(-0.05, y, z);
+    g.add(m);
+  }
+  // The port's throat, glowing, and the hot lip.
+  const throat = new THREE.Mesh(new THREE.CylinderGeometry(port, port, 1, 48, 1, true), chamberMaterial('#d8641e', '#8a3010'));
+  throat.rotation.z = Math.PI / 2;
+  throat.position.set(0.45, 0.4, 0);
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(port, 0.18, 10, 48), new THREE.MeshBasicMaterial({ color: '#e07a34' }));
   lip.rotation.y = Math.PI / 2;
-  lip.position.set(X0 - 0.05, 0.3, 0);
-  g.add(lip);
-
-  // The pot of glass, its surface glowing a deep orange so the gather reads against it.
-  // The surface sits just under the pipe's axis, so the gather dips into it.
-  const surface = -0.7, potH = surface - (Y0 + T / 2) + 0.3;
-  const pot = new THREE.Mesh(new THREE.CylinderGeometry(3.3, 3, potH, 40, 1, true),
-    new THREE.MeshStandardMaterial({ color: '#4e3527', roughness: 0.9, side: THREE.DoubleSide }));
-  pot.position.set(1.4, Y0 + T / 2 + potH / 2, -1.2);
-  const melt = new THREE.Mesh(new THREE.CircleGeometry(3.15, 40), new THREE.MeshBasicMaterial({ color: '#b84c16' }));
+  lip.position.set(-0.03, 0.4, 0);
+  g.add(throat, lip);
+  // The chamber inside: dark glowing walls, the pot, the melt.
+  const chamber = new THREE.Mesh(new THREE.BoxGeometry(D - 1, H - 1, W - 1), chamberMaterial('#c4501c', '#4a160a'));
+  chamber.position.set(D / 2 + 0.9, base + H / 2, 0);
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.2, 4.2, 40, 1, true), new THREE.MeshBasicMaterial({ color: '#6a2a12', side: THREE.DoubleSide }));
+  pot.position.set(5.4, base + 2.6, 0);
+  const melt = new THREE.Mesh(new THREE.CircleGeometry(4.5, 40), new THREE.MeshBasicMaterial({ color: '#e07a2a' }));
   melt.rotation.x = -Math.PI / 2;
-  melt.position.set(1.4, surface, -1.2);
-  melt.userData.flame = 9;
-  g.add(pot, melt);
+  melt.position.set(5.4, base + 4.7, 0);
+  melt.userData.flame = 5;
+  g.add(chamber, pot, melt);
+  // The hood over the face, and legs.
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(5, 1, W + 2), frame);
+  hood.position.set(-1.8, base + H + 1.6, 0);
+  hood.rotation.z = -0.35;
+  g.add(hood);
+  for (const z of [-W / 2 + 1, W / 2 - 1]) for (const x of [2, D - 1]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.8, 20, 0.8), frame);
+    leg.position.set(x, base - 10, z);
+    g.add(leg);
+  }
   return g;
 }
 
@@ -722,6 +812,26 @@ function newspaperTexture() {
   t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(0.45, 0.45);
+  return t;
+}
+
+/** Soft bands around the axis, brighter and darker, for the glow of turning glass. */
+function mottleTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 32;
+  const x = c.getContext('2d')!;
+  const g = x.createLinearGradient(0, 0, 256, 0);
+  for (let i = 0; i <= 8; i++) g.addColorStop(i / 8, i % 2 ? '#c9c9c9' : '#ffffff');
+  x.fillStyle = g;
+  x.fillRect(0, 0, 256, 32);
+  for (let i = 0; i < 6; i++) {
+    x.fillStyle = `rgba(150,150,150,${0.12 + (i % 3) * 0.05})`;
+    x.fillRect((i * 47) % 256, 0, 10 + (i % 4) * 6, 32);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = THREE.RepeatWrapping;
   return t;
 }
 

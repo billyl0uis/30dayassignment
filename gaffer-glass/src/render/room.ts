@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 // The shop around the bench, in inches. The piece works at the origin; the floor is below it and
 // the back wall well behind it. Everything here is set dressing: it never moves the sim.
@@ -45,15 +46,15 @@ export function buildShop(scene: THREE.Scene): Shop {
   const add = (...o: THREE.Object3D[]) => scene.add(...o);
 
   // ── Light: daylight from the window, a soft fill, and the fires ──
-  add(new THREE.HemisphereLight('#eef0f2', '#8f877b', 1.15));
-  const sun = new THREE.DirectionalLight('#fff2dc', 2.1);
+  add(new THREE.HemisphereLight('#eef0f2', '#8f877b', 0.75));
+  const sun = new THREE.DirectionalLight('#fff2dc', 2.9);
   sun.position.set(25, 70, -40);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.bias = -0.0005;
   Object.assign(sun.shadow.camera, { left: -90, right: 90, top: 70, bottom: -70, near: 10, far: 260 });
   add(sun);
-  const fill = new THREE.DirectionalLight('#e6edf5', 0.7);
+  const fill = new THREE.DirectionalLight('#e6edf5', 0.45);
   fill.position.set(-20, 20, 60);
   add(fill);
 
@@ -98,45 +99,6 @@ export function buildShop(scene: THREE.Scene): Shop {
   for (let i = 0; i <= 4; i++) bar(i === 0 || i === 4 ? 1.5 : 1, 36, 4 - 32 + i * 16, 34);
   add(box(70, 1.6, 5, std('#5e676d', 0.7), 4, 15.2, WALL_Z + 2.5));
 
-  // ── Furnace, back left: brick-faced, its gathering door glowing, a steel hood above ──
-  const fx = -88, fz = -66;
-  add(box(36, 40, 30, DARK_STEEL, fx, FLOOR_Y + 8 + 20, fz));
-  for (const dx of [-15, 15]) for (const dz of [-12, 12]) add(box(2.5, 8, 2.5, DARK_STEEL, fx + dx, FLOOR_Y + 4, fz + dz));
-  add(box(30, 30, 1.2, new THREE.MeshStandardMaterial({ map: brickTexture('#7a3a24', '#3a2219'), roughness: 0.9 }), fx, FLOOR_Y + 8 + 21, fz + 15.4));
-  add(box(14, 11, 1.6, std('#2b2420', 0.9), fx, FLOOR_Y + 32, fz + 16.2));
-  const doorMat = new THREE.MeshBasicMaterial({ color: '#ff9a3c' });
-  const door = new THREE.Mesh(new THREE.PlaneGeometry(10, 7), doorMat);
-  door.position.set(fx, FLOOR_Y + 32, fz + 17.05);
-  add(door);
-  const furnaceGlow = new THREE.PointLight('#ff8a32', 1400, 0, 2);
-  furnaceGlow.position.set(fx, FLOOR_Y + 32, fz + 24);
-  add(furnaceGlow);
-  flames.push({ light: furnaceGlow, base: 1400, mat: doorMat, color: new THREE.Color('#ff9a3c'), seed: 1 });
-  // Extraction hood and duct.
-  const hood = new THREE.Mesh(new THREE.CylinderGeometry(8, 26, 12, 4, 1, true), new THREE.MeshStandardMaterial({ color: '#a5adb3', metalness: 0.7, roughness: 0.4, side: THREE.DoubleSide }));
-  hood.rotation.y = Math.PI / 4;
-  hood.position.set(fx, FLOOR_Y + 72, fz + 4);
-  add(hood, cyl(6, 60, std('#9aa2a8', 0.45, 0.7), fx, FLOOR_Y + 108, fz + 4, 20));
-
-  // ── Glory hole, back right: a drum on its stand, port facing the bench ──
-  const gx = 92, gz = -58;
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 18, 36), STEEL);
-  drum.rotation.x = Math.PI / 2;
-  drum.position.set(gx, FLOOR_Y + 34, gz);
-  drum.castShadow = true;
-  add(drum);
-  const portMat = new THREE.MeshBasicMaterial({ color: '#ff8a32' });
-  const port = new THREE.Mesh(new THREE.CircleGeometry(5.5, 36), portMat);
-  port.position.set(gx, FLOOR_Y + 34, gz + 9.05);
-  const portRing = new THREE.Mesh(new THREE.TorusGeometry(5.8, 0.6, 10, 36), std('#c8642a', 0.7));
-  portRing.position.copy(port.position);
-  add(port, portRing, box(4, 23, 4, DARK_STEEL, gx, FLOOR_Y + 11.5, gz), box(18, 1.2, 12, DARK_STEEL, gx, FLOOR_Y + 0.6, gz));
-  add(cyl(1.4, 10, STEEL, gx, FLOOR_Y + 34, gz - 13).rotateX(Math.PI / 2));
-  const gloryGlow = new THREE.PointLight('#ff7a2a', 900, 0, 2);
-  gloryGlow.position.set(gx, FLOOR_Y + 34, gz + 16);
-  add(gloryGlow);
-  flames.push({ light: gloryGlow, base: 900, mat: portMat, color: new THREE.Color('#ff8a32'), seed: 2 });
-
   // ── Annealer, against the back wall: a white box on legs, its controller reading 960°F ──
   const ax = 58, az = WALL_Z + 11;
   add(box(24, 22, 18, std('#c9c7c0', 0.6, 0.1), ax, FLOOR_Y + 10 + 11, az));
@@ -146,42 +108,50 @@ export function buildShop(scene: THREE.Scene): Shop {
   panel.position.set(ax + 6, FLOOR_Y + 28.5, az + 9.05);
   add(panel, box(2, 1.2, 1, DARK_STEEL, ax - 6, FLOOR_Y + 21, az + 9.4));
 
-  // ── The gaffer's bench, behind the work: a wooden seat with steel arms and the tools laid out ──
-  const bx = -46, bz = -66;
-  add(box(42, 2.2, 12, WOOD, bx, FLOOR_Y + 17, bz));
-  for (const dx of [-18, 18]) for (const dz of [-4.5, 4.5]) add(box(1.6, 16, 1.6, DARK_STEEL, bx + dx, FLOOR_Y + 8, bz + dz));
-  for (const dx of [-20, 20]) add(box(1.6, 1.6, 26, STEEL, bx + dx, FLOOR_Y + 24, bz + 5));
-  for (const dx of [-20, 20]) add(box(1.4, 7, 1.4, STEEL, bx + dx, FLOOR_Y + 20.5, bz - 2));
-  // Tools on the seat: jacks, shears, tweezers.
-  const tool = std('#b7bdc2', 0.3, 0.9);
-  const jacks = new THREE.Group();
-  for (const s of [-1, 1]) {
-    const leg = box(0.5, 0.4, 12, tool, s * 1.4, 0, 0, true);
-    leg.rotation.y = s * 0.12;
-    jacks.add(leg);
+  // ── The gaffer's bench, under the work: two steel arms running away from you, the pipe across them ──
+  // The arms' tops sit just under the pipe, so the pipe rolls on them; the seat is under you.
+  const armTop = -0.42;
+  for (const ax2 of [-30, -13]) {
+    add(box(1.6, 1.6, 30, STEEL, ax2, armTop - 0.8, -3));
+    for (const az2 of [-16, 10]) add(box(1.4, armTop - 1.6 - FLOOR_Y, 1.4, DARK_STEEL, ax2, (armTop - 1.6 + FLOOR_Y) / 2, az2));
   }
-  jacks.add(box(3.6, 0.6, 1.4, tool, 0, 0, -6));
-  jacks.position.set(bx - 8, FLOOR_Y + 18.4, bz);
-  jacks.rotation.y = 1.3;
-  const shears = box(0.6, 0.4, 9, tool, bx + 4, FLOOR_Y + 18.4, bz + 1);
-  shears.rotation.y = 0.9;
-  const tweezers = box(0.4, 0.4, 7, tool, bx + 10, FLOOR_Y + 18.4, bz - 2);
-  tweezers.rotation.y = 1.6;
+  const seat = new THREE.Mesh(new RoundedBoxGeometry(26, 2.4, 12, 3, 0.6), WOOD);
+  seat.position.set(-21.5, FLOOR_Y + 17, 14);
+  seat.castShadow = seat.receiveShadow = true;
+  add(seat);
+  for (const dx of [-11, 11]) for (const dz of [-4.5, 4.5]) add(box(1.6, 16, 1.6, DARK_STEEL, -21.5 + dx, FLOOR_Y + 8, 14 + dz));
+  // Tools laid on the seat, the way they're turned: jacks, shears, tweezers.
+  const jacks = jacksModel();
+  jacks.position.set(-27, FLOOR_Y + 18.35, 13);
+  jacks.rotation.set(-Math.PI / 2, 0, 1.2);
+  const shears = shearsModel();
+  shears.position.set(-18, FLOOR_Y + 18.35, 15.5);
+  shears.rotation.set(-Math.PI / 2, 0, 0.5);
+  const tweezers = tweezersModel();
+  tweezers.position.set(-12, FLOOR_Y + 18.35, 11);
+  tweezers.rotation.set(-Math.PI / 2, 0, 1.9);
   add(jacks, shears, tweezers);
   // A water bucket with the wooden blocks soaking in it.
   add(new THREE.Mesh(new THREE.CylinderGeometry(5.5, 4.8, 11, 28, 1, true), new THREE.MeshStandardMaterial({ color: '#5d6f80', roughness: 0.5, metalness: 0.4, side: THREE.DoubleSide })).translateX(24).translateY(FLOOR_Y + 5.5).translateZ(-62));
-  const water = new THREE.Mesh(new THREE.CircleGeometry(5.3, 28), std('#3c5664', 0.15, 0.2));
+  const water = new THREE.Mesh(new THREE.CircleGeometry(5.3, 28), new THREE.MeshStandardMaterial({ color: '#3c5a68', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.62 })); // you can just see the blocks' heads under it
   water.rotation.x = -Math.PI / 2;
   water.position.set(24, FLOOR_Y + 9.5, -62);
   add(water);
-  for (const [dx, dz, t] of [[-1.5, 1, 0.3], [1.8, -1, -0.4]]) {
-    const handle = cyl(0.35, 9, WOOD, 24 + dx, FLOOR_Y + 13, -62 + dz, 10);
-    handle.rotation.z = t;
-    add(handle);
+  // Wooden blocks soak head-down: the carved cup under water, the handle leaning out over the rim.
+  for (const [dx, dz, t, spin] of [[-1.6, 1.2, 0.32, 0.4], [1.9, -1.1, -0.38, 2.2]]) {
+    const block = new THREE.Group();
+    const head = cyl(2, 3.2, std('#4a2c18', 0.9), 0, 1.6, 0, 20); // a turned cherrywood head, dark from soaking
+    const cupRim = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.35, 8, 20), std('#3a2213', 0.9));
+    cupRim.rotation.x = Math.PI / 2;
+    const handle = cyl(0.38, 11, WOOD, 0, 3.2 + 5.5, 0, 10);
+    block.add(head, cupRim, handle);
+    block.position.set(24 + dx, FLOOR_Y + 5.2, -62 + dz);
+    block.rotation.set(0, spin, t);
+    add(block);
   }
 
   // ── Pipe warmer: a trough glowing at one end, blowpipes resting in it ──
-  const px = -62, pz = -78;
+  const px = -84, pz = -60;
   add(box(6, 4, 22, DARK_STEEL, px, FLOOR_Y + 22, pz));
   const slotMat = new THREE.MeshBasicMaterial({ color: '#e0662a' });
   const slot = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 20), slotMat);
@@ -196,12 +166,12 @@ export function buildShop(scene: THREE.Scene): Shop {
   }
 
   // ── Cullet barrel: a steel drum half full of broken glass ──
-  add(new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 16, 32, 1, true), new THREE.MeshStandardMaterial({ color: '#41606b', roughness: 0.55, metalness: 0.5, side: THREE.DoubleSide })).translateX(52).translateY(FLOOR_Y + 8).translateZ(-50));
+  add(new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 16, 32, 1, true), new THREE.MeshStandardMaterial({ color: '#41606b', roughness: 0.55, metalness: 0.5, side: THREE.DoubleSide })).translateX(70).translateY(FLOOR_Y + 8).translateZ(-72));
   const cullet = new THREE.MeshStandardMaterial({ color: '#bcd6d2', roughness: 0.1, transparent: true, opacity: 0.75 });
   for (let i = 0; i < 26; i++) {
     const a = i * 2.39, r = 5.5 * Math.sqrt((i + 0.5) / 26);
     const shard = new THREE.Mesh(new THREE.TetrahedronGeometry(0.9 + (i % 3) * 0.4), i % 5 === 0 ? std('#2646c4', 0.15) : cullet);
-    shard.position.set(52 + r * Math.cos(a), FLOOR_Y + 13 + (i % 4) * 0.4, -50 + r * Math.sin(a));
+    shard.position.set(70 + r * Math.cos(a), FLOOR_Y + 13 + (i % 4) * 0.4, -72 + r * Math.sin(a));
     shard.rotation.set(i, i * 1.7, i * 0.6);
     add(shard);
   }
@@ -251,6 +221,13 @@ export function buildShop(scene: THREE.Scene): Shop {
     add(shade, bulb, lamp, cyl(0.15, 60, std('#222', 0.8), x, 94, z, 6));
   }
 
+  // ── Ceiling: dark deck and steel beams ──
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(260, 220), std('#3b4045', 0.95));
+  ceil.rotation.x = Math.PI / 2;
+  ceil.position.set(0, FLOOR_Y + 160, -20);
+  add(ceil);
+  for (let x = -100; x <= 100; x += 40) add(box(3, 6, 220, DARK_STEEL, x, FLOOR_Y + 157, -20, false));
+
   // ── Dust in the window light ──
   const N = 240;
   const dust = new Float32Array(N * 3);
@@ -261,7 +238,7 @@ export function buildShop(scene: THREE.Scene): Shop {
   }
   const dustGeo = new THREE.BufferGeometry();
   dustGeo.setAttribute('position', new THREE.BufferAttribute(dust, 3));
-  const motes = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: '#fff6e0', size: 0.35, transparent: true, opacity: 0.45, depthWrite: false }));
+  const motes = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: '#fff6e0', size: 0.14, map: moteTexture(), alphaTest: 0.01, transparent: true, opacity: 0.4, depthWrite: false }));
   add(motes);
 
   return {
@@ -282,7 +259,75 @@ export function buildShop(scene: THREE.Scene): Shop {
   };
 }
 
+// ── Hand tools, modeled lying flat in their own XY plane (y runs from handle to tip) ──
+
+const TOOL_STEEL = () => new THREE.MeshStandardMaterial({ color: '#b9c0c5', metalness: 0.9, roughness: 0.28 });
+
+/** A tapered round rod between two points in the XY plane. */
+function rod(from: [number, number], to: [number, number], r0: number, r1: number, mat: THREE.Material) {
+  const a = new THREE.Vector3(from[0], from[1], 0), b = new THREE.Vector3(to[0], to[1], 0);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, a.distanceTo(b), 14), mat);
+  m.position.copy(a).add(b).multiplyScalar(0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+  m.castShadow = true;
+  return m;
+}
+
+/** Jacks: two long tapering blades sprung apart by a curved steel bow at the handle. */
+function jacksModel() {
+  const g = new THREE.Group();
+  const steel = TOOL_STEEL();
+  g.add(rod([-0.9, 0], [-0.35, 11], 0.24, 0.1, steel), rod([0.9, 0], [0.35, 11], 0.24, 0.1, steel));
+  const bow = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.17, 10, 24, Math.PI), steel);
+  bow.rotation.z = Math.PI;
+  g.add(bow);
+  // Wooden tips on one blade, as many jacks have for opening a lip.
+  const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 2.4, 12), new THREE.MeshStandardMaterial({ color: '#8a5a34', roughness: 0.8 }));
+  tip.position.set(0.42, 10, 0);
+  tip.rotation.z = 0.06;
+  g.add(tip);
+  return g;
+}
+
+/** Shears: two thin blades crossing at a pivot, with round finger loops. */
+function shearsModel() {
+  const g = new THREE.Group();
+  const steel = TOOL_STEEL();
+  g.add(rod([-0.7, 0], [0.25, 6.5], 0.16, 0.06, steel), rod([0.7, 0], [-0.25, 6.5], 0.16, 0.06, steel));
+  for (const x of [-1.1, 1.1]) {
+    const loop = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.14, 8, 20), steel);
+    loop.position.set(x, -0.5, 0);
+    g.add(loop);
+  }
+  const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.3, 12), steel);
+  pivot.rotation.x = Math.PI / 2;
+  pivot.position.set(0, 2.6, 0);
+  g.add(pivot);
+  return g;
+}
+
+/** Tweezers: two springy tapered legs joined at the back. */
+function tweezersModel() {
+  const g = new THREE.Group();
+  const steel = TOOL_STEEL();
+  g.add(rod([-0.15, 0], [-0.45, 7], 0.14, 0.05, steel), rod([0.15, 0], [0.45, 7], 0.14, 0.05, steel));
+  const back = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 8), steel);
+  g.add(back);
+  return g;
+}
+
 // ── Textures ─────────────────────────────────────────────────────────
+
+/** A soft round speck, so dust near the camera isn't a square. */
+function moteTexture() {
+  return canvasTexture(32, 32, (x) => {
+    const g = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, 32, 32);
+  });
+}
 
 function canvasTexture(w: number, h: number, draw: (x: CanvasRenderingContext2D) => void, repeat?: [number, number]) {
   const c = document.createElement('canvas');
@@ -308,7 +353,7 @@ function blockTexture(base: string, rx: number, ry: number) {
       x.fillStyle = `rgba(${i % 2 ? 255 : 0},${i % 2 ? 255 : 0},${i % 2 ? 255 : 0},0.035)`;
       x.fillRect((i * 97) % 512, (i * 53) % 256, 3, 3);
     }
-    x.strokeStyle = 'rgba(30,34,38,0.3)';
+    x.strokeStyle = 'rgba(30,34,38,0.16)';
     x.lineWidth = 2;
     for (let row = 0; row < 8; row++) {
       const y = row * 32;
@@ -349,20 +394,6 @@ function concreteTexture() {
   }, [3, 3]);
 }
 
-function brickTexture(brick: string, mortar: string) {
-  return canvasTexture(128, 128, (x) => {
-    x.fillStyle = mortar;
-    x.fillRect(0, 0, 128, 128);
-    for (let row = 0; row < 8; row++) {
-      for (let col = -1; col < 5; col++) {
-        x.fillStyle = brick;
-        x.globalAlpha = 0.85 + ((row * 3 + col) % 4) * 0.05;
-        x.fillRect(col * 32 + (row % 2 ? 16 : 0) + 1, row * 16 + 1, 30, 14);
-      }
-    }
-    x.globalAlpha = 1;
-  }, [2, 2]);
-}
 
 /** The annealer's controller: a red LED readout. */
 function controllerTexture() {
