@@ -1,36 +1,5 @@
 [
   {
-    "id": "area-253-glassblowing",
-    "name": "Area 253 Glassblowing",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "WA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.area253-glassblowing.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Washington",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.area253-glassblowing.com"
-    }
-  },
-  {
     "id": "art-of-fire",
     "name": "Art of Fire",
     "type": "",
@@ -87,6 +56,11 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.bananafactory.org/glass-classes/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.bananafactory.org/glass-classes/",
+      "result": "Couldn't check: Site didn't respond (timed out)."
     }
   },
   {
@@ -118,6 +92,18 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://bagi.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://bagi.org/",
+      "suggested_type": "hot_shop",
+      "type_evidence": "'flamework' x5, 'fused' x1, 'fusing' x5, 'glassblowing' x1, 'hotshop' x4, 'kiln' x1, 'neon' x1, 'torch' x1",
+      "also_mentions": [
+        "flameworking",
+        "kiln",
+        "neon"
+      ],
+      "result": "No address on the homepage."
     }
   },
   {
@@ -181,37 +167,6 @@
     }
   },
   {
-    "id": "brooklyn-glass",
-    "name": "Brooklyn Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "NY",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://brooklynglass.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "New York",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://brooklynglass.com/"
-    }
-  },
-  {
     "id": "bubble-factory",
     "name": "Bubble Factory",
     "type": "",
@@ -239,37 +194,6 @@
       "rentable": "-",
       "classes": "YES",
       "website": "https://www.bubblefactoryma.com"
-    }
-  },
-  {
-    "id": "chicago-glass-collective",
-    "name": "Chicago Glass Collective",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "IL",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.chicagoglasscollective.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Illinois",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.chicagoglasscollective.com/"
     }
   },
   {
@@ -387,6 +311,11 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "-"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "",
+      "result": "No website to check."
     }
   },
   {
@@ -418,6 +347,11 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "http://www.eastfallsglass.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://www.eastfallsglass.com/",
+      "result": "Couldn't check: Page is built by JavaScript; no address or details readable."
     }
   },
   {
@@ -449,6 +383,11 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.elementsglass.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.elementsglass.com/",
+      "result": "Couldn't check: Page is built by JavaScript; no address or details readable."
     }
   },
   {
@@ -480,6 +419,11 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "http://eugeneglassschool.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://eugeneglassschool.org/",
+      "result": "Couldn't check: Page came back empty."
     }
   },
   {
@@ -510,68 +454,6 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://fallbrookschoolofthearts.org/classes.php"
-    }
-  },
-  {
-    "id": "firehouse-glass",
-    "name": "Firehouse Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "WA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.firehouseglass.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Washington",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.firehouseglass.com/"
-    }
-  },
-  {
-    "id": "first-city-art-center",
-    "name": "First City Art Center",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "FL",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.firstcityart.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Florida",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.firstcityart.org/"
     }
   },
   {
@@ -630,37 +512,6 @@
       "rentable": "-",
       "classes": "YES",
       "website": "https://flintarts.org/"
-    }
-  },
-  {
-    "id": "foci-minnesota-center-for-glass-arts",
-    "name": "FOCI Minnesota Center for Glass Arts",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "MN",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.mnglassart.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Minnesota",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.mnglassart.org/"
     }
   },
   {
@@ -748,37 +599,11 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.toledomuseum.org/about/glass-tma"
-    }
-  },
-  {
-    "id": "glassroots",
-    "name": "GlassRoots",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "NJ",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.glassroots.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "New Jersey",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "www.glassroots.org"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.toledomuseum.org/about/glass-tma",
+      "result": "Couldn't check: Site blocked the request (403)."
     }
   },
   {
@@ -809,37 +634,6 @@
       "rentable": "-",
       "classes": "YES",
       "website": "https://glenechoglassworks.com"
-    }
-  },
-  {
-    "id": "goggleworks",
-    "name": "GoggleWorks",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "PA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://goggleworks.org/whileyouarehere/studios/hot-glass/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Pennsylvania",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://goggleworks.org/whileyouarehere/studios/hot-glass/"
     }
   },
   {
@@ -901,6 +695,16 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://heliosglass.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://heliosglass.com/",
+      "suggested_type": "kiln",
+      "type_evidence": "'fused' x4, 'fusing' x7, 'kiln' x11",
+      "suggested_city": "Austin",
+      "suggested_address": "705 Wallingford Bend Dr, Ste 107, Austin, TX 78752",
+      "geocoded_as": "OpenStreetMap found no match for this address.",
+      "result": "Address found on the studio's own homepage."
     }
   },
   {
@@ -957,68 +761,6 @@
       "rentable": "-",
       "classes": "-",
       "website": "http://www.hotsandap.com/"
-    }
-  },
-  {
-    "id": "hotshop-glass",
-    "name": "HotShop Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "WI",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://hotshopglass.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Wisconsin",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://hotshopglass.com/"
-    }
-  },
-  {
-    "id": "ignite-glass-studios",
-    "name": "Ignite Glass Studios",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "IL",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://igniteglass.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Illinois",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://igniteglass.com/"
     }
   },
   {
@@ -1133,37 +875,6 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://jubilibeadsandyarns.com/"
-    }
-  },
-  {
-    "id": "los-angeles-glass-center",
-    "name": "Los Angeles Glass Center",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "CA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.laglasscenter.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "California",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.laglasscenter.com"
     }
   },
   {
@@ -1339,6 +1050,17 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.ncglasscenter.org"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.ncglasscenter.org/",
+      "type_evidence": "no glass-process words on the homepage",
+      "suggested_city": "Black Mountain",
+      "suggested_address": "112 East State St, Black Mountain, NC 28711",
+      "suggested_lat": 35.61846,
+      "suggested_lng": -82.31996,
+      "geocoded_as": "112, East State Street, Black Mountain, Buncombe County, North Carolina, 28711, United States",
+      "result": "Address found on the studio's own homepage."
     }
   },
   {
@@ -1400,37 +1122,6 @@
     }
   },
   {
-    "id": "pittsburgh-glass-center",
-    "name": "Pittsburgh Glass Center",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "PA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.pittsburghglasscenter.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Pennsylvania",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.pittsburghglasscenter.org/"
-    }
-  },
-  {
     "id": "pratt-fine-art-center",
     "name": "Pratt Fine Art Center",
     "type": "",
@@ -1459,37 +1150,17 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.pratt.org/"
-    }
-  },
-  {
-    "id": "public-glass",
-    "name": "Public Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "CA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.publicglass.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "California",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.publicglass.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.pratt.org/",
+      "type_evidence": "no glass-process words on the homepage",
+      "suggested_city": "Seattle",
+      "suggested_address": "1902 South Main Street, Seattle, WA 98144",
+      "suggested_lat": 47.60031,
+      "suggested_lng": -122.30735,
+      "geocoded_as": "1902, South Main Street, Central District, Seattle, King County, Washington, 98144, United States",
+      "result": "Address found on the studio's own homepage."
     }
   },
   {
@@ -1609,37 +1280,6 @@
     }
   },
   {
-    "id": "sonoran-glass",
-    "name": "Sonoran Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "AZ",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://sonoranglass.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Arizona",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://sonoranglass.org/"
-    }
-  },
-  {
     "id": "starworks-glass-lab",
     "name": "STARworks Glass Lab",
     "type": "",
@@ -1696,6 +1336,11 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.tacomaglassblowing.com/#"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.tacomaglassblowing.com/#",
+      "result": "Couldn't check: Site returned a server error (502)."
     }
   },
   {
@@ -1726,68 +1371,6 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://taongaglass.wordpress.com/"
-    }
-  },
-  {
-    "id": "the-crucible",
-    "name": "The Crucible",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "CA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.thecrucible.org/departments/glass-blowing/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "California",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.thecrucible.org/departments/glass-blowing/"
-    }
-  },
-  {
-    "id": "the-furnace-a-glassworks",
-    "name": "The Furnace a glassworks",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "CO",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.furnaceglassworks.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Colorado",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.furnaceglassworks.com/"
     }
   },
   {
@@ -1877,6 +1460,13 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.orangebeachal.gov/facilities/art-center/about"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.orangebeachal.gov/facilities/art-center/about",
+      "type_evidence": "no glass-process words on the homepage",
+      "result": "GAS link now goes to a 'page not found'. Only address shown is the City of Orange Beach's, which may not be the art center's.",
+      "suggested_city": "Orange Beach"
     }
   },
   {
@@ -1963,37 +1553,6 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://www.tulsaglassblowing.org/"
-    }
-  },
-  {
-    "id": "urban-glass",
-    "name": "Urban Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "NY",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://urbanglass.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "New York",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://urbanglass.org/"
     }
   },
   {
@@ -2137,6 +1696,20 @@
       "rentable": "YES",
       "classes": "YES",
       "website": "https://www.worcestercraftcenter.org"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.worcestercraftcenter.org/",
+      "type_evidence": "'fused' x1",
+      "also_mentions": [
+        "kiln"
+      ],
+      "suggested_city": "Worcester",
+      "suggested_address": "25 Sagamore Road, Worcester, MA 01605",
+      "suggested_lat": 42.28109,
+      "suggested_lng": -71.80741,
+      "geocoded_as": "Worcester Center For Crafts, 25, Sagamore Road, Massachusetts Avenue Historic District, Chadwick Square, Worcester, Worcester County, Massachusetts, 01609, United States",
+      "result": "Address found on the studio's own homepage."
     }
   },
   {
