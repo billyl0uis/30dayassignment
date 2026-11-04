@@ -1,0 +1,3508 @@
+{
+  "schemaVersion": 1,
+  "compiled": "2026-11-03",
+  "about": "Starter paint library: names, pigment codes and (where published) opacity, taken from each manufacturer's or Blick's own product pages on the compiled date. Colors are NOT included except Golden's published Lab values; every paint needs a swatch photographed by the user before its color is trusted. Formulas change - check the tube label.",
+  "lines": [
+    {
+      "brand": "Gamblin",
+      "line": "Artist's Oil Colors",
+      "medium": "oil",
+      "tier": "professional",
+      "source": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Lemon",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Light",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium",
+          "pigments": [
+            "PY37"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Hansa Yellow Light",
+          "pigments": [
+            "PY3"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Hansa Yellow Medium",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PY43"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange",
+          "pigments": [
+            "PO20"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Light",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Medium",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Alizarin Crimson Permanent",
+          "pigments": [
+            "PR177"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Red",
+          "pigments": [
+            "PV19"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ultramarine Blue",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Blue",
+          "pigments": [
+            "PB15:2"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue",
+          "pigments": [
+            "PB28"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue Hue",
+          "pigments": [
+            "PW6",
+            "PB15:4"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Green",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Viridian",
+          "pigments": [
+            "PG18"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green",
+          "pigments": [
+            "PY83",
+            "PB15:2"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Grey",
+          "pigments": [
+            "PBr7",
+            "PB29"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/artist-grade-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Gamblin",
+      "line": "1980 Oil Colors",
+      "medium": "oil",
+      "tier": "student/budget",
+      "source": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Light",
+          "pigments": [
+            "PY35",
+            "PY3"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium",
+          "pigments": [
+            "PY37",
+            "PY74"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Hansa Yellow Light",
+          "pigments": [
+            "PY3"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Hansa Yellow Medium",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PY43"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange",
+          "pigments": [
+            "PO20",
+            "PO62"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Light",
+          "pigments": [
+            "PR108",
+            "PR188"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Medium",
+          "pigments": [
+            "PR108",
+            "PR112"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Alizarin Crimson Permanent",
+          "pigments": [
+            "PR177"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ultramarine Blue",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Blue",
+          "pigments": [
+            "PB15:2"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue",
+          "pigments": [
+            "PB28",
+            "PB15:2"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue",
+          "pigments": [
+            "PB36",
+            "PB15:2"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Green",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Viridian",
+          "pigments": [
+            "PG18",
+            "PBk11",
+            "PG7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green",
+          "pigments": [
+            "PY83",
+            "PB15:2"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Grey",
+          "pigments": [
+            "PBr7",
+            "PB29"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://gamblincolors.com/oil-painting/color/1980-oil-colors/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Golden",
+      "line": "Heavy Body Acrylics",
+      "medium": "acrylic",
+      "tier": "professional",
+      "source": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              98.3,
+              -0.7,
+              1.2
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1380"
+        },
+        {
+          "name": "Bone Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              23.8,
+              -0.1,
+              -0.5
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1010"
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              25.5,
+              0.8,
+              0.4
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1200"
+        },
+        {
+          "name": "Cadmium Yellow Light",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              89.8,
+              -4.6,
+              94.6
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1120"
+        },
+        {
+          "name": "Cadmium Yellow Medium",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              84.1,
+              12.9,
+              94.6
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1130"
+        },
+        {
+          "name": "Hansa Yellow Opaque",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              84.5,
+              10.8,
+              91.8
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1191"
+        },
+        {
+          "name": "Primary Yellow",
+          "pigments": [
+            "PY175",
+            "PW6",
+            "PY74"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              84.7,
+              5.3,
+              86.9
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1530"
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PY42"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              57.8,
+              16.8,
+              39.6
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1407"
+        },
+        {
+          "name": "Cadmium Orange",
+          "pigments": [
+            "PO20"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              64.4,
+              52.7,
+              65.8
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1070"
+        },
+        {
+          "name": "Pyrrole Orange",
+          "pigments": [
+            "PO73"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              57.0,
+              58.2,
+              57.1
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1276"
+        },
+        {
+          "name": "Cadmium Red Light",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              52.1,
+              58.9,
+              44.6
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1090"
+        },
+        {
+          "name": "Cadmium Red Medium",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              42.9,
+              51.2,
+              29.2
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1100"
+        },
+        {
+          "name": "Pyrrole Red",
+          "pigments": [
+            "PR254"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              43.5,
+              54.9,
+              33.2
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1277"
+        },
+        {
+          "name": "Naphthol Red Light",
+          "pigments": [
+            "PR112"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              47.6,
+              52.3,
+              37.1
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1210"
+        },
+        {
+          "name": "Alizarin Crimson Hue",
+          "pigments": [
+            "PR122",
+            "PY150",
+            "PG7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              27.9,
+              9.7,
+              2.2
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1450"
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              31.1,
+              26.0,
+              5.1
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1305"
+        },
+        {
+          "name": "Primary Magenta",
+          "pigments": [
+            "PV19"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              41.0,
+              46.9,
+              22.7
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1510"
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              25.0,
+              2.6,
+              1.3
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1150"
+        },
+        {
+          "name": "Ultramarine Blue",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              24.1,
+              14.0,
+              -27.8
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1400"
+        },
+        {
+          "name": "Phthalo Blue (Green Shade)",
+          "pigments": [
+            "PB15:3"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              25.6,
+              7.0,
+              -18.1
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1255"
+        },
+        {
+          "name": "Phthalo Blue (Red Shade)",
+          "pigments": [
+            "PB15:0"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              24.6,
+              7.8,
+              -14.8
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1260"
+        },
+        {
+          "name": "Primary Cyan",
+          "pigments": [
+            "PB15:3",
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              34.6,
+              -3.2,
+              -32.1
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1500"
+        },
+        {
+          "name": "Cobalt Blue",
+          "pigments": [
+            "PB28"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              36.2,
+              11.4,
+              -47.1
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1140"
+        },
+        {
+          "name": "Cerulean Blue, Chromium",
+          "pigments": [
+            "PB36"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              41.0,
+              -10.7,
+              -32.4
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1050"
+        },
+        {
+          "name": "Phthalo Green (Blue Shade)",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              26.4,
+              -6.9,
+              -5.4
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1270"
+        },
+        {
+          "name": "Permanent Green Light",
+          "pigments": [
+            "PY175",
+            "PG7",
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              43.2,
+              -41.2,
+              15.8
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1250"
+        },
+        {
+          "name": "Sap Green Hue",
+          "pigments": [
+            "PY150",
+            "PG36",
+            "PBk7",
+            "PR101"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              28.4,
+              -5.2,
+              3.9
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1461"
+        },
+        {
+          "name": "Raw Sienna",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              51.9,
+              16.3,
+              32.2
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1340"
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              34.2,
+              17.0,
+              13.7
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1020"
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              27.3,
+              4.1,
+              4.2
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1030"
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              28.9,
+              1.9,
+              3.8
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1350"
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PB29",
+            "PBk7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://goldenartistcolors.com/products/golden-artist-acrylics/heavy-body?view=detail",
+          "color": {
+            "status": "manufacturer_lab",
+            "lab": [
+              23.5,
+              -0.0,
+              -2.2
+            ],
+            "note": "Published by manufacturer; measurement conditions not stated. Replace with your own swatch."
+          },
+          "productCode": "1240"
+        }
+      ]
+    },
+    {
+      "brand": "Liquitex",
+      "line": "Professional Heavy Body Acrylic",
+      "medium": "acrylic",
+      "tier": "professional",
+      "source": "https://www.liquitex.com",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-titanium-white",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-ivory-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-mars-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Light",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-cadmium-yellow-light",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-cadmium-yellow-medium",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Light Hansa",
+          "pigments": [
+            "PY3"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-yellow-light-hansa",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Medium Azo",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-yellow-medium-azo",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Oxide",
+          "pigments": [
+            "PY42"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-yellow-oxide",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange",
+          "pigments": [
+            "PO20"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-cadmium-orange",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Light",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-cadmium-red-light",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Medium",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-cadmium-red-medium",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Naphthol Crimson",
+          "pigments": [
+            "PR170"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-naphthol-crimson",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Alizarin Crimson Hue Permanent",
+          "pigments": [
+            "PR179",
+            "PR202"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-alizarin-crimson-hue-permanent",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-quinacridone-magenta",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-dioxazine-purple",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ultramarine Blue (Red Shade)",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-ultramarine-blue-red-shade",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalocyanine Blue (Green Shade)",
+          "pigments": [
+            "PB15"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-phthalocyanine-blue-green-shade",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue",
+          "pigments": [
+            "PB28"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-cobalt-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue Hue",
+          "pigments": [
+            "PB15:3",
+            "PB29",
+            "PG7",
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-cerulean-blue-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalocyanine Green (Blue Shade)",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-phthalocyanine-green-blue-shade",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green Permanent",
+          "pigments": [
+            "PB15:3",
+            "PBk11",
+            "PY139"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-sap-green-permanent",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-burnt-sienna",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-burnt-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-raw-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PB29",
+            "PBk9",
+            "PV15"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/professional-heavy-body-acrylic-payne-s-gray",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Liquitex",
+      "line": "Basics Acrylic",
+      "medium": "acrylic",
+      "tier": "student/budget",
+      "source": "https://www.liquitex.com",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-titanium-white",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-ivory-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-mars-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Light Hue",
+          "pigments": [
+            "PY3"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-cadmium-yellow-light-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium Hue",
+          "pigments": [
+            "PY74",
+            "PY83"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-cadmium-yellow-medium-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Primary Yellow",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-primary-yellow",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Oxide",
+          "pigments": [
+            "PY42"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-yellow-oxide",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange Hue",
+          "pigments": [
+            "PO73"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-cadmium-orange-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Light Hue",
+          "pigments": [
+            "PR9",
+            "PY74"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-cadmium-red-light-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Medium Hue",
+          "pigments": [
+            "PR170",
+            "PR9"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-cadmium-red-medium-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Primary Red",
+          "pigments": [
+            "PV19"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-primary-red",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Alizarin Crimson Hue Permanent",
+          "pigments": [
+            "PR179",
+            "PR202"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-alizarin-crimson-hue-permanent",
+          "color": {
+            "status": "needs_swatch"
+          },
+          "note": "Liquitex also lists an unspecified 'DPP' (diketopyrrolopyrrole) pigment."
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-quinacridone-magenta",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-dioxazine-purple",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ultramarine Blue",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-ultramarine-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalocyanine Blue",
+          "pigments": [
+            "PB15:3"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-phthalocyanine-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Primary Blue",
+          "pigments": [
+            "PB15:3"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-primary-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue Hue",
+          "pigments": [
+            "PB15:3",
+            "PB29",
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-cobalt-blue-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue Hue",
+          "pigments": [
+            "PB15:3",
+            "PB29",
+            "PG7",
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-cerulean-blue-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalocyanine Green",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-phthalocyanine-green",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Hooker's Green Hue Permanent",
+          "pigments": [
+            "PBk9",
+            "PG7",
+            "PY74"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-hooker-s-green-hue-permanent",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBk9",
+            "PR101"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-burnt-sienna",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PB29",
+            "PBk9",
+            "PR101"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-burnt-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PB29",
+            "PO73",
+            "PY139"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-raw-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PB29",
+            "PBk9",
+            "PR122"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.liquitex.com/products/basics-acrylic-color-payne-s-gray",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Winsor & Newton",
+      "line": "Artists' Oil Colour",
+      "medium": "oil",
+      "tier": "professional",
+      "source": "https://www.winsornewton.com",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW4",
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-titanium-white",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-ivory-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Lamp Black",
+          "pigments": [
+            "PBk6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-lamp-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Lemon",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-cadmium-lemon",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Pale",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-cadmium-yellow-pale",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-cadmium-yellow",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PY43"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-yellow-ochre",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange",
+          "pigments": [
+            "PO20",
+            "PR108"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-cadmium-orange",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-cadmium-red",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Alizarin Crimson",
+          "pigments": [
+            "PR177"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-permanent-alizarin-crimson",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Rose",
+          "pigments": [
+            "PV19"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-permanent-rose",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-quinacridone-magenta",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Winsor Violet (Dioxazine)",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-winsor-violet-dioxazine",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "French Ultramarine",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-french-ultramarine",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Winsor Blue (Green Shade)",
+          "pigments": [
+            "PB15"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-winsor-blue-green-shade",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Winsor Blue (Red Shade)",
+          "pigments": [
+            "PB15"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-winsor-blue-red-shade",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue",
+          "pigments": [
+            "PB28"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-cobalt-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue",
+          "pigments": [
+            "PB35"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-cerulean-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Winsor Green (Phthalo)",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-winsor-green-phthalo",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Viridian",
+          "pigments": [
+            "PG18"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-viridian",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green",
+          "pigments": [
+            "PB15",
+            "PY110"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-sap-green",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PR101"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-burnt-sienna",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-burnt-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-raw-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PB29",
+            "PBk19",
+            "PBk6",
+            "PR101"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/artists-oil-colour-payne-s-gray",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Winsor & Newton",
+      "line": "Winton Oil Colour",
+      "medium": "oil",
+      "tier": "student/budget",
+      "source": "https://www.winsornewton.com",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW4",
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-titanium-white",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-ivory-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Lamp Black",
+          "pigments": [
+            "PBk6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-lamp-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Lemon Yellow Hue",
+          "pigments": [
+            "PW6",
+            "PY73"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-lemon-yellow-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Pale Hue",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-cadmium-yellow-pale-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Hue",
+          "pigments": [
+            "PO73",
+            "PY65"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-cadmium-yellow-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PY42"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-yellow-ochre",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange Hue",
+          "pigments": [
+            "PO73",
+            "PY65"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-cadmium-orange-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Hue",
+          "pigments": [
+            "PR170",
+            "PR188"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-cadmium-red-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Deep Hue",
+          "pigments": [
+            "PO36",
+            "PR170"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-cadmium-red-deep-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Alizarin Crimson",
+          "pigments": [
+            "PR177"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-permanent-alizarin-crimson",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Rose",
+          "pigments": [
+            "PV19"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-permanent-rose",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-dioxazine-purple",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "French Ultramarine",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-french-ultramarine",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Blue",
+          "pigments": [
+            "PB15"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-phthalo-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue Hue",
+          "pigments": [
+            "PB15:1",
+            "PB29",
+            "PW5"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-cobalt-blue-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue Hue",
+          "pigments": [
+            "PB15:1",
+            "PG7",
+            "PW4"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-cerulean-blue-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Viridian Hue",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-viridian-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green",
+          "pigments": [
+            "PB15",
+            "PY110"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-sap-green",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PR101"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-burnt-sienna",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-burnt-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBk9",
+            "PBr7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-raw-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PB29",
+            "PBk19",
+            "PBk6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/winton-oil-colour-payne-s-gray",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Winsor & Newton",
+      "line": "Galeria Acrylic",
+      "medium": "acrylic",
+      "tier": "student/budget",
+      "source": "https://www.winsornewton.com",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-titanium-white",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-ivory-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-mars-black",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Lemon Yellow",
+          "pigments": [
+            "PY3"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-lemon-yellow",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Pale Hue",
+          "pigments": [
+            "PY3",
+            "PY74"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-cadmium-yellow-pale-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium Hue",
+          "pigments": [
+            "PY73",
+            "PY83"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-cadmium-yellow-medium-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PY42"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-yellow-ochre",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange Hue",
+          "pigments": [
+            "PR9",
+            "PY65"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-cadmium-orange-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Hue",
+          "pigments": [
+            "PR112"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-cadmium-red-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Crimson",
+          "pigments": [
+            "PR170"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-crimson",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Alizarin Crimson",
+          "pigments": [
+            "PR170",
+            "PV19"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-permanent-alizarin-crimson",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Rose",
+          "pigments": [
+            "PR122",
+            "PV19"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-permanent-rose",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Winsor Violet",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-winsor-violet",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ultramarine",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-ultramarine",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Blue",
+          "pigments": [
+            "PB15",
+            "PG7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-phthalo-blue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue Hue",
+          "pigments": [
+            "PB15",
+            "PB29",
+            "PW6"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-cobalt-blue-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue Hue",
+          "pigments": [
+            "PB15",
+            "PBk11",
+            "PW6"
+          ],
+          "opacity": "opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-cerulean-blue-hue",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Green",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-phthalo-green",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green",
+          "pigments": [
+            "PBk7",
+            "PG7",
+            "PW6",
+            "PY14"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-sap-green",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Green Light",
+          "pigments": [
+            "PG7",
+            "PY3"
+          ],
+          "opacity": "semi-transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-permanent-green-light",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBk11",
+            "PR101",
+            "PY42"
+          ],
+          "opacity": "transparent",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-burnt-sienna",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-burnt-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-raw-umber",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PB29",
+            "PBk7",
+            "PBk9"
+          ],
+          "opacity": "semi-opaque",
+          "sourceUrl": "https://www.winsornewton.com/products/galeria-acrylic-payne-s-gray",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Blick",
+      "line": "Artists' Acrylic",
+      "medium": "acrylic",
+      "tier": "professional",
+      "source": "https://www.dickblick.com/products/blick-artists-acrylic/",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-titanium-white-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-mars-black-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-ivory-black-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Light",
+          "pigments": [
+            "PY35:1"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-cadmium-yellow-light-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium",
+          "pigments": [
+            "PY35:1"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-cadmium-yellow-medium-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Light Hansa",
+          "pigments": [
+            "PY3"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-yellow-light-hansa-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Medium Azo",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-yellow-medium-azo-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PY43"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-yellow-ochre-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange",
+          "pigments": [
+            "PO20:1"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-cadmium-orange-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Light",
+          "pigments": [
+            "PR108:1"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-cadmium-red-light-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Medium",
+          "pigments": [
+            "PR108:1"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-cadmium-red-medium-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Naphthol Crimson",
+          "pigments": [
+            "PR170"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-naphthol-crimson-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Alizarin Crimson Hue",
+          "pigments": [
+            "PR170",
+            "PR122"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-alizarin-crimson-hue-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PV19"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-quinacridone-magenta-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-dioxazine-purple-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          },
+          "note": "Retailer lists 'PR23 RS'; almost certainly PV23."
+        },
+        {
+          "name": "Ultramarine Blue",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-ultramarine-blue-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Blue (Green Shade)",
+          "pigments": [
+            "PB15:3"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-phthalo-blue-green-shade-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue",
+          "pigments": [
+            "PB28"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-cobalt-blue-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue",
+          "pigments": [
+            "PB36"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-cerulean-blue-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Green (Blue Shade)",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-phthalocyanine-green-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green Hue",
+          "pigments": [
+            "PBk11",
+            "PY83",
+            "PG36"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-sap-green-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-burnt-sienna-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-burnt-umber-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBr7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-raw-umber-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PB29",
+            "PBk9"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-acrylic-paynes-gray-2-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Blick",
+      "line": "Studio Acrylics",
+      "medium": "acrylic",
+      "tier": "student/budget",
+      "source": "https://www.dickblick.com/products/blick-studio-acrylics/",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-pkg-of-2-titanium-white-4-oz-tubes/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-mars-black-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-ivory-black-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Light Hue",
+          "pigments": [
+            "PW6",
+            "PY3"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-cadmium-yellow-light-hue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium Hue",
+          "pigments": [
+            "PY83",
+            "PY74",
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-cadmium-yellow-medium-hue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Primary Yellow",
+          "pigments": [
+            "PY74"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-primary-yellow-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Oxide",
+          "pigments": [
+            "PY42"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-yellow-oxide-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Orange Hue",
+          "pigments": [
+            "PO73"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-cadmium-orange-hue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Light Hue",
+          "pigments": [
+            "PY74",
+            "PO13",
+            "PR254"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-cadmium-red-light-hue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Medium Hue",
+          "pigments": [
+            "PY12",
+            "PR254"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-cadmium-red-medium-hue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Primary Red",
+          "pigments": [
+            "PR170",
+            "PV19"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-primary-red-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Alizarin Crimson",
+          "pigments": [
+            "PR202",
+            "PR206"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-alizarin-crimson-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-quinacridone-magenta-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Dioxazine Purple",
+          "pigments": [
+            "PV23"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-dioxazine-purple-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ultramarine Blue",
+          "pigments": [
+            "PB29"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-ultramarine-blue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Blue",
+          "pigments": [
+            "PB15"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-phthalo-blue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Primary Blue",
+          "pigments": [
+            "PB15"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-primary-blue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue Hue",
+          "pigments": [
+            "PB15",
+            "PW6",
+            "PB29"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-cobalt-blue-hue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue Hue",
+          "pigments": [
+            "PB15",
+            "PG7",
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-cerulean-blue-hue-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Green",
+          "pigments": [
+            "PG7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-phthalo-green-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green",
+          "pigments": [
+            "PG8",
+            "PG7"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-sap-green-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBk11",
+            "PY83",
+            "PR101"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-burnt-sienna-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBk11",
+            "PY83",
+            "PY42",
+            "PR101"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-burnt-umber-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBk11",
+            "PY83",
+            "PY42",
+            "PR101"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-raw-umber-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PBk7",
+            "PB29"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-studio-acrylics-paynes-gray-4-oz-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    },
+    {
+      "brand": "Blick",
+      "line": "Artists' Oil Color",
+      "medium": "oil",
+      "tier": "professional",
+      "source": "https://www.dickblick.com/products/blick-artists-oil-color/",
+      "paints": [
+        {
+          "name": "Titanium White",
+          "pigments": [
+            "PW6",
+            "PW4"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-titanium-white-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Ivory Black",
+          "pigments": [
+            "PBk9"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-ivory-black-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Mars Black",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-mars-black-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Lemon",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-cadmium-yellow-lemon-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Light",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-cadmium-yellow-light-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Yellow Medium",
+          "pigments": [
+            "PY35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-cadmium-yellow-medium-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Yellow Ochre",
+          "pigments": [
+            "PBk11",
+            "PY42",
+            "PR101"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-yellow-ochre-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Light",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-cadmium-red-light-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cadmium Red Medium",
+          "pigments": [
+            "PR108"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-cadmium-red-medium-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Alizarin Crimson",
+          "pigments": [
+            "PR202",
+            "PR209",
+            "PR179"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-permanent-alizarin-crimson-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Quinacridone Magenta",
+          "pigments": [
+            "PR122"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-quinacridone-magenta-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Permanent Rose",
+          "pigments": [
+            "PR208",
+            "PR209",
+            "PW6"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-permanent-rose-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Phthalo Blue",
+          "pigments": [
+            "PB15:1"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-phthalo-blue-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cobalt Blue",
+          "pigments": [
+            "PB72"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-cobalt-blue-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Cerulean Blue",
+          "pigments": [
+            "PB35"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-cerulean-blue-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Viridian",
+          "pigments": [
+            "PG18"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-viridian-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Sap Green",
+          "pigments": [
+            "PG36"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-sap-green-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Sienna",
+          "pigments": [
+            "PBk11",
+            "PR101"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-burnt-sienna-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        },
+        {
+          "name": "Burnt Umber",
+          "pigments": [
+            "PBk11",
+            "PW6",
+            "PR101"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-burnt-umber-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          },
+          "note": "PW6 in a burnt umber is unusual - verify on tube"
+        },
+        {
+          "name": "Raw Umber",
+          "pigments": [
+            "PBk11"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-raw-umber-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          },
+          "note": "Only PBk11 listed - likely incomplete; verify on tube"
+        },
+        {
+          "name": "Payne's Gray",
+          "pigments": [
+            "PBk7",
+            "PB60",
+            "PV19"
+          ],
+          "opacity": null,
+          "sourceUrl": "https://www.dickblick.com/items/blick-artists-oil-color-paynes-gray-40-ml-tube/",
+          "color": {
+            "status": "needs_swatch"
+          }
+        }
+      ]
+    }
+  ]
+}
