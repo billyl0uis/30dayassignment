@@ -13,3 +13,4 @@ Projects made for the 30-day assignment, one folder each.
 | [Carcass](carcass/) | A specimen prep simulator that starts with a whole raccoon: skin, gut, deflesh, bag the small bones and macerate, with every mistake carried to a museum grade. |
 | [Vitrigraph Lab](vitrigraph-lab/) | A vitrigraph kiln learning game: load a pot with colored glass, heat it, pull cane by hand, then chop it to see the murrini cross-sections. A bonus module for Before The Heat. |
 | [Gaffer Glass](gaffer-glass/) | A furnace glassblowing game: rent hot shop time, gather, blow, jack and transfer pieces on the pipe, anneal them overnight and sell to an order board while saving for your own furnace. Vite + TypeScript + canvas; run with `npm run dev`. |
+| [Hot Shop Atlas](hot-shop-atlas/) | A free map and directory of US glass studios (hot shops, flameworking, kiln, neon) with filters, share links and "Near me". Data lives in one `studios.json`. |

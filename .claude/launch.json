@@ -25,14 +25,14 @@
       "port": 5197
     },
     {
-      "name": "home-preview",
+      "name": "hot-shop-atlas",
       "runtimeExecutable": "python3",
       "runtimeArgs": [
         "-m",
         "http.server",
         "5198",
         "--directory",
-        "/private/tmp/claude-501/-Users-baileywheeler-Desktop-Githubsite-30dayassignment/2cd3cdd4-22cb-4e1f-be34-e3c5ae5b91fa/scratchpad/home-wt"
+        "hot-shop-atlas"
       ],
       "port": 5198
     }

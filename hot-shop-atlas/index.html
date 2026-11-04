@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hot Shop Atlas</title>
+<meta name="description" content="A free map and directory of glassblowing studios in the United States.">
+<meta name="theme-color" content="#151210">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="panel" id="panel" data-sheet="half" aria-label="Studio directory">
+    <button class="sheet-handle" id="sheetHandle" type="button" aria-label="Resize directory"><span></span></button>
+
+    <header class="brand">
+      <h1>Hot Shop Atlas</h1>
+      <p class="tag">Glass studios across the United States</p>
+    </header>
+
+    <!-- List view -->
+    <section class="view" id="listView">
+      <div class="search-row">
+        <input id="q" type="search" placeholder="Search name, city, state…" autocomplete="off" aria-label="Search studios">
+        <button id="nearMe" class="btn" type="button" title="Sort by distance from you">Near me</button>
+      </div>
+
+      <details class="filters" id="filters">
+        <summary>Filters <span class="filter-count" id="filterCount"></span></summary>
+        <div class="filter-body">
+          <div class="field">
+            <span class="label">Type</span>
+            <div class="chips" id="typeChips"></div>
+          </div>
+          <div class="field two">
+            <label>State
+              <select id="stateSel"><option value="">All states</option></select>
+            </label>
+            <label>Access
+              <select id="accessSel"><option value="">Any access</option></select>
+            </label>
+          </div>
+          <div class="field">
+            <span class="label">Offers (must have all)</span>
+            <div class="chips" id="offerChips"></div>
+          </div>
+          <button class="link-btn" id="clearFilters" type="button">Clear filters</button>
+        </div>
+      </details>
+
+      <div class="list-head">
+        <span id="count" aria-live="polite"></span>
+        <label class="sort">Sort
+          <select id="sortSel">
+            <option value="name">Name</option>
+            <option value="state">State</option>
+            <option value="distance" disabled>Distance</option>
+          </select>
+        </label>
+      </div>
+      <p class="status" id="status" hidden></p>
+      <ul class="list" id="list"></ul>
+    </section>
+
+    <!-- Detail view -->
+    <section class="view" id="detailView" hidden>
+      <button class="back" id="back" type="button">← All studios</button>
+      <article class="detail" id="detail"></article>
+    </section>
+  </aside>
+
+  <main class="map-wrap">
+    <div id="map" aria-label="Map of glass studios"></div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
