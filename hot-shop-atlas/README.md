@@ -84,11 +84,14 @@ For private studios, use the city's center as `lat`/`lng`. The rounding is only 
 
 ## Reviewing candidates (`candidates.json`)
 
-`candidates.json` started with 73 US studios (39 left after 34 were published) from the [Glass Art Society's public access studio list](https://www.glassart.org/resources/in-the-community/public-access-studios/), read on 2026-11-04. **The site doesn't load this file.** None of these studios appear on the map until you move them over.
+`candidates.json` holds studios from two Glass Art Society lists. **The site doesn't load this file.** None of these studios appear on the map until you move them over.
 
-What GAS gave us is name, state, whether the studio rents, whether it has public classes, and a website. Everything else is blank on purpose: `type`, `city`, `lat`/`lng`, and `last_verified`. Each entry also has two extra fields:
+- The [public access studios list](https://www.glassart.org/resources/in-the-community/public-access-studios/), read on 2026-11-04: 73 US studios, 34 of them published so far.
+- The ["Everything Else" schools + programs list](https://www.glassart.org/resources/students/schools-programs/everything-else/), read on 2026-11-05: 142 US entries. 42 were already on the map or in the queue, so 100 were added, and 11 of those are published so far. This list is broader: it includes colleges, suppliers, and kiln, mosaic and stained-glass programs. It gives only name, state, and website.
 
-- `review_notes`: problems already spotted in the GAS data. 10 entries have one, for example the Corning entry that links to UrbanGlass's website.
+What GAS gave us is name, state, a website, and (public access list only) whether the studio rents and has public classes. Everything else is blank on purpose: `type`, `city`, `lat`/`lng`, and `last_verified`. Each entry also has two extra fields:
+
+- `review_notes`: problems already spotted in the GAS data, for example the Corning entry that links to UrbanGlass's website, or a supplier listed as a program.
 - `gas_original`: exactly what the GAS row said, so you can always see what came from them.
 
 To publish a studio:
@@ -115,7 +118,7 @@ Netlify also works: drag the `hot-shop-atlas` folder onto <https://app.netlify.c
 ## What it uses
 
 - [Leaflet](https://leafletjs.com) and [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster), loaded from unpkg
-- [OpenStreetMap](https://www.openstreetmap.org/copyright) tiles, free with no key. Keep the attribution visible. The dark look is a CSS filter (`.leaflet-tile-pane` in `style.css`). Delete that line for the normal light map.
+- [OpenStreetMap](https://www.openstreetmap.org/copyright) tiles, free with no key. Keep the attribution visible. A light CSS filter warms the tiles a little (`.leaflet-tile-pane` in `style.css`). Delete that line for the plain OSM look.
 - "Near me" asks for your location only when you click it. The location stays in the page and is never saved or sent anywhere.
 
 ## Files
@@ -126,7 +129,7 @@ Netlify also works: drag the `hot-shop-atlas` folder onto <https://app.netlify.c
 | `style.css` | Look, plus the phone bottom-sheet layout |
 | `app.js` | Loading and checking data, map, filters, list, detail card, share links, Near me |
 | `studios.json` | The data. The only file you need to edit. |
-| `candidates.json` | Unverified studios from the GAS list, waiting for review. The site doesn't load it. Each entry has a `first_pass` block: a status (`ready`, `needs_you` or `likely_closed`), plus the city, address, coordinates, suggested type, and what the studio's own site said. |
+| `candidates.json` | Unverified studios from the GAS list, waiting for review. The site doesn't load it. Each entry has a `first_pass` block: a status (`ready`, `needs_you`, `not_checked` or `likely_closed`), plus the city, address, coordinates, suggested type, and what the studio's own site said. |
 | `REVIEW.md` | A readable table of every candidate's status, with the reason for each "needs you". |
 
 ## Next (not built yet)

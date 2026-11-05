@@ -1,19 +1,19 @@
 :root {
-  --bg: #151210;
-  --panel: #1c1815;
-  --panel-2: #241f1b;
-  --line: #352e28;
-  --ink: #f2e9de;
-  --muted: #a39686;
-  --glow: #ff8a2a;
-  --glow-soft: rgba(255, 138, 42, 0.16);
-  --focus: #ffb366;
+  --bg: #faf6f0;
+  --panel: #fffdf9;
+  --panel-2: #f4ede4;
+  --line: #e6dbcd;
+  --ink: #2b221b;
+  --muted: #7a6b5d;
+  --glow: #ec6f12;
+  --glow-soft: rgba(236, 111, 18, 0.12);
+  --focus: #c25208;
 
-  --t-hot: #ff8a2a;
-  --t-flame: #5fb3ff;
-  --t-kiln: #c792ea;
-  --t-neon: #ff5fa8;
-  --t-mixed: #e6d3a8;
+  --t-hot: #f47a1c;
+  --t-flame: #3b91e3;
+  --t-kiln: #a866d8;
+  --t-neon: #e8488a;
+  --t-mixed: #c9a663;
 
   --radius: 10px;
   --sidebar: 400px;
@@ -38,7 +38,7 @@ a { color: var(--focus); }
   height: 100dvh;
 }
 .map-wrap { position: relative; min-width: 0; }
-#map { position: absolute; inset: 0; background: #0e0c0b; }
+#map { position: absolute; inset: 0; background: #f2efe9; }
 
 /* ---------- Panel ---------- */
 .panel {
@@ -47,7 +47,7 @@ a { color: var(--focus); }
   min-height: 0;
   background: var(--panel);
   border-right: 1px solid var(--line);
-  box-shadow: 0 0 60px rgba(255, 120, 30, 0.05);
+  box-shadow: 4px 0 24px rgba(80, 50, 20, 0.08);
   z-index: 500;
 }
 .sheet-handle { display: none; }
@@ -59,7 +59,6 @@ a { color: var(--focus); }
   letter-spacing: 0.01em;
   font-weight: 650;
   color: var(--ink);
-  text-shadow: 0 0 18px rgba(255, 138, 42, 0.35);
 }
 .brand h1::before {
   content: "";
@@ -67,8 +66,8 @@ a { color: var(--focus); }
   width: 10px; height: 10px;
   margin-right: 9px;
   border-radius: 50%;
-  background: radial-gradient(circle, #ffd29a, var(--glow) 55%, #b6420a);
-  box-shadow: 0 0 10px var(--glow);
+  background: radial-gradient(circle, #ffe0b0, var(--glow) 55%, #b6420a);
+  box-shadow: 0 0 8px rgba(236, 111, 18, 0.6);
   vertical-align: 2px;
 }
 .tag { margin: 2px 0 0 19px; color: var(--muted); font-size: 13px; }
@@ -84,7 +83,7 @@ a { color: var(--focus); }
   border-radius: var(--radius);
   padding: 9px 12px;
 }
-#q::placeholder { color: #7d7266; }
+#q::placeholder { color: #9a8b7c; }
 
 .btn {
   background: var(--panel-2);
@@ -94,7 +93,7 @@ a { color: var(--focus); }
   cursor: pointer;
   white-space: nowrap;
 }
-.btn:hover { border-color: #57493d; }
+.btn:hover { border-color: #cbb9a4; }
 .btn.on { border-color: var(--glow); background: var(--glow-soft); }
 
 /* Filters */
@@ -210,17 +209,17 @@ select {
   width: 26px; height: 26px; border-radius: 50%;
   display: grid; place-items: center;
   font: 700 12px/1 ui-sans-serif, system-ui, sans-serif;
-  color: #1a1410;
+  color: #fff;
   background: var(--c);
-  border: 2px solid #1a1410;
-  box-shadow: 0 0 0 1px var(--c), 0 0 12px var(--c);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(60, 35, 15, 0.35), 0 0 10px color-mix(in srgb, var(--c) 45%, transparent);
   transition: transform 0.12s;
 }
 .pin.approx {
-  background: rgba(20, 16, 13, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   color: var(--c);
   border: 2px dashed var(--c);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--c) 50%, transparent);
+  box-shadow: 0 1px 4px rgba(60, 35, 15, 0.25);
 }
 .pin.active { transform: scale(1.35); z-index: 1000; }
 .you {
@@ -234,20 +233,21 @@ select {
   border-radius: 50%;
   display: grid; place-items: center;
   font: 700 13px/1 ui-sans-serif, system-ui, sans-serif;
-  color: #1a1410;
-  background: radial-gradient(circle, #ffd29a, var(--glow) 70%);
+  color: #fff;
+  background: radial-gradient(circle, #ffb366, var(--glow) 70%);
 }
 .marker-cluster {
   border-radius: 50%;
-  background: rgba(255, 138, 42, 0.25);
-  box-shadow: 0 0 18px rgba(255, 138, 42, 0.45);
+  background: rgba(236, 111, 18, 0.22);
+  box-shadow: 0 0 14px rgba(236, 111, 18, 0.35);
 }
 
-.leaflet-container { font: inherit; background: #0e0c0b; }
-/* Turns the light OSM tiles into a dark, warm map. Only the tiles are
-   filtered — markers sit in a different pane and keep their real colors. */
-.leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) sepia(0.25) saturate(0.6); }
-.leaflet-control-attribution { background: rgba(21, 18, 16, 0.75) !important; color: var(--muted); }
+.leaflet-container { font: inherit; background: #f2efe9; }
+/* A light touch of warmth on the standard OSM tiles. Only the tiles are
+   filtered — markers sit in a different pane and keep their real colors.
+   Delete this line for the plain OSM look. */
+.leaflet-tile-pane { filter: sepia(0.12) saturate(0.85); }
+.leaflet-control-attribution { background: rgba(255, 253, 249, 0.85) !important; color: var(--muted); }
 .leaflet-control-attribution a { color: var(--muted); }
 .leaflet-bar a { background: var(--panel); color: var(--ink); border-color: var(--line); }
 .leaflet-bar a:hover { background: var(--panel-2); }
@@ -263,7 +263,7 @@ select {
     border-right: 0;
     border-top: 1px solid var(--line);
     border-radius: 16px 16px 0 0;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -8px 30px rgba(80, 50, 20, 0.15);
     transition: height 0.25s ease;
     padding-bottom: env(safe-area-inset-bottom);
     overflow: hidden;
@@ -281,7 +281,7 @@ select {
   }
   .sheet-handle span {
     display: block; margin: 0 auto;
-    width: 42px; height: 5px; border-radius: 3px; background: #4d4239;
+    width: 42px; height: 5px; border-radius: 3px; background: #d8cab9;
   }
   .brand { padding: 4px 18px 6px; }
   .brand h1 { font-size: 17px; }
