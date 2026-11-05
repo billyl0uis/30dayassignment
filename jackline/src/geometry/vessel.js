@@ -64,18 +64,22 @@ function caps(poly) {
 
 // A pulled lip: near the rim and around +x, push the wall out and up.
 // Inner and outer walls move together, so the wall keeps its thickness.
-export function spoutDeform(sec) {
+// Called with no options it is Jackline's pitcher spout, sized to the piece;
+// `at` (angle round the axis), `amount` (cm out), `depth` (cm down from the
+// rim) and `width` (half-angle, radians) place and size one by hand.
+export function spoutDeform(sec, opts = {}) {
   const top = sec.outer[sec.outer.length - 1][1]
-  const depth = THREE.MathUtils.clamp(sec.height * 0.2, 1.5, 4)
-  const amount = THREE.MathUtils.clamp(sec.outer[sec.outer.length - 1][0] * 0.32, 0.8, 2.4)
-  const width = 0.6
+  const depth = opts.depth ?? THREE.MathUtils.clamp(sec.height * 0.2, 1.5, 4)
+  const amount = opts.amount ?? THREE.MathUtils.clamp(sec.outer[sec.outer.length - 1][0] * 0.32, 0.8, 2.4)
+  const width = opts.width ?? 0.6
+  const at = opts.at ?? SPOUT_AT
   return (geo) => {
     const p = geo.attributes.position
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i), z = p.getZ(i)
       const t = (y - (top - depth)) / depth
       if (t <= 0) continue
-      let d = Math.atan2(x, z) - SPOUT_AT
+      let d = Math.atan2(x, z) - at
       d = Math.atan2(Math.sin(d), Math.cos(d))
       if (Math.abs(d) >= width) continue
       const r = Math.hypot(x, z)
