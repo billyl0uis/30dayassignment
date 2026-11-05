@@ -109,6 +109,25 @@ export const useStore = create((set, get) => {
       set({ selectedId: p.id })
     },
     settleAll: () => get().change(settleAll(get().scene)),
+    // Contact types, keyed by contactKey(). Pad is the default, so it isn't stored.
+    setContactType: (key, type) => {
+      const contacts = { ...get().scene.contacts }
+      if (type === 'pad') delete contacts[key]
+      else contacts[key] = type
+      get().change({ ...get().scene, contacts })
+    },
+    setContactTypes: (keys, type) => {
+      const contacts = { ...get().scene.contacts }
+      for (const k of keys) type === 'pad' ? delete contacts[k] : (contacts[k] = type)
+      get().change({ ...get().scene, contacts })
+    },
+    // Briefly light up parts (clicking an issue).
+    flash: { ids: [], at: 0 },
+    flashParts: (ids) => {
+      const at = Date.now()
+      set({ flash: { ids, at } })
+      setTimeout(() => get().flash.at === at && set({ flash: { ids: [], at: 0 } }), 1600)
+    },
     setMode: (mode) => get().change({ ...get().scene, mode }),
     setStage: (patch, opts = {}) => {
       let scene = { ...get().scene, stage: { ...get().scene.stage, ...patch } }

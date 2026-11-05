@@ -3,6 +3,9 @@ import { sceneTotals } from '../core/scene.js'
 import { fmtMass, fmtTotalMass } from '../core/units.js'
 import { Segmented } from './fields.jsx'
 import { footprint } from '../core/placement.js'
+import { useChecks } from '../useChecks.js'
+
+const TYPE_SHORT = { bare: 'bare', pad: 'pad', adhesive: 'glue' }
 
 const TYPE_LABEL = { blown: 'Blown forms', solid: 'Solid shapes', cane: 'Cane rods' }
 const HANG_LABEL = { loop: 'Glass loop', drilled: 'Drilled + wire', cap: 'Glued cap' }
@@ -37,6 +40,12 @@ function dimsText(p) {
 export default function Readouts() {
   const { scene, setSettings, select, selectedId } = useStore()
   const t = sceneTotals(scene)
+  const { contacts } = useChecks()
+  const nameOf = (id) => (id === 'base' ? 'base' : id === 'wall' ? 'wall' : scene.parts.find((p) => p.id === id)?.name ?? '?')
+  const contactText = (p) => {
+    const mine = contacts.filter((c) => c.a === p.id)
+    return mine.length ? mine.map((c) => `${nameOf(c.b)}: ${TYPE_SHORT[c.type]}`).join(', ') : null
+  }
   const mu = scene.settings.massUnit
   return (
     <>
@@ -77,7 +86,7 @@ export default function Readouts() {
                 <td>{p.name}</td>
                 <td>{dimsText(p)}</td>
                 <td>{fmtMass(m.weightG, mu)}</td>
-                <td className="muted">—</td>
+                <td className={contactText(p)?.includes('bare') ? 'bad-text' : ''}>{contactText(p) ?? <span className="muted">—</span>}</td>
                 <td>{p.hang ? HANG_LABEL[p.hang.kind] : <span className="muted">none</span>}</td>
               </tr>
             ))}

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { Canvas, useThree } from '@react-three/fiber'
-import { ContactShadows, Environment, Grid, Html, Lightformer, Line, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { ContactShadows, Environment, Grid, Lightformer, Line, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei'
 import { useStore } from '../store.js'
+import { checksFor } from '../useChecks.js'
 import { partMesh } from '../core/mesh.js'
 import { partMetrics } from '../core/parts.js'
 import { bounds, footprint, hangPointLocal, leanPose, posedPositions, restY, rotationMatrix, supportMap, undersideMap, wallZ, hungPose } from '../core/placement.js'
@@ -14,18 +15,31 @@ const S = 0.1
 
 export default function Viewport() {
   const view = useStore((s) => s.view)
+  const labels = useRef({})
   return (
     <div className="viewport">
+      {/* Size labels are plain DOM over the canvas, placed each frame by
+          <LabelProjector>. (drei's <Html> rebuilds a React root on every
+          camera switch, which throws under React 19.) */}
+      <div className="labels" aria-hidden>
+        <span ref={(el) => (labels.current.w = el)} className="dim-tag" style={{ display: "none" }} />
+        <span ref={(el) => (labels.current.d = el)} className="dim-tag" style={{ display: "none" }} />
+        <span ref={(el) => (labels.current.top = el)} className="dim-tag soft" style={{ display: "none" }}>Footprint · top view</span>
+      </div>
       <Canvas dpr={[1, 2]} gl={{ antialias: true }} onPointerMissed={() => useStore.getState().select(null)}>
         <PerspectiveCamera makeDefault={view === '3d'} position={[45, 70, 170]} fov={30} near={1} far={4000} />
-        <OrthographicCamera makeDefault={view === 'top'} position={[0, 600, 0]} up={[0, 0, -1]} zoom={4} near={1} far={4000} onUpdate={(c) => c.lookAt(0, 0, 0)} />
-        <OrbitControls key={view} makeDefault target={[0, view === "top" ? 0 : 12, 0]} enableRotate={view === '3d'} maxPolarAngle={Math.PI * 0.49} minDistance={30} maxDistance={900} enableDamping />
+        <OrthographicCamera makeDefault={view === 'top'} position={[0, 600, 0.001]} zoom={4} near={1} far={4000} onUpdate={(c) => c.lookAt(0, 0, 0)} />
+        <OrbitControls key={view} makeDefault target={[0, view === "top" ? 0 : 12, 0]} enableRotate={view === '3d'} maxPolarAngle={view === "top" ? 0 : Math.PI * 0.49} minDistance={30} maxDistance={900} enableDamping />
         <Backdrop />
         <Studio />
+        {/* Plain room light so the base and wall read; step 4 adds the coloured light. */}
+        <hemisphereLight args={['#ffffff', '#8a8e96', 1.1]} />
+        <directionalLight position={[-60, 140, 80]} intensity={1.2} />
         <group scale={S}>
           <StageSet />
           <Parts />
-          <Footprint />
+          <ContactMarkers />
+          <Footprint labels={labels} />
         </group>
         <ContactShadows position={[0, 0.02, 0]} opacity={0.5} scale={160} blur={2.4} far={60} resolution={512} />
         <Grid position={[0, -1.25, 0]} infiniteGrid cellSize={5} sectionSize={10} cellColor="#81858c" sectionColor="#8f939a" cellThickness={0.6} sectionThickness={1} fadeDistance={400} fadeStrength={1.6} />
@@ -106,13 +120,36 @@ function StageSet() {
 }
 
 function Parts() {
-  const parts = useStore((s) => s.scene.parts)
   const scene = useStore((s) => s.scene)
   const selectedId = useStore((s) => s.selectedId)
-  return parts.map((p) => <PartMesh key={p.id} part={p} scene={scene} selected={p.id === selectedId} />)
+  const flash = useStore((s) => s.flash)
+  const { issues } = checksFor(scene)
+  const bad = new Set(issues.filter((i) => i.level === 'bad').flatMap((i) => i.partIds))
+  return scene.parts.map((p) => <PartMesh key={p.id} part={p} scene={scene} selected={p.id === selectedId} bad={bad.has(p.id)} flashing={flash.ids.includes(p.id)} />)
 }
 
-function PartMesh({ part, scene, selected }) {
+// A small disc where parts touch, coloured by contact type, drawn on top so
+// it shows through the glass.
+const CONTACT_COLOR = { bare: '#e5484d', pad: '#4cc38a', adhesive: '#4aa3ff' }
+function ContactMarkers() {
+  const scene = useStore((s) => s.scene)
+  const selectedId = useStore((s) => s.selectedId)
+  const { contacts } = checksFor(scene)
+  const up = useMemo(() => new THREE.Vector3(0, 0, 1), [])
+  return contacts.map((c) => {
+    const q = new THREE.Quaternion().setFromUnitVectors(up, new THREE.Vector3(...c.normal))
+    const mine = c.a === selectedId || c.b === selectedId
+    const r = Math.min(14, Math.max(4, Math.sqrt(c.areaMm2 / Math.PI))) * (mine ? 1.25 : 1)
+    return (
+      <mesh key={c.key} position={c.center} quaternion={q} renderOrder={3}>
+        <circleGeometry args={[r, 24]} />
+        <meshBasicMaterial color={CONTACT_COLOR[c.type]} transparent opacity={mine ? 0.95 : 0.6} depthTest={false} side={THREE.DoubleSide} />
+      </mesh>
+    )
+  })
+}
+
+function PartMesh({ part, scene, selected, bad, flashing }) {
   const shapeKey = `${part.type}|${part.scale}|${JSON.stringify(part.dims)}`
   const geometry = useMemo(() => {
     const m = partMesh(part, 'render')
@@ -147,7 +184,7 @@ function PartMesh({ part, scene, selected }) {
             startDrag(part, e)
           }}
         >
-          <Glass color={part.color} thicknessMm={thick} selected={selected} />
+          <Glass color={part.color} thicknessMm={thick} selected={selected} bad={bad} flashing={flashing} />
         </mesh>
       </group>
       {p.mount === 'hung' && (
@@ -167,7 +204,8 @@ function PartMesh({ part, scene, selected }) {
 // Clear glass gets its colour from attenuation, as in Jackline: thick parts
 // read deeper than thin walls. Tint strength shortens the attenuation
 // distance. (Step 4 replaces this with the coloured-light render.)
-function Glass({ color, thicknessMm, selected }) {
+function Glass({ color, thicknessMm, selected, bad, flashing }) {
+  const glow = flashing ? ['#ff8a3d', 0.45] : bad ? ['#e5484d', 0.22] : selected ? ['#ff8a3d', 0.08] : ['#000000', 0]
   const surface = useMemo(() => new THREE.Color('#ffffff').lerp(new THREE.Color(color.hex), 0.28), [color.hex])
   const tinted = color.hex !== '#ffffff'
   return (
@@ -181,8 +219,8 @@ function Glass({ color, thicknessMm, selected }) {
       attenuationDistance={tinted ? 3 + (1 - color.opacity) * 40 : Infinity}
       specularIntensity={1}
       envMapIntensity={1.4}
-      emissive={selected ? '#ff8a3d' : '#000000'}
-      emissiveIntensity={selected ? 0.08 : 0}
+      emissive={glow[0]}
+      emissiveIntensity={glow[1]}
     />
   )
 }
@@ -199,29 +237,44 @@ function SelectRing({ part }) {
 }
 
 // The group's bounding rectangle on the base, with its size.
-function Footprint() {
+function Footprint({ labels }) {
   const scene = useStore((s) => s.scene)
   const view = useStore((s) => s.view)
-  const f = footprint(scene)
-  if (!f) return null
+  const f = footprint(scene) ?? { minX: 0, maxX: 0, minZ: 0, maxZ: 0, w: 0, d: 0 }
+  const shown = scene.parts.length > 0
   const y = 0.8
   const pts = [[f.minX, y, f.minZ], [f.maxX, y, f.minZ], [f.maxX, y, f.maxZ], [f.minX, y, f.maxZ], [f.minX, y, f.minZ]]
+  // Anchor points (mm) and text for the DOM labels.
+  const anchors = useRef([])
+  anchors.current = [
+    ['w', [(f.minX + f.maxX) / 2, y, f.maxZ + 18], `W ${Math.round(f.w)} mm`, shown, true],
+    ['d', [f.maxX + 18, y, (f.minZ + f.maxZ) / 2], `D ${Math.round(f.d)} mm`, shown, true],
+    ['top', [f.minX, y, f.minZ - 16], null, shown && view === 'top', false],
+  ]
   return (
     <>
-      <Line points={pts} color="#ff8a3d" lineWidth={1.4} dashed dashSize={12} gapSize={8} />
-      <Html position={[(f.minX + f.maxX) / 2, y, f.maxZ + 18]} center className="dim-tag" zIndexRange={[10, 0]}>
-        W {Math.round(f.w)} mm
-      </Html>
-      <Html position={[f.maxX + 18, y, (f.minZ + f.maxZ) / 2]} center className="dim-tag" zIndexRange={[10, 0]}>
-        D {Math.round(f.d)} mm
-      </Html>
-      {view === 'top' && (
-        <Html position={[f.minX, y, f.minZ - 16]} className="dim-tag soft" zIndexRange={[10, 0]}>
-          Footprint · top view
-        </Html>
-      )}
+      <Line points={pts} color="#ff8a3d" lineWidth={1.4} dashed dashSize={12} gapSize={8} visible={shown} />
+      <LabelProjector anchors={anchors} labels={labels} />
     </>
   )
+}
+
+function LabelProjector({ anchors, labels }) {
+  const v = useMemo(() => new THREE.Vector3(), [])
+  useFrame(({ camera, size }) => {
+    for (const [k, p, text, on, centred] of anchors.current) {
+      const el = labels.current[k]
+      if (!el) continue
+      v.set(p[0] * S, p[1] * S, p[2] * S).project(camera)
+      const vis = on && v.z < 1
+      el.style.display = vis ? '' : 'none'
+      if (!vis) continue
+      if (text != null && el.textContent !== text) el.textContent = text
+      const x = (v.x * 0.5 + 0.5) * size.width, yy = (-v.y * 0.5 + 0.5) * size.height
+      el.style.transform = `translate(${x}px, ${yy}px)${centred ? ' translate(-50%, -50%)' : ''}`
+    }
+  })
+  return null
 }
 
 // ------------------------------------------------------------------ drag

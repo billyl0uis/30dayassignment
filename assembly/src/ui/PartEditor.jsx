@@ -180,7 +180,7 @@ function HangFields({ part, set }) {
         onChange={(k) => setHang(k === 'none' ? null : { kind: k })}
       />
       {kind === 'loop' && (
-        <NumField label="Loop cross-section diameter" value={h.loopDiaMm} step={0.5} onChange={(v) => setHang({ ...h, loopDiaMm: v }, { live: true })} hint="Hot-pulled loop. Checked against a rule of thumb, not an engineering rating (step 3)." />
+        <NumField label="Loop cross-section diameter" value={h.loopDiaMm} step={0.5} onChange={(v) => setHang({ ...h, loopDiaMm: v }, { live: true })} hint="Hot-pulled loop. Checked against a rule of thumb — not an engineering rating. Set the rule in settings." />
       )}
       {kind === 'drilled' && (
         <div className="row2">

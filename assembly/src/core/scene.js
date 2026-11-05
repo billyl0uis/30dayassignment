@@ -14,7 +14,7 @@ export const MODES = ['stacked', 'leaning', 'hung', 'field']
 export const defaultStage = () => ({ baseW: 900, baseD: 600, armatureY: 1400 })
 
 export function emptyScene() {
-  return { app: 'assembly', version: SCENE_VERSION, name: 'Untitled', mode: 'field', settings: defaultSettings(), stage: defaultStage(), parts: [], contacts: [], light: null }
+  return { app: 'assembly', version: SCENE_VERSION, name: 'Untitled', mode: 'field', settings: defaultSettings(), stage: defaultStage(), parts: [], contacts: {}, light: null }
 }
 
 export const sceneToJSON = (scene) => JSON.stringify(scene, null, 2)
@@ -44,7 +44,8 @@ export function sceneFromJSON(text) {
     settings: s,
     stage: { ...base.stage, ...raw.stage },
     parts,
-    contacts: Array.isArray(raw.contacts) ? raw.contacts : [],
+    // Contact types the user chose, keyed by contactKey(); anything else is a pad.
+    contacts: Object.fromEntries(Object.entries(raw.contacts && !Array.isArray(raw.contacts) ? raw.contacts : {}).filter(([, t]) => ['bare', 'pad', 'adhesive'].includes(t))),
     light: raw.light ?? null,
   }
 }

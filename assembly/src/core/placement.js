@@ -92,6 +92,8 @@ export function bounds(positions) {
 
 const KEY_OFF = 32768
 const key = (i, j) => (i + KEY_OFF) * 65536 + (j + KEY_OFF)
+export const cellKey = key
+export const cellIJ = (k) => [Math.floor(k / 65536) - KEY_OFF, (k % 65536) - KEY_OFF]
 
 // Record, per cell of the (u, v) plane, the max or min of w over a mesh.
 // Triangles are filled at cell centres and their edges are sampled too, so
@@ -135,7 +137,7 @@ export function depthMap(positions, indices, u, v, w, mode, cell = CELL_MM, into
   return into
 }
 
-const X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1]
+export const X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1]
 
 // Top surface of every resting part except `excludeId`, seen from above.
 export function supportMap(scene, excludeIds = []) {

@@ -22,6 +22,7 @@
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
+html { color-scheme: dark; background: #15171c; }
 body { font-family: var(--font); font-size: 14px; background: #15171c; }
 button, input, select { font: inherit; color: inherit; }
 
@@ -156,3 +157,27 @@ input.text, select { border: 1px solid var(--line); border-radius: 8px; backgrou
 .dim-tag { font: 500 11.5px var(--font); color: #ff8a3d; background: #15171cd9; padding: 2px 7px; border-radius: 999px; white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
 .dim-tag.soft { color: #ece8e0; background: #15171c99; }
 .warn-text { color: #f5b942; }
+.dim-tag.hidden { display: none; }
+.section-over { position: absolute; inset: 0 0 auto 0; bottom: 0; display: flex; flex-direction: column; background: var(--paper); z-index: 1; }
+.stage-note { position: relative; z-index: 1; background: var(--paper); }
+.labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.labels .dim-tag { position: absolute; left: 0; top: 0; }
+
+/* Checks ------------------------------------------------------------------ */
+.checks-panel { margin-top: 18px; }
+.checks-panel h2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tally { text-transform: none; letter-spacing: 0; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.tally.bad { color: #ff8f8f; background: #e5484d22; }
+.tally.warn { color: #f5c76a; background: #f5b94222; }
+.tally.good { color: #7ee0ad; background: #4cc38a22; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.issue { width: 100%; display: flex; gap: 9px; text-align: left; align-items: flex-start; padding: 7px 8px; background: transparent; border-color: transparent; }
+.issue.on { background: var(--panel-2); border-color: var(--line); }
+.issue i { flex: none; width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: var(--c); box-shadow: 0 0 7px var(--c); }
+.issue.bad { --c: #e5484d; }
+.issue.warn { --c: #f5b942; }
+.issue span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.issue b { font-weight: 600; font-size: 12.5px; line-height: 1.3; }
+.issue small { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
+.contact-row { display: flex; flex-direction: column; gap: 5px; }
+.bad-text { color: #ff8f8f; }

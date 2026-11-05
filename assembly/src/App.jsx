@@ -6,6 +6,7 @@ import PartEditor from './ui/PartEditor.jsx'
 import Readouts from './ui/Readouts.jsx'
 import SectionPreview from './ui/SectionPreview.jsx'
 import PlacementPanel, { StagePanel } from './ui/PlacementPanel.jsx'
+import ChecksPanel, { ContactsPanel } from './ui/ChecksPanel.jsx'
 import Viewport from './scene/Viewport.jsx'
 import { Segmented } from './ui/fields.jsx'
 
@@ -104,9 +105,12 @@ export default function App() {
       </header>
       <aside className="shelf">
         <PartList />
+        <ChecksPanel />
       </aside>
       <main className="stage">
-        {view === 'section' ? <SectionPreview /> : <Viewport />}
+        {/* The 3D view stays mounted (remounting the canvas is slow and drops its labels); the section view lies over it. */}
+        <Viewport />
+        {view === 'section' && <div className="section-over"><SectionPreview /></div>}
         <div className="view-switch">
           <Segmented small value={view} options={[['3d', '3D'], ['top', 'Top (footprint)'], ['section', 'Section']]} onChange={setView} />
         </div>
@@ -115,6 +119,7 @@ export default function App() {
       <aside className="side">
         <PartEditor />
         <PlacementPanel />
+        <ContactsPanel />
         <Readouts />
         <StagePanel />
       </aside>
