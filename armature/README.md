@@ -2,11 +2,12 @@
 
 Build a sculpture from a metal frame and glass parts, then see whether it would hold together. For glass and metal students.
 
-Estimates for planning — not an engineering sign-off.
+**[Play it online](https://billyl0uis.github.io/30dayassignment/armature/play/)** · Estimates for planning — not an engineering sign-off.
 
 ```bash
 npm install
 npm run dev     # http://localhost:5214
+npm run build   # writes the playable site to play/ for GitHub Pages
 npm test        # vitest: hand-calc weight/COM, presets, blow + capture, checks
 ```
 
