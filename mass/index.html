@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mass</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <main>
+    <canvas id="view"></canvas>
+    <p id="status" class="status"></p>
+    <div id="probe" class="probe" hidden></div>
+  </main>
+  <aside>
+    <header>
+      <h1>Mass</h1>
+      <p class="sub">Solid hot-glass sculpting</p>
+    </header>
+
+    <section>
+      <h2>View</h2>
+      <div class="seg">
+        <button data-view="hot" aria-pressed="true">Hot</button>
+        <button data-view="cold" aria-pressed="false">Cold</button>
+        <button data-view="thickness" aria-pressed="false">Thickness</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Readouts</h2>
+      <dl class="readouts">
+        <dt>Weight</dt><dd id="r-weight">—</dd>
+        <dt>Volume</dt><dd id="r-volume">—</dd>
+        <dt><label class="mark"><input type="checkbox" id="show-thickest" checked><i class="dot red"></i>Thickest point</label></dt><dd id="r-thickest">—</dd>
+        <dt>Anneal <span class="tag" title="Uncalibrated: k and the schedule are placeholders in src/config.js">estimate</span></dt><dd id="r-anneal">—</dd>
+        <dt><label class="mark"><input type="checkbox" id="show-com" checked><i class="dot green"></i>Centre of mass</label></dt><dd id="r-com">—</dd>
+        <dt>Tip angle</dt><dd id="r-tip">—</dd>
+      </dl>
+      <p class="hint" id="r-note"></p>
+    </section>
+
+    <section>
+      <h2>Glass colour</h2>
+      <div class="swatches">
+        <button data-tint="#f1f7f2" title="Clear (soda-lime)" style="--c:#f1f7f2"></button>
+        <button data-tint="#e8a64a" title="Amber" style="--c:#e8a64a"></button>
+        <button data-tint="#5a7fe0" title="Cobalt" style="--c:#5a7fe0"></button>
+        <button data-tint="#4fbf7a" title="Emerald" style="--c:#4fbf7a"></button>
+        <button data-tint="#e0507a" title="Gold ruby" style="--c:#e0507a"></button>
+        <input id="tint" type="color" title="Custom tint" value="#5a7fe0">
+      </div>
+      <label class="row">Absorption strength <output id="strength-out">0.35</output></label>
+      <input id="strength" type="range" min="0" max="2" step="0.05" value="0.35">
+      <p class="hint">Tint is the colour after 1 cm of glass. Light passing through is attenuated by e<sup>−σ·t</sup> per channel, where t is the measured thickness.</p>
+    </section>
+
+    <section>
+      <h2>Gather</h2>
+      <label class="row">Diameter <output id="diameter-out">8.0 cm</output></label>
+      <input id="diameter" type="range" min="4" max="13" step="0.5" value="8">
+      <button id="new-gather">New gather</button>
+
+      <label class="row">Layer thickness <output id="layer-out">0.8 cm</output></label>
+      <input id="layer" type="range" min="0.2" max="2" step="0.1" value="0.8">
+      <button id="add-gather">Add gather</button>
+    </section>
+
+    <section>
+      <h2>Calibration</h2>
+      <div class="pair">
+        <button id="test-sphere" title="8 cm sphere: any ray through the centre crosses 8 cm">Sphere</button>
+        <button id="test-wedge" title="16 × 7 cm wedge rising 0 → 5 cm">Wedge</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>History</h2>
+      <div class="pair">
+        <button id="undo" title="⌘Z">Undo</button>
+        <button id="redo" title="⇧⌘Z">Redo</button>
+      </div>
+    </section>
+
+    <section class="foot">
+      <label class="row">Density
+        <span><input id="density" type="number" min="1" max="6" step="0.05" value="2.5"> g/cm³</span>
+      </label>
+      <label class="row">Grid resolution
+        <select id="res">
+          <option value="64">64³</option>
+          <option value="96">96³</option>
+          <option value="128" selected>128³</option>
+          <option value="160">160³</option>
+        </select>
+      </label>
+    </section>
+  </aside>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

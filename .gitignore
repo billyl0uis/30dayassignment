@@ -1,0 +1,16 @@
+# dependencies, build output and caches (per-project .gitignores may repeat these)
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.DS_Store
+
+# Claude Code worktrees are separate git checkouts
+.claude/worktrees/
+
+# local secrets — never commit
+.env
+.env.*
+!.env.example

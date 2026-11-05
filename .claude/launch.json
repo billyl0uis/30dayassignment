@@ -37,6 +37,41 @@
       "port": 5198
     },
     {
+      "name": "paint-mixer-fix",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5199",
+        "--directory",
+        "/private/tmp/claude-501/-Users-baileywheeler-Desktop-Githubsite-30dayassignment/46a68d56-e915-411a-8624-3f6bbf6a564b/scratchpad/wt/paint-mixer"
+      ],
+      "port": 5199
+    },
+    {
+      "name": "mass",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5200",
+        "--directory",
+        "mass"
+      ],
+      "port": 5200
+    },
+    {
+      "name": "assembly",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "assembly",
+        "run",
+        "dev"
+      ],
+      "port": 5201
+    },
+    {
       "name": "armature",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
