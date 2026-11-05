@@ -1,0 +1,4 @@
+# Design-process files (mock-ups, review screenshots, the direction contract).
+# Kept local so they are never served beside the live site.
+.impeccable/*
+!.impeccable/design.json

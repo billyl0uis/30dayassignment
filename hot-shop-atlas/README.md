@@ -22,6 +22,7 @@ Then open <http://localhost:5198>. Refresh the page after editing `studios.json`
 ```json
 {
   "id": "example-glass-co",
+  "no": 46,
   "name": "Example Glass Co.",
   "type": "hot_shop",
   "access": "public_rental",
@@ -64,6 +65,10 @@ These are short codes rather than the display labels, so a typo or a missing em 
 
 Use lowercase letters, numbers, and dashes, like `brooklyn-glass`. It becomes the share link, `…/?studio=brooklyn-glass`, so **don't change it** once you've shared that link. Every `id` has to be unique.
 
+### The chart number (`no`)
+
+Each studio has a permanent number that makes its chart code, like **HS-032** (type prefix plus number). Give a new studio the next unused number (the highest `no` in the file, plus one). Never renumber or reuse one, so codes people have seen stay true. Type prefixes: HS hot shop, FW flameworking, KG kiln, NE neon, MX mixed.
+
 ### Getting lat / lng
 
 Search the address on [openstreetmap.org](https://www.openstreetmap.org), right-click the spot, and choose "Show address". The URL shows the coordinates. Look up one address at a time by hand. That stays within OSM's usage policy.
@@ -84,10 +89,13 @@ For private studios, use the city's center as `lat`/`lng`. The rounding is only 
 
 ## Reviewing candidates (`candidates.json`)
 
-`candidates.json` holds studios from two Glass Art Society lists. **The site doesn't load this file.** None of these studios appear on the map until you move them over.
+`candidates.json` holds studios from two Glass Art Society lists and a few regional sources. **The site doesn't load this file.** None of these studios appear on the map until you move them over.
 
 - The [public access studios list](https://www.glassart.org/resources/in-the-community/public-access-studios/), read on 2026-11-04: 73 US studios, 34 of them published so far.
 - The ["Everything Else" schools + programs list](https://www.glassart.org/resources/students/schools-programs/everything-else/), read on 2026-11-05: 142 US entries. 42 were already on the map or in the queue, so 100 were added, and 11 of those are published so far. This list is broader: it includes colleges, suppliers, and kiln, mosaic and stained-glass programs. It gives only name, state, and website.
+- Regional sources, read on 2026-11-05: 17 studios with name, town and state only (no websites, apart from two). 9 come from [VisitNC's glassblowing list](https://www.visitnc.com/list/nc-glassblowing-studios-will-blow-your-mind) and 3 from the [Indiana Glass Trail](https://indianaglasstrail.com/locations/), which also lists museums, factories and individual artists that were left out. 5 are hot shops named in search results, which still need their own websites found. These entries have `regional_original` instead of `gas_original`.
+
+glassblower.info was considered and **not used**: its robots.txt blocks AI crawlers, including Claude, so its listings aren't collected here.
 
 What GAS gave us is name, state, a website, and (public access list only) whether the studio rents and has public classes. Everything else is blank on purpose: `type`, `city`, `lat`/`lng`, and `last_verified`. Each entry also has two extra fields:
 
@@ -118,7 +126,14 @@ Netlify also works: drag the `hot-shop-atlas` folder onto <https://app.netlify.c
 ## What it uses
 
 - [Leaflet](https://leafletjs.com) and [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster), loaded from unpkg
-- [OpenStreetMap](https://www.openstreetmap.org/copyright) tiles, free with no key. Keep the attribution visible. A light CSS filter warms the tiles a little (`.leaflet-tile-pane` in `style.css`). Delete that line for the plain OSM look.
+- [OpenStreetMap](https://www.openstreetmap.org/copyright) tiles, free with no key. Keep the attribution visible. The tiles are partly desaturated in CSS (`.leaflet-tile-pane` in `style.css`) so the studio colours carry the meaning.
+- Fonts from Google Fonts: Schibsted Grotesk for text, Chivo Mono for codes and counts.
+
+## The look, and trying other options
+
+The design is a glass colour-bar chart: every studio is a numbered swatch, and each studio type has its own colour. The full system is written up in `DESIGN.md`.
+
+Add `?tweak` to the address (for example `http://localhost:5198/?tweak`) to get a **Tweaks** button on the map. It switches six parts of the design live: rod colours, heading font, row size, swatch finish, base map, and pin label. Your choices are remembered only in your own browser. To make a choice the default for everyone, change the matching `data-…` value on the `<html>` tag at the top of `index.html`. Visitors without `?tweak` never see the panel.
 - "Near me" asks for your location only when you click it. The location stays in the page and is never saved or sent anywhere.
 
 ## Files
@@ -126,8 +141,10 @@ Netlify also works: drag the `hot-shop-atlas` folder onto <https://app.netlify.c
 | File | What's in it |
 |---|---|
 | `index.html` | Page layout |
-| `style.css` | Look, plus the phone bottom-sheet layout |
+| `style.css` | Look, the design options, and the phone bottom-sheet layout |
 | `app.js` | Loading and checking data, map, filters, list, detail card, share links, Near me |
+| `tweaks.js` | The `?tweak` design-options panel |
+| `PRODUCT.md` / `DESIGN.md` | Who the site is for and what it must do; the visual system |
 | `studios.json` | The data. The only file you need to edit. |
 | `candidates.json` | Unverified studios from the GAS list, waiting for review. The site doesn't load it. Each entry has a `first_pass` block: a status (`ready`, `needs_you`, `not_checked` or `likely_closed`), plus the city, address, coordinates, suggested type, and what the studio's own site said. |
 | `REVIEW.md` | A readable table of every candidate's status, with the reason for each "needs you". |

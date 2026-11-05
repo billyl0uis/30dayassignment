@@ -4,13 +4,17 @@
 // ---------- Vocabulary ----------
 // JSON uses short snake_case keys (easy to type, no em dashes to get wrong);
 // these tables turn them into the labels people see.
+// `code` is the family prefix on the chart (HS-027); `short` labels the
+// family strip; `lightText` marks dark swatches that need white text on top,
+// `darkText` light ones that must stay ink in every palette.
 const TYPES = {
-  hot_shop:     { label: 'Hot shop',          letter: 'H', color: 'var(--t-hot)' },
-  flameworking: { label: 'Flameworking',      letter: 'F', color: 'var(--t-flame)' },
-  kiln:         { label: 'Kiln / warm glass', letter: 'K', color: 'var(--t-kiln)' },
-  neon:         { label: 'Neon',              letter: 'N', color: 'var(--t-neon)' },
-  mixed:        { label: 'Mixed',             letter: 'M', color: 'var(--t-mixed)' },
+  hot_shop:     { label: 'Hot shop',          short: 'Hot shop', code: 'HS', color: 'var(--t-hot)' },
+  flameworking: { label: 'Flameworking',      short: 'Flame',    code: 'FW', color: 'var(--t-flame)', lightText: true },
+  kiln:         { label: 'Kiln / warm glass', short: 'Kiln',     code: 'KG', color: 'var(--t-kiln)', lightText: true },
+  neon:         { label: 'Neon',              short: 'Neon',     code: 'NE', color: 'var(--t-neon)', darkText: true },
+  mixed:        { label: 'Mixed',             short: 'Mixed',    code: 'MX', color: 'var(--t-mixed)' },
 };
+const chartCode = (s) => TYPES[s.type].code + (s.no ? '-' + String(s.no).padStart(3, '0') : '');
 const ACCESS = {
   public_rental:       'Public rental',
   classes:             'Classes',
@@ -42,6 +46,7 @@ const state = {
   sort: 'name',
   you: null,            // {lat, lng} once "Near me" is used
   activeId: null,
+  lastId: null,         // last studio opened; outlined when you go back to the list
 };
 
 const $ = (id) => document.getElementById(id);
@@ -57,6 +62,20 @@ const el = (tag, props = {}, ...kids) => {
   return n;
 };
 const isPhone = () => matchMedia('(max-width: 760px)').matches;
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ICONS = {
+  back: 'M13 8H3M7 4L3 8l4 4',
+  prev: 'M10 3L5 8l5 5',
+  next: 'M6 3l5 5-5 5',
+  out: 'M3 8h10M9 4l4 4-4 4',
+};
+function icon(name) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('class', 'ico'); svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', ICONS[name]); svg.append(path);
+  return svg;
+}
 
 // ---------- Map ----------
 const map = L.map('map', {
@@ -69,32 +88,48 @@ L.control.attribution({ position: isPhone() ? 'topright' : 'bottomright', prefix
 
 // Standard OpenStreetMap tiles: free, no key, fine for a low-traffic hobby
 // site under OSM's tile usage policy as long as the attribution stays visible.
-// The dark look is a CSS filter on the tiles (see .leaflet-tile-pane in style.css).
+// The tiles are partly desaturated in CSS (.leaflet-tile-pane) so the swatch
+// colours on the pins carry the meaning.
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
 
+// animate: false — pins jump straight to their spot instead of sliding out of
+// clusters. A slide that gets paused (background tab, slow phone) can leave a
+// pin frozen part-way, miles from its studio.
 const clusters = L.markerClusterGroup({
+  animate: false,
+  disableClusteringAtZoom: 15, // at street level every studio gets its own pin
   showCoverageOnHover: false,
   maxClusterRadius: 45,
   spiderfyOnMaxZoom: true,
   iconCreateFunction: (c) => L.divIcon({
     html: `<div>${c.getChildCount()}</div>`,
     className: 'marker-cluster',
-    iconSize: [40, 40],
+    iconSize: [42, 42],
   }),
 });
 map.addLayer(clusters);
 let youMarker = null;
 
 function pinIcon(s, active = false) {
+  // The pin is a small swatch carrying its family code, so type reads by text
+  // as well as colour. The selected pin also shows its full chart code.
+  // Pin label style comes from <html data-pin>: "code" (HS), "number" (027) or "dot".
   const t = TYPES[s.type];
+  const mode = document.documentElement.dataset.pin || 'code';
+  const cls = ['pin', s.precision === 'city' && 'approx', t.darkText && 'dark-text', t.lightText && 'light-text',
+    active && 'active', mode === 'dot' && 'as-dot'].filter(Boolean).join(' ');
+  const text = mode === 'number' && s.no ? String(s.no).padStart(3, '0') : mode === 'dot' ? '' : t.code;
+  const label = active ? `<span class="pin-label">${chartCode(s)}</span>` : '';
+  // On phones the tappable area is at least 44x44 around the swatch.
+  const [w, h] = isPhone() ? [44, 44] : mode === 'dot' ? [20, 20] : [42, 24];
   return L.divIcon({
     className: '',
-    html: `<div class="pin${s.precision === 'city' ? ' approx' : ''}${active ? ' active' : ''}" style="--c:${t.color}">${t.letter}</div>`,
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
+    html: `<div class="pin-hit"><div class="${cls}" style="--c:${t.color}">${text}${label}</div></div>`,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h / 2],
   });
 }
 
@@ -135,9 +170,12 @@ function normalize(raw) {
   const round = (n) => Math.round(n * 100) / 100;
   const offers = (Array.isArray(raw.offers) ? raw.offers : []).filter((o) => OFFERS[o]);
 
+  const no = Number.isInteger(raw.no) && raw.no > 0 ? raw.no : null;
+
   return {
     studio: {
       id,
+      no,
       name: String(raw.name),
       type: raw.type,
       access: raw.access || '',
@@ -196,6 +234,9 @@ async function load() {
     state.markers.set(s.id, m);
   }
 
+  const n = state.studios.length;
+  $('tagline').replaceChildren(el('span', { class: 'long' }, 'Chart of US glass studios · '), el('span', { class: 'count' }, `${n} swatch${n === 1 ? '' : 'es'}`));
+
   buildFilters();
   apply();
 
@@ -218,9 +259,12 @@ function showStatus(msg) {
 function buildFilters() {
   const typeChips = $('typeChips');
   for (const [key, t] of Object.entries(TYPES)) {
-    const chip = el('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', onclick: () => {
-      toggle(state.types, key, chip); apply();
-    } }, el('span', { class: 'dot', style: `--c:${t.color}` }), t.label);
+    const n = state.studios.filter((s) => s.type === key).length;
+    const chip = el('button', {
+      class: `fam${n ? '' : ' zero'}`, type: 'button', 'aria-pressed': 'false', style: `--c:${t.color}`,
+      'aria-label': `${t.label}: ${n} studio${n === 1 ? '' : 's'}`,
+      onclick: () => { toggle(state.types, key, chip); apply(); },
+    }, t.short, el('span', { class: 'code' }, `${t.code} ${n}`));
     typeChips.append(chip);
   }
   const offerChips = $('offerChips');
@@ -240,12 +284,15 @@ function buildFilters() {
   $('stateSel').addEventListener('change', (e) => { state.st = e.target.value; apply(); });
   $('accessSel').addEventListener('change', (e) => { state.access = e.target.value; apply(); });
   $('sortSel').addEventListener('change', (e) => { state.sort = e.target.value; apply(); });
-  $('clearFilters').addEventListener('click', () => {
+  $('clearFilters').addEventListener('click', () => clearFilters());
+}
+function clearFilters() {
+  {
     state.types.clear(); state.offers.clear(); state.st = ''; state.access = ''; state.q = '';
     $('q').value = ''; $('stateSel').value = ''; $('accessSel').value = '';
-    document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+    document.querySelectorAll('.chip, .fam').forEach((c) => c.setAttribute('aria-pressed', 'false'));
     apply();
-  });
+  }
 }
 function toggle(set, key, chip) {
   set.has(key) ? set.delete(key) : set.add(key);
@@ -254,7 +301,7 @@ function toggle(set, key, chip) {
 
 const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 function haystack(s) {
-  return fold([s.name, s.city, s.state, s.description, TYPES[s.type].label, ACCESS[s.access] || '', ...s.offers.map((o) => OFFERS[o])].join(' '));
+  return fold([s.name, chartCode(s), s.city, s.state, s.description, TYPES[s.type].label, ACCESS[s.access] || '', ...s.offers.map((o) => OFFERS[o])].join(' '));
 }
 
 function apply() {
@@ -272,6 +319,7 @@ function apply() {
   const sorters = {
     name: byName,
     state: (a, b) => a.state.localeCompare(b.state) || a.city.localeCompare(b.city) || byName(a, b),
+    code: (a, b) => (a.no ?? 1e9) - (b.no ?? 1e9) || byName(a, b),
     distance: (a, b) => distance(a) - distance(b),
   };
   state.filtered.sort(sorters[state.sort] || byName);
@@ -292,6 +340,7 @@ function renderList() {
   $('count').textContent = total
     ? (state.filtered.length === total ? `${total} studio${total === 1 ? '' : 's'}` : `${state.filtered.length} of ${total} studios`)
     : '';
+  $('count').classList.toggle('filtered', state.filtered.length !== total);
 
   if (!total) {
     list.append(el('li', { class: 'empty' },
@@ -300,7 +349,14 @@ function renderList() {
     return;
   }
   if (!state.filtered.length) {
-    list.append(el('li', { class: 'empty' }, el('strong', {}, 'Nothing matches'), 'Try fewer filters.'));
+    const fams = [...state.types].map((k) => TYPES[k].label.toLowerCase());
+    const none = fams.length && state.studios.every((s) => !state.types.has(s.type));
+    list.append(el('li', { class: 'empty' },
+      el('strong', {}, none ? `No ${fams.join(' or ')} studios yet` : 'No swatches match'),
+      el('p', {}, none
+        ? 'The chart only lists studios checked against their own website, and none of this type have been added yet.'
+        : 'Nothing on the chart fits these filters.'),
+      el('button', { class: 'btn', type: 'button', onclick: () => clearFilters() }, 'Clear filters')));
     return;
   }
   for (const s of state.filtered) {
@@ -308,17 +364,30 @@ function renderList() {
     const where = [s.city, s.state].filter(Boolean).join(', ');
     const meta = [where, ACCESS[s.access]].filter(Boolean).join(' · ');
     const btn = el('button', {
-      class: 'item', type: 'button',
-      onclick: () => select(s.id),
+      class: ['item', s.id === state.lastId && 'sel', t.lightText && 'light-text', t.darkText && 'dark-text'].filter(Boolean).join(' '),
+      type: 'button', style: `--c:${t.color}`,
+      'data-id': s.id,
+      'aria-label': `${s.name}, ${t.label}${where ? ', ' + where : ''}`,
+      onclick: (e) => choose(s.id, e.currentTarget),
       onmouseenter: () => highlight(s.id, true),
       onmouseleave: () => highlight(s.id, false),
     },
-      el('span', { class: 'dot', style: `--c:${t.color}`, title: t.label }),
-      el('span', { class: 'name' }, s.name),
-      state.you ? el('span', { class: 'dist' }, formatMiles(distance(s))) : null,
-      el('span', { class: 'meta' }, meta || t.label));
+      el('span', { class: `swatch${s.precision === 'city' ? ' approx' : ''}`, 'aria-hidden': 'true' }),
+      el('span', { class: 'code', 'aria-hidden': 'true' }, chartCode(s)),
+      el('span', { class: 'txt' },
+        el('span', { class: 'name' }, s.name),
+        el('span', { class: 'meta' }, meta || t.label)),
+      state.you ? el('span', { class: 'dist' }, formatMiles(distance(s))) : null);
     list.append(el('li', {}, btn));
   }
+}
+
+// Signature move: the chosen row's swatch floods across the row, then the
+// studio opens under a band of the same colour.
+function choose(id, row) {
+  if (reduceMotion()) { select(id); return; }
+  row.classList.add('flooding');
+  setTimeout(() => select(id), 280);
 }
 
 function highlight(id, on) {
@@ -335,6 +404,7 @@ function select(id, { push = true } = {}) {
     prev?.setIcon(pinIcon(state.byId.get(state.activeId)));
   }
   state.activeId = id;
+  state.lastId = id;
   const m = state.markers.get(id);
   m.setIcon(pinIcon(s, true));
 
@@ -347,10 +417,9 @@ function select(id, { push = true } = {}) {
   // If the studio is hidden by filters it isn't on the map; add it back
   // temporarily so a shared link always shows its pin.
   if (!clusters.hasLayer(m)) clusters.addLayer(m);
-  // Jump (no animation) so this never races another zoom in progress, then
-  // let markercluster fan out pins that still overlap at this zoom.
-  centerOn(m.getLatLng(), Math.max(map.getZoom(), s.precision === 'city' ? 10 : 12));
-  if (clusters.getVisibleParent(m) !== m) clusters.zoomToShowLayer(m);
+  // Jump (no animation) so this never races another zoom in progress. At
+  // zoom 15+ clustering is off, so the studio's own pin is always visible.
+  centerOn(m.getLatLng(), Math.max(map.getZoom(), s.precision === 'city' ? 11 : 15));
 
   if (push) setUrl(id);
   document.title = `${s.name} — Hot Shop Atlas`;
@@ -366,6 +435,7 @@ function closeDetail({ push = true } = {}) {
   apply(); // drops a temporarily-added marker if filters hide it
   if (push) setUrl(null);
   document.title = 'Hot Shop Atlas';
+  document.querySelector(`.item[data-id="${CSS.escape(state.lastId || '')}"]`)?.scrollIntoView({ block: 'center' });
 }
 
 // On phones the sheet covers the bottom of the map, so aim above it.
@@ -386,28 +456,44 @@ function renderDetail(s) {
     ...s.other_links.map((l) => [l.label, l.url]),
   ].filter(Boolean);
 
+  // Previous / next follow the list as currently filtered and sorted.
+  const i = state.filtered.findIndex((x) => x.id === s.id);
+  const prev = i > 0 ? state.filtered[i - 1] : null;
+  const next = i >= 0 && i < state.filtered.length - 1 ? state.filtered[i + 1] : null;
+  const spec = [
+    ['Type', t.label],
+    s.access && ['Access', ACCESS[s.access]],
+    s.offers.length && ['Offers', s.offers.map((o) => OFFERS[o]).join(', ')],
+    s.founded && ['Founded', s.founded],
+  ].filter(Boolean);
+
   const parts = [
-    el('h2', {}, s.name),
-    el('div', { class: 'badges' },
-      el('span', { class: 'badge' }, el('span', { class: 'dot', style: `--c:${t.color}` }), t.label),
-      s.access ? el('span', { class: 'badge' }, ACCESS[s.access]) : null),
-    where ? el('p', { class: 'where' }, s.address ? `${s.address}, ${where}` : where) : null,
-    s.precision === 'city'
-      ? el('p', { class: 'approx' }, 'Pin shows the city only, not the studio’s exact location.')
-      : null,
-    s.description ? el('p', { class: 'desc' }, s.description) : null,
-    s.offers.length ? [el('h3', {}, 'Offers'), el('ul', { class: 'offers' }, s.offers.map((o) => el('li', {}, OFFERS[o])))] : null,
-    links.length
-      ? [el('h3', {}, 'See their work'), el('ul', { class: 'links' }, links.map(([label, url]) =>
-          el('li', {}, el('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, label, el('span', {}, prettyUrl(url))))))]
-      : null,
-    el('button', { class: 'btn share', type: 'button', onclick: (e) => copyLink(e.currentTarget) }, 'Copy link to this studio'),
-    el('div', { class: 'fine' },
-      s.founded ? el('p', {}, `Founded ${s.founded}`) : null,
-      s.last_verified ? el('p', {}, `Last verified ${formatDate(s.last_verified)}`) : null,
-      s.source ? el('p', {}, `Source: ${s.source}`) : null),
+    el('nav', { class: 'd-nav', 'aria-label': 'Studio navigation' },
+      el('button', { type: 'button', onclick: () => closeDetail() }, icon('back'), 'All studios'),
+      el('span', { class: 'step' },
+        el('button', { type: 'button', disabled: !prev, 'aria-label': 'Previous studio', onclick: () => prev && select(prev.id) }, icon('prev'), 'Prev'),
+        el('button', { type: 'button', disabled: !next, 'aria-label': 'Next studio', onclick: () => next && select(next.id) }, 'Next', icon('next')))),
+    el('div', { class: `band${s.precision === 'city' ? ' approx' : ''}`, style: `--c:${t.color}`, 'aria-hidden': 'true' },
+      el('span', { class: 'code' }, chartCode(s))),
+    el('div', { class: 'd-body' },
+      el('h2', {}, s.name),
+      where ? el('p', { class: 'where' }, s.address ? `${s.address}, ${where}` : where) : null,
+      s.precision === 'city'
+        ? el('p', { class: 'approx-note' }, 'The pin shows the city only, not the studio’s exact location.')
+        : null,
+      el('dl', { class: 'spec' }, spec.flatMap(([k, v]) => [el('dt', {}, k), el('dd', {}, v)])),
+      s.description ? el('p', { class: 'desc' }, s.description) : null,
+      links.length
+        ? el('ul', { class: 'links', 'aria-label': 'See their work' }, links.map(([label, url], n) =>
+            el('li', {}, el('a', { href: url, target: '_blank', rel: 'noopener noreferrer' },
+              el('b', {}, n === 0 && label === 'Website' ? 'Visit website' : label, icon('out')), el('span', {}, prettyUrl(url))))))
+        : null,
+      el('button', { class: 'btn share', type: 'button', onclick: (e) => copyLink(e.currentTarget) }, 'Copy link to this studio'),
+      el('div', { class: 'fine' },
+        s.last_verified ? el('p', {}, `Last verified ${formatDate(s.last_verified)}`) : null,
+        s.source ? el('p', {}, `Source: ${s.source}`) : null)),
   ];
-  $('detail').replaceChildren(...parts.flat().filter(Boolean));
+  $('detail').replaceChildren(...parts.flat(2).filter(Boolean));
 }
 
 const prettyUrl = (u) => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
@@ -438,7 +524,6 @@ function openFromUrl() {
   else if (state.activeId) closeDetail({ push: false });
 }
 window.addEventListener('popstate', openFromUrl);
-$('back').addEventListener('click', () => closeDetail());
 
 // ---------- Near me ----------
 const toRad = (d) => (d * Math.PI) / 180;
@@ -485,6 +570,11 @@ $('nearMe').addEventListener('click', () => {
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
   );
 });
+
+// Redraw every pin (used by the design-options panel in tweaks.js).
+window.atlasRefreshPins = () => {
+  for (const [id, m] of state.markers) m.setIcon(pinIcon(state.byId.get(id), id === state.activeId));
+};
 
 // ---------- Phone bottom sheet ----------
 const ORDER = ['peek', 'half', 'full'];

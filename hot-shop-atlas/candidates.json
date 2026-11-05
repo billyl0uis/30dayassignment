@@ -820,7 +820,7 @@
       "checked": "2026-11-04",
       "page": "https://www.ncglasscenter.org/",
       "status": "needs_you",
-      "result": "Address on site: 112 East State St Black Mountain, NC 28711. But no hot-shop wording on the homepage, so the type is unconfirmed."
+      "result": "Address on site: 112 East State St Black Mountain, NC 28711. But no hot-shop wording on the homepage, so the type is unconfirmed. VisitNC lists it among NC glassblowing studios (as Asheville). May be the successor to Asheville Glass Center."
     }
   },
   {
@@ -1872,7 +1872,7 @@
       "checked": "2026-11-05",
       "page": "https://www.ashevilleglass.com/",
       "status": "likely_closed",
-      "result": "Domain is for sale (HugeDomains). Likely closed or moved."
+      "result": "Domain is for sale (HugeDomains). Likely closed or moved. North Carolina Glass Center (Black Mountain, next to Asheville) may be its successor — see that entry."
     }
   },
   {
@@ -4449,6 +4449,550 @@
       "type_evidence": "'fused' x4, 'kiln' x2",
       "status": "needs_you",
       "result": "GAS spelled the state 'Gerogia'; saved as GA. No address and only kiln/flame wording on the homepage."
+    }
+  },
+  {
+    "id": "cedar-creek-gallery",
+    "name": "Cedar Creek Gallery",
+    "type": "",
+    "access": "",
+    "city": "Creedmoor",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "Cedar Creek Gallery",
+      "town": "Creedmoor",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "the-glasstation",
+    "name": "The GlasStation",
+    "type": "",
+    "access": "",
+    "city": "Farmville",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "The GlasStation",
+      "town": "Farmville",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "dillsboro-creative-arts-center",
+    "name": "Dillsboro Creative Arts Center",
+    "type": "",
+    "access": "",
+    "city": "Dillsboro",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "Dillsboro Creative Arts Center",
+      "town": "Dillsboro",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "goldhagen-art-glass",
+    "name": "Goldhagen Art Glass",
+    "type": "",
+    "access": "",
+    "city": "Hayesville",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "Goldhagen Art Glass",
+      "town": "Hayesville",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "hearth-glass-and-gallery",
+    "name": "Hearth Glass and Gallery",
+    "type": "",
+    "access": "",
+    "city": "Burnsville",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "Hearth Glass and Gallery",
+      "town": "Burnsville",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "hot-glass-alley",
+    "name": "Hot Glass Alley",
+    "type": "",
+    "access": "",
+    "city": "Charlotte",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "Hot Glass Alley",
+      "town": "Charlotte",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "moon-girl-glass",
+    "name": "Moon Girl Glass",
+    "type": "",
+    "access": "",
+    "city": "Marshall",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "Moon Girl Glass",
+      "town": "Marshall",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "woodhaven-glass",
+    "name": "Woodhaven Glass",
+    "type": "",
+    "access": "",
+    "city": "Brevard",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "visitnc",
+      "name": "Woodhaven Glass",
+      "town": "Brevard",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "kokomo-opalescent-glass",
+    "name": "Kokomo Opalescent Glass",
+    "type": "",
+    "access": "",
+    "city": "Kokomo",
+    "state": "IN",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Indiana Glass Trail locations (indianaglasstrail.com), read 2026-11-05",
+    "review_notes": "Trail says it's an art-glass factory with tours, hand blowing by local artists, and classes. Probably not a rentable hot shop.",
+    "regional_original": {
+      "list": "indiana",
+      "name": "Kokomo Opalescent Glass",
+      "town": "Kokomo",
+      "state": "IN"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Trail says it's an art-glass factory with tours, hand blowing by local artists, and classes. Probably not a rentable hot shop."
+    }
+  },
+  {
+    "id": "house-of-glass",
+    "name": "House of Glass",
+    "type": "",
+    "access": "",
+    "city": "Elwood",
+    "state": "IN",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Indiana Glass Trail locations (indianaglasstrail.com), read 2026-11-05",
+    "review_notes": "",
+    "regional_original": {
+      "list": "indiana",
+      "name": "House of Glass",
+      "town": "Elwood",
+      "state": "IN"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "glick-glass-center",
+    "name": "Glick Glass Center, Ball State University",
+    "type": "",
+    "access": "",
+    "city": "Muncie",
+    "state": "IN",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Indiana Glass Trail locations (indianaglasstrail.com), read 2026-11-05",
+    "review_notes": "A university program. Check whether the public can take classes or rent time.",
+    "regional_original": {
+      "list": "indiana",
+      "name": "Glick Glass Center, Ball State University",
+      "town": "Muncie",
+      "state": "IN"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "A university program. Check whether the public can take classes or rent time."
+    }
+  },
+  {
+    "id": "liberty-arts",
+    "name": "Liberty Arts",
+    "type": "",
+    "access": "",
+    "city": "Durham",
+    "state": "NC",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "https://www.libertyartsnc.org/glass",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
+    "review_notes": "",
+    "regional_original": {
+      "list": "search",
+      "name": "Liberty Arts",
+      "town": "Durham",
+      "state": "NC"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "expressive-glass",
+    "name": "Expressive Glass",
+    "type": "",
+    "access": "",
+    "city": "Buffalo",
+    "state": "NY",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
+    "review_notes": "",
+    "regional_original": {
+      "list": "search",
+      "name": "Expressive Glass",
+      "town": "Buffalo",
+      "state": "NY"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "hot-shops-art-center",
+    "name": "Hot Shops Art Center",
+    "type": "",
+    "access": "",
+    "city": "Omaha",
+    "state": "NE",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
+    "review_notes": "An art center with many studios; check whether a glass hot shop there is open to the public.",
+    "regional_original": {
+      "list": "search",
+      "name": "Hot Shops Art Center",
+      "town": "Omaha",
+      "state": "NE"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "An art center with many studios; check whether a glass hot shop there is open to the public."
+    }
+  },
+  {
+    "id": "avalon-glassworks",
+    "name": "Avalon Glassworks",
+    "type": "",
+    "access": "",
+    "city": "",
+    "state": "WA",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
+    "review_notes": "",
+    "regional_original": {
+      "list": "search",
+      "name": "Avalon Glassworks",
+      "town": "",
+      "state": "WA"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "hollywood-hot-glass",
+    "name": "Hollywood Hot Glass",
+    "type": "",
+    "access": "",
+    "city": "",
+    "state": "FL",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
+    "review_notes": "",
+    "regional_original": {
+      "list": "search",
+      "name": "Hollywood Hot Glass",
+      "town": "",
+      "state": "FL"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Not checked yet."
+    }
+  },
+  {
+    "id": "workhouse-arts-center",
+    "name": "Workhouse Arts Center",
+    "type": "",
+    "access": "",
+    "city": "",
+    "state": "VA",
+    "address": "",
+    "lat": null,
+    "lng": null,
+    "location_precision": "city",
+    "website": "https://www.workhousearts.org/glass-studio",
+    "instagram": "",
+    "shop_url": "",
+    "other_links": [],
+    "offers": [],
+    "description": "",
+    "founded": "",
+    "last_verified": "",
+    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
+    "review_notes": "Its glass page says hot shop rentals start once the glassblowing studio has fully launched.",
+    "regional_original": {
+      "list": "search",
+      "name": "Workhouse Arts Center",
+      "town": "",
+      "state": "VA"
+    },
+    "first_pass": {
+      "status": "not_checked",
+      "result": "Its glass page says hot shop rentals start once the glassblowing studio has fully launched."
     }
   }
 ]

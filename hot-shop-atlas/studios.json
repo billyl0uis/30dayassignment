@@ -1,6 +1,7 @@
 [
   {
     "id": "sonoran-glass",
+    "no": 1,
     "name": "Sonoran Glass",
     "type": "hot_shop",
     "access": "public_rental",
@@ -25,6 +26,7 @@
   },
   {
     "id": "los-angeles-glass-center",
+    "no": 2,
     "name": "Los Angeles Glass Center",
     "type": "hot_shop",
     "access": "public_rental",
@@ -49,6 +51,7 @@
   },
   {
     "id": "public-glass",
+    "no": 3,
     "name": "Public Glass",
     "type": "hot_shop",
     "access": "public_rental",
@@ -73,6 +76,7 @@
   },
   {
     "id": "the-crucible",
+    "no": 4,
     "name": "The Crucible",
     "type": "hot_shop",
     "access": "public_rental",
@@ -97,6 +101,7 @@
   },
   {
     "id": "the-furnace-a-glassworks",
+    "no": 5,
     "name": "The Furnace a glassworks",
     "type": "hot_shop",
     "access": "public_rental",
@@ -121,6 +126,7 @@
   },
   {
     "id": "first-city-art-center",
+    "no": 6,
     "name": "First City Art Center",
     "type": "hot_shop",
     "access": "public_rental",
@@ -145,6 +151,7 @@
   },
   {
     "id": "zen-glass-studio-and-gallery",
+    "no": 7,
     "name": "Zen Glass Studio & Gallery",
     "type": "hot_shop",
     "access": "",
@@ -166,6 +173,7 @@
   },
   {
     "id": "boise-art-glass",
+    "no": 8,
     "name": "Boise Art Glass",
     "type": "hot_shop",
     "access": "",
@@ -187,6 +195,7 @@
   },
   {
     "id": "chicago-glass-collective",
+    "no": 9,
     "name": "Chicago Glass Collective",
     "type": "hot_shop",
     "access": "public_rental",
@@ -211,6 +220,7 @@
   },
   {
     "id": "ignite-glass-studios",
+    "no": 10,
     "name": "Ignite Glass Studios",
     "type": "hot_shop",
     "access": "public_rental",
@@ -235,6 +245,7 @@
   },
   {
     "id": "flame-run",
+    "no": 11,
     "name": "Flame Run",
     "type": "hot_shop",
     "access": "",
@@ -256,6 +267,7 @@
   },
   {
     "id": "new-orleans-glassworks",
+    "no": 12,
     "name": "New Orleans GlassWorks",
     "type": "hot_shop",
     "access": "",
@@ -277,6 +289,7 @@
   },
   {
     "id": "noca-glass-school",
+    "no": 13,
     "name": "NOCA Glass School",
     "type": "hot_shop",
     "access": "classes",
@@ -300,6 +313,7 @@
   },
   {
     "id": "flint-institute-of-arts",
+    "no": 14,
     "name": "Flint Institute of Arts",
     "type": "hot_shop",
     "access": "classes",
@@ -323,6 +337,7 @@
   },
   {
     "id": "glass-academy",
+    "no": 15,
     "name": "Glass Academy",
     "type": "hot_shop",
     "access": "",
@@ -344,6 +359,7 @@
   },
   {
     "id": "glass-art-kalamazoo",
+    "no": 16,
     "name": "Glass Art Kalamazoo",
     "type": "hot_shop",
     "access": "",
@@ -365,6 +381,7 @@
   },
   {
     "id": "michigan-hot-glass-workshop",
+    "no": 17,
     "name": "Michigan Hot Glass Workshop",
     "type": "hot_shop",
     "access": "",
@@ -386,6 +403,7 @@
   },
   {
     "id": "foci-minnesota-center-for-glass-arts",
+    "no": 18,
     "name": "FOCI Minnesota Center for Glass Arts",
     "type": "hot_shop",
     "access": "public_rental",
@@ -410,6 +428,7 @@
   },
   {
     "id": "third-degree",
+    "no": 19,
     "name": "Third Degree",
     "type": "hot_shop",
     "access": "",
@@ -431,6 +450,7 @@
   },
   {
     "id": "crucible-glassworks",
+    "no": 20,
     "name": "Crucible Glassworks",
     "type": "hot_shop",
     "access": "",
@@ -452,6 +472,7 @@
   },
   {
     "id": "starworks-glass-lab",
+    "no": 21,
     "name": "STARworks Glass Lab",
     "type": "hot_shop",
     "access": "",
@@ -473,6 +494,7 @@
   },
   {
     "id": "glassroots",
+    "no": 22,
     "name": "GlassRoots",
     "type": "hot_shop",
     "access": "public_rental",
@@ -497,6 +519,7 @@
   },
   {
     "id": "hot-sand-glass-studio",
+    "no": 23,
     "name": "Hot Sand Glass Studio",
     "type": "hot_shop",
     "access": "",
@@ -518,6 +541,7 @@
   },
   {
     "id": "brooklyn-glass",
+    "no": 24,
     "name": "Brooklyn Glass",
     "type": "hot_shop",
     "access": "public_rental",
@@ -542,6 +566,7 @@
   },
   {
     "id": "hands-on-glass",
+    "no": 25,
     "name": "Hands on Glass",
     "type": "hot_shop",
     "access": "classes",
@@ -565,6 +590,7 @@
   },
   {
     "id": "salem-art-works",
+    "no": 26,
     "name": "Salem Art Works",
     "type": "hot_shop",
     "access": "",
@@ -586,6 +612,7 @@
   },
   {
     "id": "urban-glass",
+    "no": 27,
     "name": "Urban Glass",
     "type": "hot_shop",
     "access": "public_rental",
@@ -610,6 +637,7 @@
   },
   {
     "id": "neusole-glassworks",
+    "no": 28,
     "name": "Neusole Glassworks",
     "type": "hot_shop",
     "access": "",
@@ -631,6 +659,7 @@
   },
   {
     "id": "elements-glass",
+    "no": 29,
     "name": "Elements Glass",
     "type": "hot_shop",
     "access": "public_rental",
@@ -655,6 +684,7 @@
   },
   {
     "id": "east-falls-glass",
+    "no": 30,
     "name": "East Falls Glass",
     "type": "hot_shop",
     "access": "public_rental",
@@ -679,6 +709,7 @@
   },
   {
     "id": "goggleworks",
+    "no": 31,
     "name": "GoggleWorks",
     "type": "hot_shop",
     "access": "public_rental",
@@ -703,6 +734,7 @@
   },
   {
     "id": "pittsburgh-glass-center",
+    "no": 32,
     "name": "Pittsburgh Glass Center",
     "type": "hot_shop",
     "access": "public_rental",
@@ -727,6 +759,7 @@
   },
   {
     "id": "the-crefeld-glass-works",
+    "no": 33,
     "name": "The Crefeld Glass Works",
     "type": "hot_shop",
     "access": "",
@@ -748,6 +781,7 @@
   },
   {
     "id": "dallas-glass-art",
+    "no": 34,
     "name": "Dallas Glass Art",
     "type": "hot_shop",
     "access": "classes",
@@ -771,6 +805,7 @@
   },
   {
     "id": "sinaca-studios-school-of-glass",
+    "no": 35,
     "name": "SiNaCa Studios- School of Glass",
     "type": "hot_shop",
     "access": "classes",
@@ -794,6 +829,7 @@
   },
   {
     "id": "vetro-glassblowing-studio",
+    "no": 36,
     "name": "Vetro Glassblowing Studio",
     "type": "hot_shop",
     "access": "",
@@ -815,6 +851,7 @@
   },
   {
     "id": "open-studio-chrysler-museum-of-art",
+    "no": 37,
     "name": "Open studio - Chrysler Museum of Art",
     "type": "hot_shop",
     "access": "classes",
@@ -838,6 +875,7 @@
   },
   {
     "id": "area-253-glassblowing",
+    "no": 38,
     "name": "Area 253 Glassblowing",
     "type": "hot_shop",
     "access": "public_rental",
@@ -862,6 +900,7 @@
   },
   {
     "id": "art-by-fire-ltd",
+    "no": 39,
     "name": "Art by Fire Ltd",
     "type": "hot_shop",
     "access": "",
@@ -883,6 +922,7 @@
   },
   {
     "id": "edge-of-glass-hotshop",
+    "no": 40,
     "name": "Edge of Glass Hotshop",
     "type": "hot_shop",
     "access": "",
@@ -904,6 +944,7 @@
   },
   {
     "id": "firehouse-glass",
+    "no": 41,
     "name": "Firehouse Glass",
     "type": "hot_shop",
     "access": "public_rental",
@@ -928,6 +969,7 @@
   },
   {
     "id": "museum-of-glass",
+    "no": 42,
     "name": "Museum of Glass",
     "type": "hot_shop",
     "access": "",
@@ -949,6 +991,7 @@
   },
   {
     "id": "seattle-glassblowing-studio",
+    "no": 43,
     "name": "Seattle Glassblowing Studio",
     "type": "hot_shop",
     "access": "",
@@ -970,6 +1013,7 @@
   },
   {
     "id": "tacoma-glassblowing-studio",
+    "no": 44,
     "name": "Tacoma Glassblowing Studio",
     "type": "hot_shop",
     "access": "public_rental",
@@ -994,6 +1038,7 @@
   },
   {
     "id": "hotshop-glass",
+    "no": 45,
     "name": "HotShop Glass",
     "type": "hot_shop",
     "access": "public_rental",
