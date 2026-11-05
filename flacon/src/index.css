@@ -1,0 +1,50 @@
+@import "tailwindcss";
+/* The vessel core's components live outside this folder; scan them too. */
+@source "../../finial/src/core";
+
+/* The colour names the vessel core's components draw with. Flacon's own
+   palette: a dark plum ground with a rose-gold accent. */
+:root {
+  --ground: #150f14;
+  --panel: #1e161d;
+  --raise: #2a1f28;
+  --line: #3e2f3b;
+  --ink: #f5eef2;
+  --mute: #c9b6c2;
+  --faint: #9c8796;
+  --accent: #e7a07a;
+  --accent-ink: #1d0c04;
+  --caution: #f0c050;
+  --danger: #ef6b5e;
+  --ok: #8fd0a0;
+  --grid: #352833;
+  --axis: #6d5867;
+  --glass-fill: rgb(214 190 230 / 0.26);
+  --glass-line: #e6d4f0;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ground: var(--ground);
+  --color-panel: var(--panel);
+  --color-raise: var(--raise);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-mute: var(--mute);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-caution: var(--caution);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+}
+
+html,
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Mix a target color from the paints you own. Runs on your device; photos never leave it.">
+<meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Paint Mixer">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Paint Mixer</title>
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="alternate icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='11' cy='13' r='8' fill='%23d9483b'/%3E%3Ccircle cx='21' cy='13' r='8' fill='%23e8b923' fill-opacity='.85'/%3E%3Ccircle cx='16' cy='21' r='8' fill='%232f5d8a' fill-opacity='.85'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="src/app.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="head-row">
+      <h1 id="app-name">Paint Mixer</h1>
+      <button class="icon-btn" id="theme" title="Theme: auto" aria-label="Switch light/dark theme">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>
+      </button>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Steps">
+      <button role="tab" data-tab="paints" aria-selected="true"><span class="step" aria-hidden="true">1</span>Paints</button>
+      <button role="tab" data-tab="reference" aria-selected="false"><span class="step" aria-hidden="true">2</span>Reference</button>
+      <button role="tab" data-tab="mix" aria-selected="false"><span class="step" aria-hidden="true">3</span>Mix</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner" class="banner" hidden></div>
+  <div id="guide" class="guide" hidden></div>
+
+  <!-- My Paints -->
+  <section class="tab active" id="tab-paints">
+    <h2>Your palette</h2>
+    <div class="palette-bar">
+      <select id="palette-select" aria-label="Active palette"></select>
+      <button class="btn small" data-action="new-palette">New</button>
+      <select id="preset-select" class="btn small" aria-label="New palette from a classic palette">
+        <option value="">Classic palette…</option>
+        <option value="zorn">Zorn</option>
+        <option value="splitPrimary">Split Primary</option>
+        <option value="primaryTriad">Primary Triad</option>
+      </select>
+      <button class="btn small" data-action="rename-palette">Rename</button>
+      <button class="btn small danger" data-action="delete-palette">Delete</button>
+    </div>
+    <div id="palette-info" class="count"></div>
+    <ul id="palette-chips" class="pal-list"></ul>
+
+    <details class="drawer" id="add-paints">
+      <summary><span>Add paints</span> <span class="muted small" id="add-paints-hint">from the library, or your own</span></summary>
+      <div class="drawer-body">
+        <div id="role-banner" class="banner" hidden></div>
+        <div class="row">
+          <input type="search" id="search" class="grow" placeholder="Search by name, brand or pigment (e.g. PB29)" aria-label="Search paints">
+        </div>
+        <div class="row" style="margin-top:8px">
+          <select id="brand-filter" aria-label="Brand"><option value="">All brands</option></select>
+          <label class="check"><input type="checkbox" id="usable-only"> Only paints with a known color</label>
+        </div>
+        <div id="lib-count" class="count"></div>
+        <ul id="library" class="lib"></ul>
+
+        <h3>Not in the list? Add your own paint</h3>
+        <form class="custom" id="custom-form" autocomplete="off">
+          <input type="text" name="pname" placeholder="Name, e.g. Bright Red (Blickrylic)" aria-label="Paint name" required>
+          <input type="text" name="pigments" placeholder="Pigments on the label (optional)" aria-label="Pigment codes">
+          <input type="color" name="picker" value="#808080" aria-label="Pick color">
+          <input type="text" name="hex" placeholder="#hex (optional)" aria-label="Hex value">
+          <button class="btn primary" type="submit">Add</button>
+        </form>
+        <p class="muted small">Leave the color empty: after adding, take a swatch photo so the app measures your actual paint.</p>
+      </div>
+    </details>
+
+    <h2>Your data</h2>
+    <div class="row">
+      <button class="btn" data-action="export">Export JSON</button>
+      <button class="btn" data-action="import">Import JSON</button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+    </div>
+    <p class="muted small">Everything is saved in this browser only. Export to back it up or move it to another device.</p>
+  </section>
+
+  <!-- Reference -->
+  <section class="tab" id="tab-reference">
+    <h2>Reference photo</h2>
+    <p class="lede">Load a photo of what you want to paint, then tap any spot to get its color.</p>
+    <div class="row">
+      <label class="btn primary file-btn">Choose photo<input type="file" id="ref-file" accept="image/*" hidden></label>
+      <div class="field-inline">
+        <span class="small muted" id="ref-size-label">Sample area</span>
+        <div class="seg" id="ref-size" role="group" aria-labelledby="ref-size-label">
+          <button data-size="1" title="Exactly one pixel">1 px</button><button data-size="3" title="Average of 3×3 pixels">3×3</button><button data-size="5" title="Average of 5×5 pixels">5×5</button><button data-size="9" title="Average of 9×9 pixels">9×9</button>
+        </div>
+      </div>
+    </div>
+    <p class="muted small" id="ref-name"></p>
+    <p class="muted small">A bigger sample area smooths out photo grain and brush texture. The photo stays on this device.</p>
+    <div class="ref-stage" id="ref-stage" hidden>
+      <canvas id="ref-canvas" aria-label="Reference photo: tap or drag to sample a color"></canvas>
+      <canvas id="ref-loupe" class="loupe" hidden aria-hidden="true"></canvas>
+    </div>
+    <div id="ref-current" class="ref-current" hidden></div>
+
+    <h2>Main colors in the photo</h2>
+    <div id="ref-keys" class="chips"></div>
+
+    <h2>Saved colors</h2>
+    <div id="ref-targets" class="chips"></div>
+  </section>
+
+  <!-- Mix -->
+  <section class="tab" id="tab-mix">
+    <h2>Color to match</h2>
+    <div class="target-row">
+      <input type="color" id="picker" class="big-picker" value="#5a7d6a" aria-label="Pick the color to match">
+      <div class="target-fields">
+        <input type="text" id="hex" value="#5a7d6a" aria-label="Hex value" class="hex-input">
+        <span class="muted small">Tap the swatch to pick, type a hex, or sample one from your <a href="#reference">reference photo</a>.</span>
+      </div>
+    </div>
+    <div id="mix-targets" class="chips"></div>
+    <div class="row mix-actions">
+      <button class="btn primary" id="go">Find recipe</button>
+      <select id="level" aria-label="How many recipes to show">
+        <option value="best">Show the best recipe</option>
+        <option value="close">Show close options</option>
+        <option value="broader">Show more options</option>
+      </select>
+      <label class="check"><input type="checkbox" id="allow4"> Allow 4-paint recipes</label>
+      <button class="btn" id="save-target">Save color</button>
+    </div>
+    <p id="mix-palette" class="muted small"></p>
+    <div id="mix-status" class="muted small"></div>
+    <div id="results"></div>
+    <div id="check" class="check-panel" hidden></div>
+  </section>
+</main>
+
+<footer class="wrap">Predictions are a starting point; brands, batches, screens and lighting all vary.</footer>
+
+<dialog id="detail"><div class="dlg" id="detail-body"></div></dialog>
+<dialog id="capture" class="wide"></dialog>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

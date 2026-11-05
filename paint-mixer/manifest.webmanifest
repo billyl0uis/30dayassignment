@@ -1,0 +1,15 @@
+{
+  "name": "Paint Mixer",
+  "short_name": "Paint Mixer",
+  "description": "Mix a target color from the paints you own. Runs on your device; photos never leave it.",
+  "start_url": "./#paints",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#f7f6f2",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

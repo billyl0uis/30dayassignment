@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mixer Tests</title>
+<style>
+  :root { --bg:#fafaf7; --fg:#1d1d1b; --muted:#6b6b66; --line:#e2e2dc; --ok:#1f7a3a; --bad:#b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161615; --fg:#ecece6; --muted:#9a9a92; --line:#2e2e2b; --ok:#5cc47a; --bad:#ff8a80; } }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:15px/1.45 system-ui, sans-serif; max-width:900px; margin-inline:auto; }
+  h1 { font-size:20px; margin:0 0 4px; } h2 { font-size:15px; margin:24px 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  #summary { color:var(--muted); margin-bottom:8px; }
+  .case { border-top:1px solid var(--line); padding:10px 0; }
+  .name { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); }
+  .detail { color:var(--muted); font-size:13px; margin-top:2px; word-break:break-word; }
+  .sw { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+  .chip { width:96px; font-size:11px; color:var(--muted); }
+  .chip div { height:48px; border-radius:6px; border:1px solid var(--line); margin-bottom:3px; }
+</style>
+</head>
+<body>
+<h1>Engine &amp; library tests</h1>
+<div id="summary">Running…</div>
+<div id="out"></div>
+<script type="module">
+import { makeCases } from './cases.js';
+import { makeStage2Cases } from './cases-stage2.js';
+import { makeStage3Cases } from './cases-stage3.js';
+import { makeStage4Cases } from './cases-stage4.js';
+import { makeStage5Cases } from './cases-stage5.js';
+
+const out = document.getElementById('out');
+const lib = await (await fetch('../paint-library.json')).json();
+let pass = 0, fail = 0, group = null;
+
+for (const c of [...makeCases(lib), ...makeStage2Cases(lib), ...makeStage3Cases(lib), ...makeStage4Cases(lib), ...makeStage5Cases(lib)]) {
+  if (c.group !== group) { group = c.group; out.insertAdjacentHTML('beforeend', `<h2>${group}</h2>`); }
+  const el = document.createElement('div'); el.className = 'case';
+  const t0 = performance.now();
+  try {
+    const r = c.run() ?? {};
+    pass++;
+    el.innerHTML = `<div class="name"><span class="ok">✔</span> ${c.name}</div>` +
+      `<div class="detail">${r.detail ?? ''} <span>(${(performance.now() - t0).toFixed(0)} ms)</span></div>`;
+    if (r.swatches) {
+      const s = document.createElement('div'); s.className = 'sw';
+      for (const w of r.swatches) {
+        const chip = document.createElement('div'); chip.className = 'chip';
+        const box = document.createElement('div'); box.style.background = w.hex;
+        chip.append(box, `${w.label} ${w.hex}`);
+        s.append(chip);
+      }
+      el.append(s);
+    }
+  } catch (e) {
+    fail++;
+    el.innerHTML = `<div class="name"><span class="bad">✘</span> ${c.name}</div><div class="detail bad"></div>`;
+    el.querySelector('.detail').textContent = e.message;
+  }
+  out.append(el);
+  await new Promise((r) => setTimeout(r)); // let the page paint between cases
+}
+document.getElementById('summary').innerHTML = `<span class="${fail ? 'bad' : 'ok'}">${pass} passed, ${fail} failed</span>`;
+</script>
+</body>
+</html>
