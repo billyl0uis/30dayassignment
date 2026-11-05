@@ -84,7 +84,7 @@ For private studios, use the city's center as `lat`/`lng`. The rounding is only 
 
 ## Reviewing candidates (`candidates.json`)
 
-`candidates.json` started with 73 US studios (56 left after the first 17 were published) from the [Glass Art Society's public access studio list](https://www.glassart.org/resources/in-the-community/public-access-studios/), read on 2026-11-04. **The site doesn't load this file.** None of these studios appear on the map until you move them over.
+`candidates.json` started with 73 US studios (39 left after 34 were published) from the [Glass Art Society's public access studio list](https://www.glassart.org/resources/in-the-community/public-access-studios/), read on 2026-11-04. **The site doesn't load this file.** None of these studios appear on the map until you move them over.
 
 What GAS gave us is name, state, whether the studio rents, whether it has public classes, and a website. Everything else is blank on purpose: `type`, `city`, `lat`/`lng`, and `last_verified`. Each entry also has two extra fields:
 
@@ -126,8 +126,8 @@ Netlify also works: drag the `hot-shop-atlas` folder onto <https://app.netlify.c
 | `style.css` | Look, plus the phone bottom-sheet layout |
 | `app.js` | Loading and checking data, map, filters, list, detail card, share links, Near me |
 | `studios.json` | The data. The only file you need to edit. |
-| `candidates.json` | Unverified studios from the GAS list, waiting for review. The site doesn't load it. The 30 "public rental" entries also have a `first_pass` block: city, address, coordinates, and suggested type, taken from each studio's own homepage. |
-| `REVIEW.md` | A readable table of that first pass, marking which studios look ready and which need you. |
+| `candidates.json` | Unverified studios from the GAS list, waiting for review. The site doesn't load it. Each entry has a `first_pass` block: a status (`ready`, `needs_you` or `likely_closed`), plus the city, address, coordinates, suggested type, and what the studio's own site said. |
+| `REVIEW.md` | A readable table of every candidate's status, with the reason for each "needs you". |
 
 ## Next (not built yet)
 

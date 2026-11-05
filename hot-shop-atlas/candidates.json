@@ -25,6 +25,13 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://www.artoffire.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.artoffire.com/",
+      "type_evidence": "'glassblowing' x1",
+      "status": "needs_you",
+      "result": "No address found on the homepage."
     }
   },
   {
@@ -60,7 +67,8 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "https://www.bananafactory.org/glass-classes/",
-      "result": "Couldn't check: Site didn't respond (timed out)."
+      "status": "needs_you",
+      "result": "Couldn't check: Site's security certificate has expired, so it couldn't be opened safely."
     }
   },
   {
@@ -96,14 +104,9 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "https://bagi.org/",
-      "suggested_type": "hot_shop",
-      "type_evidence": "'flamework' x5, 'fused' x1, 'fusing' x5, 'glassblowing' x1, 'hotshop' x4, 'kiln' x1, 'neon' x1, 'torch' x1",
-      "also_mentions": [
-        "flameworking",
-        "kiln",
-        "neon"
-      ],
-      "result": "No address on the homepage."
+      "type_evidence": "'flamework' x10, 'fused' x1, 'fusing' x5, 'glassblowing' x2, 'hotshop' x4, 'kiln' x2, 'neon' x1, 'torch' x1",
+      "status": "needs_you",
+      "result": "No address found on the homepage."
     }
   },
   {
@@ -134,6 +137,12 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "http://www.blowingsands.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://www.blowingsands.com/",
+      "status": "needs_you",
+      "result": "Address on site: 5805 14th Ave NW Seattle, WA 98107. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -164,6 +173,12 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "http://www.bluesagestudios.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://www.bluesagestudios.com/",
+      "status": "needs_you",
+      "result": "Address on site: 1218-C N. Western Ave. Oklahoma City, OK 73106. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -194,36 +209,12 @@
       "rentable": "-",
       "classes": "YES",
       "website": "https://www.bubblefactoryma.com"
-    }
-  },
-  {
-    "id": "dallas-glass-art",
-    "name": "Dallas Glass Art",
-    "type": "",
-    "access": "classes",
-    "city": "",
-    "state": "TX",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://dallasglassart.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Texas",
-      "rentable": "NO",
-      "classes": "YES",
-      "website": "https://dallasglassart.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.bubblefactoryma.com/",
+      "status": "likely_closed",
+      "result": "Website now shows an unrelated gambling page — the domain has lapsed. Likely closed. Don't link it."
     }
   },
   {
@@ -252,6 +243,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "http://www.dcglassworks.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://www.dcglassworks.com/",
+      "status": "likely_closed",
+      "result": "Website now redirects to an unrelated gambling site — the domain has lapsed. Likely closed. Don't link it."
     }
   },
   {
@@ -280,6 +277,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://diabloglassschool.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://diabloglassschool.com/",
+      "status": "needs_you",
+      "result": "Address on site: 123 Terrace St, Boston, MA 02120. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -315,79 +318,8 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "",
+      "status": "needs_you",
       "result": "No website to check."
-    }
-  },
-  {
-    "id": "east-falls-glass",
-    "name": "East Falls Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "PA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "http://www.eastfallsglass.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Pennsylvania",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "http://www.eastfallsglass.com/"
-    },
-    "first_pass": {
-      "checked": "2026-11-04",
-      "page": "http://www.eastfallsglass.com/",
-      "result": "Couldn't check: Page is built by JavaScript; no address or details readable."
-    }
-  },
-  {
-    "id": "elements-glass",
-    "name": "Elements Glass",
-    "type": "",
-    "access": "public_rental",
-    "city": "",
-    "state": "OR",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.elementsglass.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Oregon",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.elementsglass.com/"
-    },
-    "first_pass": {
-      "checked": "2026-11-04",
-      "page": "https://www.elementsglass.com/",
-      "result": "Couldn't check: Page is built by JavaScript; no address or details readable."
     }
   },
   {
@@ -423,7 +355,8 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "http://eugeneglassschool.org/",
-      "result": "Couldn't check: Page came back empty."
+      "status": "likely_closed",
+      "result": "Domain is parked and for sale. Likely closed or moved."
     }
   },
   {
@@ -454,92 +387,12 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://fallbrookschoolofthearts.org/classes.php"
-    }
-  },
-  {
-    "id": "flame-run",
-    "name": "Flame Run",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "KY",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.flamerun.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Kentucky",
-      "rentable": "-",
-      "classes": "-",
-      "website": "https://www.flamerun.com/"
-    }
-  },
-  {
-    "id": "flint-institute-of-arts",
-    "name": "Flint Institute of Arts",
-    "type": "",
-    "access": "classes",
-    "city": "",
-    "state": "MI",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://flintarts.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Michigan",
-      "rentable": "-",
-      "classes": "YES",
-      "website": "https://flintarts.org/"
-    }
-  },
-  {
-    "id": "glass-academy",
-    "name": "Glass Academy",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "MI",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.glassacademy.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Michigan",
-      "rentable": "-",
-      "classes": "-",
-      "website": "https://www.glassacademy.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://fallbrookschoolofthearts.org/classes.php",
+      "status": "needs_you",
+      "result": "Couldn't check: GAS link returns an error (400)."
     }
   },
   {
@@ -568,6 +421,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://www.glassaxis.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.glassaxis.org/",
+      "status": "needs_you",
+      "result": "Couldn't check: Site's security certificate is for a different address, so it couldn't be opened safely."
     }
   },
   {
@@ -603,7 +462,8 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "https://www.toledomuseum.org/about/glass-tma",
-      "result": "Couldn't check: Site blocked the request (403)."
+      "status": "needs_you",
+      "result": "Couldn't check: GAS link is now a 'page not found'. Only address shown is the main museum's (2445 Monroe St), which may not be the Glass Pavilion's."
     }
   },
   {
@@ -634,36 +494,12 @@
       "rentable": "-",
       "classes": "YES",
       "website": "https://glenechoglassworks.com"
-    }
-  },
-  {
-    "id": "hands-on-glass",
-    "name": "Hands on Glass",
-    "type": "",
-    "access": "classes",
-    "city": "",
-    "state": "NY",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.handsonglass.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "New York",
-      "rentable": "NO",
-      "classes": "YES",
-      "website": "https://www.handsonglass.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://glenechoglassworks.com/",
+      "status": "needs_you",
+      "result": "Address on site: 7300 MacArthur Boulevard, Glen Echo, Maryland 20812. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -699,12 +535,9 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "https://heliosglass.com/",
-      "suggested_type": "kiln",
       "type_evidence": "'fused' x4, 'fusing' x7, 'kiln' x11",
-      "suggested_city": "Austin",
-      "suggested_address": "705 Wallingford Bend Dr, Ste 107, Austin, TX 78752",
-      "geocoded_as": "OpenStreetMap found no match for this address.",
-      "result": "Address found on the studio's own homepage."
+      "status": "needs_you",
+      "result": "Kiln studio, not a hot shop. Address 705 Wallingford Bend Dr, Austin; OpenStreetMap found no match."
     }
   },
   {
@@ -733,34 +566,13 @@
       "rentable": "NO",
       "classes": "NO",
       "website": "https://www.hilltopartists.org/"
-    }
-  },
-  {
-    "id": "hot-sand-glass-studio",
-    "name": "Hot Sand Glass Studio",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "NJ",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "http://www.hotsandap.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "New Jersey",
-      "rentable": "-",
-      "classes": "-",
-      "website": "http://www.hotsandap.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.hilltopartists.org/",
+      "type_evidence": "'fused' x1",
+      "status": "needs_you",
+      "result": "Only a PO Box on the site, and GAS says no rentals or public classes (youth program)."
     }
   },
   {
@@ -789,6 +601,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://www.indplsartcenter.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.indplsartcenter.org/",
+      "status": "needs_you",
+      "result": "Address on site: 820 E 67th St. Indianapolis, IN 46220. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -817,6 +635,13 @@
       "rentable": "NO",
       "classes": "NO",
       "website": "http://jankestudios.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://jankestudios.com/",
+      "type_evidence": "'blownglass' x1, 'glassblowing' x5, 'hotshop' x1",
+      "status": "needs_you",
+      "result": "Hot-shop wording and an address (659 Auburn Ave NE, Atlanta), but GAS says no rentals and no public classes — may not belong on a public map."
     }
   },
   {
@@ -847,6 +672,12 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "http://jelvehdesigns.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://jelvehdesigns.com/",
+      "status": "needs_you",
+      "result": "Couldn't check: Site didn't respond."
     }
   },
   {
@@ -875,6 +706,13 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://jubilibeadsandyarns.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://jubilibeadsandyarns.com/",
+      "type_evidence": "'torch' x1",
+      "status": "needs_you",
+      "result": "A bead and yarn shop; one 'torch' mention. Probably not a glass studio for this map."
     }
   },
   {
@@ -903,6 +741,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "http://louisvilleglassworks.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://louisvilleglassworks.com/",
+      "status": "needs_you",
+      "result": "Address 815 W. Market St, Louisville — same building as Flame Run. No glass wording on the homepage; may be the building, not a separate studio."
     }
   },
   {
@@ -933,92 +777,13 @@
       "rentable": "-",
       "classes": "YES",
       "website": "https://www.moreanartscenter.org"
-    }
-  },
-  {
-    "id": "neusole-glassworks",
-    "name": "Neusole Glassworks",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "OH",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.neusoleglassworks.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Ohio",
-      "rentable": "-",
-      "classes": "-",
-      "website": "https://www.neusoleglassworks.com/"
-    }
-  },
-  {
-    "id": "new-orleans-glassworks",
-    "name": "New Orleans GlassWorks",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "LA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "http://neworleansglassworks.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Louisiana",
-      "rentable": "-",
-      "classes": "-",
-      "website": "http://neworleansglassworks.com/"
-    }
-  },
-  {
-    "id": "noca-glass-school",
-    "name": "NOCA Glass School",
-    "type": "",
-    "access": "classes",
-    "city": "",
-    "state": "MA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.nocaglassschool.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Massachusetts",
-      "rentable": "-",
-      "classes": "YES",
-      "website": "https://www.nocaglassschool.com"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.moreanartscenter.org/",
+      "type_evidence": "'glassblowing' x3",
+      "status": "needs_you",
+      "result": "No address found on the homepage."
     }
   },
   {
@@ -1054,43 +819,8 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "https://www.ncglasscenter.org/",
-      "type_evidence": "no glass-process words on the homepage",
-      "suggested_city": "Black Mountain",
-      "suggested_address": "112 East State St, Black Mountain, NC 28711",
-      "suggested_lat": 35.61846,
-      "suggested_lng": -82.31996,
-      "geocoded_as": "112, East State Street, Black Mountain, Buncombe County, North Carolina, 28711, United States",
-      "result": "Address found on the studio's own homepage."
-    }
-  },
-  {
-    "id": "open-studio-chrysler-museum-of-art",
-    "name": "Open studio - Chrysler Museum of Art",
-    "type": "",
-    "access": "classes",
-    "city": "",
-    "state": "VA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://chrysler.org/glass/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Virginia",
-      "rentable": "NO",
-      "classes": "YES",
-      "website": "https://chrysler.org/glass/"
+      "status": "needs_you",
+      "result": "Address on site: 112 East State St Black Mountain, NC 28711. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -1119,6 +849,13 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://penland.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://penland.org/",
+      "type_evidence": "'kiln' x1",
+      "status": "needs_you",
+      "result": "Address on site: 2687 Conley Ridge Road Bakersville, NC 28705. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -1154,13 +891,8 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "https://www.pratt.org/",
-      "type_evidence": "no glass-process words on the homepage",
-      "suggested_city": "Seattle",
-      "suggested_address": "1902 South Main Street, Seattle, WA 98144",
-      "suggested_lat": 47.60031,
-      "suggested_lng": -122.30735,
-      "geocoded_as": "1902, South Main Street, Central District, Seattle, King County, Washington, 98144, United States",
-      "result": "Address found on the studio's own homepage."
+      "status": "needs_you",
+      "result": "Address on site: 1902 SOUTH MAIN STREET SEATTLE WA 98144. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -1189,6 +921,12 @@
       "rentable": "NO",
       "classes": "NO",
       "website": ""
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "",
+      "status": "needs_you",
+      "result": "No website to check."
     }
   },
   {
@@ -1219,128 +957,12 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://www.schack.org/contact-us/"
-    }
-  },
-  {
-    "id": "seattle-glassblowing-studio",
-    "name": "Seattle Glassblowing Studio",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "WA",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://seattleglassblowing.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "GAS lists classes as 'VIRTUAL EXPERIENCE'.",
-    "gas_original": {
-      "state_city": "Washington",
-      "rentable": "NO",
-      "classes": "VIRTUAL EXPERIENCE",
-      "website": "https://seattleglassblowing.com/"
-    }
-  },
-  {
-    "id": "sinaca-studios-school-of-glass",
-    "name": "SiNaCa Studios- School of Glass",
-    "type": "",
-    "access": "classes",
-    "city": "",
-    "state": "TX",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.sinacastudios.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Texas",
-      "rentable": "NO",
-      "classes": "YES",
-      "website": "https://www.sinacastudios.org/"
-    }
-  },
-  {
-    "id": "starworks-glass-lab",
-    "name": "STARworks Glass Lab",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "NC",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.starworksnc.org/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "North Carolina",
-      "rentable": "-",
-      "classes": "-",
-      "website": "https://www.starworksnc.org/"
-    }
-  },
-  {
-    "id": "tacoma-glassblowing-studio",
-    "name": "Tacoma Glassblowing Studio",
-    "type": "",
-    "access": "public_rental",
-    "city": "Tacoma",
-    "state": "",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.tacomaglassblowing.com/#",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [
-      "rentals",
-      "classes"
-    ],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "GAS put 'Tacoma' in the State column. Saved as the city; state left blank for you to confirm.",
-    "gas_original": {
-      "state_city": "Tacoma",
-      "rentable": "YES",
-      "classes": "YES",
-      "website": "https://www.tacomaglassblowing.com/#"
     },
     "first_pass": {
       "checked": "2026-11-04",
-      "page": "https://www.tacomaglassblowing.com/#",
-      "result": "Couldn't check: Site returned a server error (502)."
+      "page": "https://www.schack.org/contact-us/",
+      "status": "needs_you",
+      "result": "Couldn't check: GAS link is now a 'page not found'. Address on that page: 2921 Hoyt Ave., Everett, WA. No glass wording to confirm the hot shop."
     }
   },
   {
@@ -1371,6 +993,12 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://taongaglass.wordpress.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://taongaglass.wordpress.com/",
+      "status": "needs_you",
+      "result": "Address on site: 905 Kalanianaole Hwy Unit 18, Box 15A Kailua, Hawaii 96734. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -1401,6 +1029,13 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://www.richmondglassspot.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.richmondglassspot.com/",
+      "type_evidence": "'hotshop' x1",
+      "status": "needs_you",
+      "result": "No address found on the homepage."
     }
   },
   {
@@ -1429,6 +1064,13 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://www.shoptheunderground.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.shoptheunderground.com/",
+      "type_evidence": "'fused' x1, 'kiln' x3",
+      "status": "needs_you",
+      "result": "Kiln/fusing wording only (address 167 Washington Valley Rd Ext, Warren, NJ). Probably a kiln studio or shop, not a hot shop."
     }
   },
   {
@@ -1464,9 +1106,8 @@
     "first_pass": {
       "checked": "2026-11-04",
       "page": "https://www.orangebeachal.gov/facilities/art-center/about",
-      "type_evidence": "no glass-process words on the homepage",
-      "result": "GAS link now goes to a 'page not found'. Only address shown is the City of Orange Beach's, which may not be the art center's.",
-      "suggested_city": "Orange Beach"
+      "status": "needs_you",
+      "result": "Couldn't check: GAS link is now a 'page not found'. Only address shown is the City of Orange Beach's."
     }
   },
   {
@@ -1495,34 +1136,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://urbanglass.org/"
-    }
-  },
-  {
-    "id": "third-degree",
-    "name": "Third Degree",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "MO",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://thirddegreeglassfactory.com/",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Glass Art Society public access studio list (glassart.org), read 2026-11-04",
-    "review_notes": "",
-    "gas_original": {
-      "state_city": "Missouri",
-      "rentable": "-",
-      "classes": "-",
-      "website": "https://thirddegreeglassfactory.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "",
+      "status": "needs_you",
+      "result": "GAS links it to UrbanGlass's website, so there's nothing of theirs to check."
     }
   },
   {
@@ -1553,6 +1172,13 @@
       "rentable": "NO",
       "classes": "YES",
       "website": "https://www.tulsaglassblowing.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.tulsaglassblowing.org/",
+      "type_evidence": "'glassblowing' x8, 'hotshop' x1, 'kiln' x3",
+      "status": "needs_you",
+      "result": "Address on site: 7440 E 7th St, Tulsa, OK 74112. OpenStreetMap matched the wrong 7th Street (downtown, 74172), so there's no trustworthy pin yet."
     }
   },
   {
@@ -1581,6 +1207,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://vandaliaglassworks.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://vandaliaglassworks.com/",
+      "status": "likely_closed",
+      "result": "Website is password-locked. May be closed or moving."
     }
   },
   {
@@ -1609,6 +1241,12 @@
       "rentable": "-",
       "classes": "-",
       "website": "http://washingtonglassschool.com/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "http://washingtonglassschool.com/",
+      "status": "needs_you",
+      "result": "Couldn't check: Page loads but has almost no text to check."
     }
   },
   {
@@ -1637,6 +1275,13 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://waterstreetglassworks.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://waterstreetglassworks.org/",
+      "type_evidence": "'blownglass' x1, 'fused' x1, 'fusing' x2, 'glassblowing' x2, 'kiln' x1, 'lampwork' x1, 'torch' x1",
+      "status": "needs_you",
+      "result": "No address found on the homepage."
     }
   },
   {
@@ -1665,6 +1310,13 @@
       "rentable": "-",
       "classes": "-",
       "website": "https://www.wheatonarts.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.wheatonarts.org/",
+      "type_evidence": "'flamework' x1",
+      "status": "needs_you",
+      "result": "Address on site: 1000 Village Drive, Millville, NJ 08332. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -1701,15 +1353,8 @@
       "checked": "2026-11-04",
       "page": "https://www.worcestercraftcenter.org/",
       "type_evidence": "'fused' x1",
-      "also_mentions": [
-        "kiln"
-      ],
-      "suggested_city": "Worcester",
-      "suggested_address": "25 Sagamore Road, Worcester, MA 01605",
-      "suggested_lat": 42.28109,
-      "suggested_lng": -71.80741,
-      "geocoded_as": "Worcester Center For Crafts, 25, Sagamore Road, Massachusetts Avenue Historic District, Chadwick Square, Worcester, Worcester County, Massachusetts, 01609, United States",
-      "result": "Address found on the studio's own homepage."
+      "status": "needs_you",
+      "result": "Address on site: 25 Sagamore Road Worcester, MA 01605. But no hot-shop wording on the homepage, so the type is unconfirmed."
     }
   },
   {
@@ -1740,6 +1385,12 @@
       "rentable": "-",
       "classes": "YES",
       "website": "https://www.yayainc.org/"
+    },
+    "first_pass": {
+      "checked": "2026-11-04",
+      "page": "https://www.yayainc.org/",
+      "status": "needs_you",
+      "result": "No address found on the homepage and no hot-shop wording."
     }
   }
 ]
