@@ -276,27 +276,39 @@ export function settleAll(scene) {
 export function footprint(scene) {
   if (!scene.parts.length) return null
   const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity]
-  let hungLow = Infinity, anyHung = false
+  let hungLow = Infinity, anyHung = false, restTop = 0
   for (const p of scene.parts) {
     const b = bounds(posedPositions(p))
     for (let k = 0; k < 3; k++) (min[k] = Math.min(min[k], b.min[k])), (max[k] = Math.max(max[k], b.max[k]))
     if (p.pose.mount === 'hung') (anyHung = true), (hungLow = Math.min(hungLow, b.min[1]))
+    else restTop = Math.max(restTop, b.max[1])
   }
   return {
     minX: min[0], maxX: max[0], minZ: min[2], maxZ: max[2],
     w: max[0] - min[0], d: max[2] - min[2],
     height: Math.max(max[1], anyHung ? scene.stage.armatureY : 0),
     partsTop: max[1],
+    restTop, // tallest part or stack standing on the base
     hangDrop: anyHung ? scene.stage.armatureY - hungLow : null,
     clearance: anyHung ? hungLow : null,
   }
 }
 
-// A free spot to drop a new part: just right of everything already there.
-export function freeSpot(scene, part) {
-  const w = bounds(collideMesh(part).positions)
-  const half = (w.max[0] - w.min[0]) / 2
+// A free spot to set a new part down: the first place on the base, row by
+// row from the middle outwards, where its footprint doesn't overlap any
+// part already there. Off to the right if the base is full.
+export function freeSpot(scene, part, gap = 15) {
+  const b = bounds(collideMesh(part).positions)
+  const hw = (b.max[0] - b.min[0]) / 2, hd = (b.max[2] - b.min[2]) / 2
+  const taken = scene.parts.map((p) => bounds(posedPositions(p)))
+  const free = (x, z) => taken.every((t) => x + hw + gap <= t.min[0] || x - hw - gap >= t.max[0] || z + hd + gap <= t.min[2] || z - hd - gap >= t.max[2])
+  const { baseW, baseD } = scene.stage
+  const xs = [], zs = [0]
+  for (let x = -baseW / 2 + hw + 20; x <= baseW / 2 - hw - 20; x += 10) xs.push(x)
+  for (let dz = 2 * hd + gap; dz <= baseD / 2 - hd; dz += 2 * hd + gap) zs.push(-dz, dz)
+  xs.sort((a, c) => Math.abs(a) - Math.abs(c))
+  for (const z of zs) for (const x of xs) if (free(x, z)) return { x, z }
   if (!scene.parts.length) return { x: 0, z: 0 }
   const f = footprint(scene)
-  return { x: f.maxX + half + 20, z: 0 }
+  return { x: f.maxX + hw + 20, z: 0 }
 }

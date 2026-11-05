@@ -4462,7 +4462,7 @@
     "lat": null,
     "lng": null,
     "location_precision": "city",
-    "website": "",
+    "website": "https://cedarcreekgallery.com/",
     "instagram": "",
     "shop_url": "",
     "other_links": [],
@@ -4479,40 +4479,10 @@
       "state": "NC"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
-    }
-  },
-  {
-    "id": "the-glasstation",
-    "name": "The GlasStation",
-    "type": "",
-    "access": "",
-    "city": "Farmville",
-    "state": "NC",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
-    "review_notes": "",
-    "regional_original": {
-      "list": "visitnc",
-      "name": "The GlasStation",
-      "town": "Farmville",
-      "state": "NC"
-    },
-    "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "https://cedarcreekgallery.com/",
+      "status": "needs_you",
+      "result": "Glassblowing wording on its About page (cedarcreekgallery.com), but no address anywhere on its own site."
     }
   },
   {
@@ -4526,7 +4496,7 @@
     "lat": null,
     "lng": null,
     "location_precision": "city",
-    "website": "",
+    "website": "https://jcgep.org/",
     "instagram": "",
     "shop_url": "",
     "other_links": [],
@@ -4543,8 +4513,10 @@
       "state": "NC"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "https://jcgep.org/",
+      "status": "needs_you",
+      "result": "The Green Energy Park site (jcgep.org) has no glass wording on its homepage. Address there: 100 Green Energy Park Rd."
     }
   },
   {
@@ -4558,7 +4530,7 @@
     "lat": null,
     "lng": null,
     "location_precision": "city",
-    "website": "",
+    "website": "https://www.goldhagenartglass.com/",
     "instagram": "",
     "shop_url": "",
     "other_links": [],
@@ -4575,72 +4547,10 @@
       "state": "NC"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
-    }
-  },
-  {
-    "id": "hearth-glass-and-gallery",
-    "name": "Hearth Glass and Gallery",
-    "type": "",
-    "access": "",
-    "city": "Burnsville",
-    "state": "NC",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
-    "review_notes": "",
-    "regional_original": {
-      "list": "visitnc",
-      "name": "Hearth Glass and Gallery",
-      "town": "Burnsville",
-      "state": "NC"
-    },
-    "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
-    }
-  },
-  {
-    "id": "hot-glass-alley",
-    "name": "Hot Glass Alley",
-    "type": "",
-    "access": "",
-    "city": "Charlotte",
-    "state": "NC",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "VisitNC article \"10 NC Glassblowing Studios That Will Blow Your Mind\" (visitnc.com), read 2026-11-05",
-    "review_notes": "",
-    "regional_original": {
-      "list": "visitnc",
-      "name": "Hot Glass Alley",
-      "town": "Charlotte",
-      "state": "NC"
-    },
-    "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "https://www.goldhagenartglass.com/",
+      "status": "needs_you",
+      "result": "An artist's own studio and gallery (glassblowing wording; 7 Goldhagen Studio Drive, Hayesville, NC on goldhagenartglass.com). Check it's open to the public before showing an exact pin."
     }
   },
   {
@@ -4654,7 +4564,7 @@
     "lat": null,
     "lng": null,
     "location_precision": "city",
-    "website": "",
+    "website": "https://moongirlglass.com/",
     "instagram": "",
     "shop_url": "",
     "other_links": [],
@@ -4671,8 +4581,10 @@
       "state": "NC"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "https://moongirlglass.com/",
+      "status": "needs_you",
+      "result": "Glassblowing wording and classes on moongirlglass.com; address on its contact page: 1881 Riddle Farm Rd, Marshall, NC 28753. OpenStreetMap found no match, so no trustworthy pin yet."
     }
   },
   {
@@ -4703,8 +4615,10 @@
       "state": "NC"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "",
+      "status": "needs_you",
+      "result": "No website of its own found. Directories give two different Brevard addresses."
     }
   },
   {
@@ -4735,8 +4649,10 @@
       "state": "IN"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Trail says it's an art-glass factory with tours, hand blowing by local artists, and classes. Probably not a rentable hot shop."
+      "checked": "2026-11-05",
+      "page": "",
+      "status": "needs_you",
+      "result": "Trail says it's an art-glass factory with tours, hand blowing by local artists, and classes. Probably not a rentable hot shop. Not checked further."
     }
   },
   {
@@ -4750,7 +4666,7 @@
     "lat": null,
     "lng": null,
     "location_precision": "city",
-    "website": "",
+    "website": "https://thehouseofglassinc.com/",
     "instagram": "",
     "shop_url": "",
     "other_links": [],
@@ -4767,8 +4683,10 @@
       "state": "IN"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "https://thehouseofglassinc.com/",
+      "status": "needs_you",
+      "result": "thehouseofglassinc.com gives only \"1/10th mile West of Elwood on Indiana SR 28\" (no street address) and says \"blown glass\" but no hot-shop wording."
     }
   },
   {
@@ -4799,40 +4717,10 @@
       "state": "IN"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "A university program. Check whether the public can take classes or rent time."
-    }
-  },
-  {
-    "id": "liberty-arts",
-    "name": "Liberty Arts",
-    "type": "",
-    "access": "",
-    "city": "Durham",
-    "state": "NC",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "https://www.libertyartsnc.org/glass",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
-    "review_notes": "",
-    "regional_original": {
-      "list": "search",
-      "name": "Liberty Arts",
-      "town": "Durham",
-      "state": "NC"
-    },
-    "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "",
+      "status": "needs_you",
+      "result": "A university program. Check whether the public can take classes or rent time. Not checked further."
     }
   },
   {
@@ -4863,8 +4751,10 @@
       "state": "NY"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "",
+      "status": "needs_you",
+      "result": "No website of its own found. Listings call it a flameworking studio at 3333 Lake Shore Rd, Buffalo, NY, and one marks it closed."
     }
   },
   {
@@ -4878,7 +4768,7 @@
     "lat": null,
     "lng": null,
     "location_precision": "city",
-    "website": "",
+    "website": "https://www.hotshopsartcenter.org/",
     "instagram": "",
     "shop_url": "",
     "other_links": [],
@@ -4895,8 +4785,10 @@
       "state": "NE"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "An art center with many studios; check whether a glass hot shop there is open to the public."
+      "checked": "2026-11-05",
+      "page": "https://www.hotshopsartcenter.org/",
+      "status": "needs_you",
+      "result": "\"Hot shop\" appears only as the center's name on hotshopsartcenter.org; no glassblowing wording on the homepage. Address there: 1301 Nicholas Street, Omaha, NE."
     }
   },
   {
@@ -4910,7 +4802,7 @@
     "lat": null,
     "lng": null,
     "location_precision": "city",
-    "website": "",
+    "website": "https://avalonglassworks.com/",
     "instagram": "",
     "shop_url": "",
     "other_links": [],
@@ -4927,40 +4819,10 @@
       "state": "WA"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
-    }
-  },
-  {
-    "id": "hollywood-hot-glass",
-    "name": "Hollywood Hot Glass",
-    "type": "",
-    "access": "",
-    "city": "",
-    "state": "FL",
-    "address": "",
-    "lat": null,
-    "lng": null,
-    "location_precision": "city",
-    "website": "",
-    "instagram": "",
-    "shop_url": "",
-    "other_links": [],
-    "offers": [],
-    "description": "",
-    "founded": "",
-    "last_verified": "",
-    "source": "Named in web search results on 2026-11-05; not yet confirmed on the studio's own site",
-    "review_notes": "",
-    "regional_original": {
-      "list": "search",
-      "name": "Hollywood Hot Glass",
-      "town": "",
-      "state": "FL"
-    },
-    "first_pass": {
-      "status": "not_checked",
-      "result": "Not checked yet."
+      "checked": "2026-11-05",
+      "page": "https://avalonglassworks.com/",
+      "status": "needs_you",
+      "result": "avalonglassworks.com's title now reads \"Art Glass Made in West Seattle 1993-2026\", and the studio was listed for sale in April 2026. May be closing."
     }
   },
   {
@@ -4991,8 +4853,10 @@
       "state": "VA"
     },
     "first_pass": {
-      "status": "not_checked",
-      "result": "Its glass page says hot shop rentals start once the glassblowing studio has fully launched."
+      "checked": "2026-11-05",
+      "page": "https://www.workhousearts.org/glass-studio",
+      "status": "needs_you",
+      "result": "Its glass page says hot shop rentals start once the glassblowing studio has fully launched. Not checked further."
     }
   }
 ]

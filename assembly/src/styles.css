@@ -147,3 +147,12 @@ input.text, select { border: 1px solid var(--line); border-radius: 8px; backgrou
   .toolbar { flex-wrap: wrap; gap: 8px; }
   .shelf, .side { border: 0; }
 }
+
+/* 3D view --------------------------------------------------------------- */
+.viewport { position: relative; flex: 1; min-height: 0; }
+.viewport canvas { touch-action: none; }
+.view-switch { position: absolute; top: 10px; left: 12px; z-index: 2; }
+.view-switch .segmented { background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(6px); }
+.dim-tag { font: 500 11.5px var(--font); color: #ff8a3d; background: #15171cd9; padding: 2px 7px; border-radius: 999px; white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+.dim-tag.soft { color: #ece8e0; background: #15171c99; }
+.warn-text { color: #f5b942; }

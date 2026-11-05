@@ -96,5 +96,24 @@ test('footprint: bounding rectangle, height and hang drop', () => {
   const h = place({ ...sc, parts: [] }, sphere(40, { mount: 'hung', lineMm: 300 }))
   f = footprint({ ...sc, parts: [a, b, h] })
   close(f.hangDrop, 340, 1e-6)
+  close(f.restTop, 120, 1e-6, 'hung parts don\'t count as standing')
   close(f.height, sc.stage.armatureY, 1e-6, 'armature counts in overall height')
+})
+
+test('new parts are set down in free spots on the base, not on top of each other', async () => {
+  const { freeSpot } = await import('../src/core/placement.js')
+  let sc = emptyScene()
+  for (let i = 0; i < 12; i++) {
+    const p = sphere(100)
+    sc = { ...sc, parts: [...sc.parts, { ...p, pose: { ...p.pose, ...freeSpot(sc, p) } }] }
+  }
+  const bs = sc.parts.map((p) => bounds(posedPositions(p)))
+  for (let i = 0; i < bs.length; i++)
+    for (let j = i + 1; j < bs.length; j++) {
+      const a = bs[i], b = bs[j]
+      const overlap = a.min[0] < b.max[0] && b.min[0] < a.max[0] && a.min[2] < b.max[2] && b.min[2] < a.max[2]
+      assert.ok(!overlap, `parts ${i} and ${j} overlap`)
+    }
+  const f = footprint(sc)
+  assert.ok(f.w <= sc.stage.baseW && f.d <= sc.stage.baseD, 'all on the base')
 })

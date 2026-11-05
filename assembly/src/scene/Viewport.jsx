@@ -17,9 +17,9 @@ export default function Viewport() {
   return (
     <div className="viewport">
       <Canvas dpr={[1, 2]} gl={{ antialias: true }} onPointerMissed={() => useStore.getState().select(null)}>
-        <PerspectiveCamera makeDefault={view === '3d'} position={[60, 85, 210]} fov={30} near={1} far={4000} />
+        <PerspectiveCamera makeDefault={view === '3d'} position={[45, 70, 170]} fov={30} near={1} far={4000} />
         <OrthographicCamera makeDefault={view === 'top'} position={[0, 600, 0]} up={[0, 0, -1]} zoom={4} near={1} far={4000} onUpdate={(c) => c.lookAt(0, 0, 0)} />
-        <OrbitControls key={view} makeDefault target={[0, view === 'top' ? 0 : 25, 0]} enableRotate={view === '3d'} maxPolarAngle={Math.PI * 0.49} minDistance={30} maxDistance={900} enableDamping />
+        <OrbitControls key={view} makeDefault target={[0, view === "top" ? 0 : 12, 0]} enableRotate={view === '3d'} maxPolarAngle={Math.PI * 0.49} minDistance={30} maxDistance={900} enableDamping />
         <Backdrop />
         <Studio />
         <group scale={S}>

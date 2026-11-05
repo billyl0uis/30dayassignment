@@ -1,6 +1,6 @@
 # Candidate review
 
-**111 needs you · 17 not checked · 17 likely closed** (145 candidates; 45 already published).
+**123 needs you · 17 likely closed** (140 candidates; 50 already published).
 
 Candidates come from two Glass Art Society lists: the public access studios list (read 2026-11-04) and the "Everything Else" schools + programs list (read 2026-11-05). **Nothing here is live.** Say which to publish and I'll move them into `studios.json`.
 
@@ -53,7 +53,10 @@ Candidates come from two Glass Art Society lists: the public access studios list
 | Needs you | [Ox-Bow](https://www.ox-bow.org/) | IL | Address on site: 3435 Rupprecht Way, Saugatuck, MI 49453. No glass-studio wording on the homepage, so the type is unconfirmed. |
 | Needs you | [Prairie Fire Glass Studio & Gallery](https://www.prairiefireglass.com/) | IL | Address on site: 217 W. Washington Street Monticello, Illinois 61856. No glass-studio wording on the homepage, so the type is unconfirmed. |
 | Needs you | [Southern Illinois University Carbondale](https://cola.siu.edu/artanddesign/about-us/specializations/glass.php) | IL | A college or university program. Check whether the public can take classes or rent time. Couldn't check: site refused the request (403). |
+| Needs you | Glick Glass Center, Ball State University | Muncie, IN | A university program. Check whether the public can take classes or rent time. Not checked further. |
+| Needs you | [House of Glass](https://thehouseofglassinc.com/) | Elwood, IN | thehouseofglassinc.com gives only "1/10th mile West of Elwood on Indiana SR 28" (no street address) and says "blown glass" but no hot-shop wording. |
 | Needs you | [Indianapolis Art Cetner](https://www.indplsartcenter.org/) | IN | Address on site: 820 E 67th St. Indianapolis, IN 46220. But no hot-shop wording on the homepage, so the type is unconfirmed. |
+| Needs you | Kokomo Opalescent Glass | Kokomo, IN | Trail says it's an art-glass factory with tours, hand blowing by local artists, and classes. Probably not a rentable hot shop. Not checked further. |
 | Needs you | [Louisville GlassWorks](http://louisvilleglassworks.com/) | KY | Address 815 W. Market St, Louisville — same building as Flame Run. No glass wording on the homepage; may be the building, not a separate studio. |
 | Needs you | [Payton Glass Activity Center](https://paytonglasscenter.com/) | KY | Flamework/torch wording only; 815 W. Market St, Louisville — the same building as Flame Run. Probably a flameworking activity center. |
 | Needs you | [YAYA Creative Glass](https://www.yayainc.org/) | LA | No address found on the homepage and no hot-shop wording. |
@@ -70,9 +73,15 @@ Candidates come from two Glass Art Society lists: the public access studios list
 | Needs you | [Water Street Glassworks](https://waterstreetglassworks.org/) | MI | No address found on the homepage. |
 | Needs you | [Craft Alliance](https://www.craftalliance.org/) | MO | Address on site: 5080 Delmar Blvd. St. Louis, MO 63108. No glass-studio wording on the homepage, so the type is unconfirmed. |
 | Needs you | [University of Montana](https://www.umwestern.edu/) | MT | GAS links to umwestern.edu, which is the University of Montana Western, a different school from the name. GAS name doesn't match the link: the site is University of Montana Western (710 S. Atlantic St, Dillon, MT). One glassblowing mention. |
+| Needs you | [Cedar Creek Gallery](https://cedarcreekgallery.com/) | Creedmoor, NC | Glassblowing wording on its About page (cedarcreekgallery.com), but no address anywhere on its own site. |
+| Needs you | [Dillsboro Creative Arts Center](https://jcgep.org/) | Dillsboro, NC | The Green Energy Park site (jcgep.org) has no glass wording on its homepage. Address there: 100 Green Energy Park Rd. |
+| Needs you | [Goldhagen Art Glass](https://www.goldhagenartglass.com/) | Hayesville, NC | An artist's own studio and gallery (glassblowing wording; 7 Goldhagen Studio Drive, Hayesville, NC on goldhagenartglass.com). Check it's open to the public before showing an exact pin. |
 | Needs you | [John C. Campbell Folk School](https://www.folkschool.org/) | NC | Address on site: ampbell Folk School One Folk School Road Brasstown, NC 28902. Kiln/flame wording only, no hot-shop wording. |
+| Needs you | [Moon Girl Glass](https://moongirlglass.com/) | Marshall, NC | Glassblowing wording and classes on moongirlglass.com; address on its contact page: 1881 Riddle Farm Rd, Marshall, NC 28753. OpenStreetMap found no match, so no trustworthy pin yet. |
 | Needs you | [North Carolina Glass Center](https://www.ncglasscenter.org/) | NC | Address on site: 112 East State St Black Mountain, NC 28711. But no hot-shop wording on the homepage, so the type is unconfirmed. VisitNC lists it among NC glassblowing studios (as Asheville). May be the successor to Asheville Glass Center. |
 | Needs you | [Penland School of Craft](https://penland.org/) | NC | Address on site: 2687 Conley Ridge Road Bakersville, NC 28705. But no hot-shop wording on the homepage, so the type is unconfirmed. |
+| Needs you | Woodhaven Glass | Brevard, NC | No website of its own found. Directories give two different Brevard addresses. |
+| Needs you | [Hot Shops Art Center](https://www.hotshopsartcenter.org/) | Omaha, NE | "Hot shop" appears only as the center's name on hotshopsartcenter.org; no glassblowing wording on the homepage. Address there: 1301 Nicholas Street, Omaha, NE. |
 | Needs you | [Franklin Pierce College](https://www.franklinpierce.edu/) | NH | A college or university program. Check whether the public can take classes or rent time. No address or glass-studio wording on the homepage. |
 | Needs you | [Carlisle Machine Works, Inc.](https://www.carlislemachine.com/) | NJ | Known as a glass supplier or equipment maker. May run classes, but probably not a studio for this map. Couldn't check: security certificate couldn't be verified. |
 | Needs you | [Junili Beads & Yarns](https://jubilibeadsandyarns.com/) | NJ | A bead and yarn shop; one 'torch' mention. Probably not a glass studio for this map. |
@@ -83,6 +92,7 @@ Candidates come from two Glass Art Society lists: the public access studios list
 | Needs you | [Professional Glass Consultants](https://www.etchmaster.com/) | NM | Known as a glass supplier or equipment maker. May run classes, but probably not a studio for this map. No address or glass-studio wording on the homepage. |
 | Needs you | [Glass Art Sudio, Inc.](https://www.glassartinclv.com/) | NV | Couldn't check: GAS link is a 'page not found'. |
 | Needs you | [Glasscraft EXPO](https://www.glasscraftexpo.com/) | NV | Address on site: Hotel & Casino | 9777 S Las Vegas Blvd | Las Vegas, NV 89183. Has hot-shop wording, but held back: This is a trade show, not a studio. Probably skip. |
+| Needs you | Expressive Glass | Buffalo, NY | No website of its own found. Listings call it a flameworking studio at 3333 Lake Shore Rd, Buffalo, NY, and one marks it closed. |
 | Needs you | [O-AT-KA School of Glass & Glass Studio](https://www.oatkaglass.com/) | NY | Couldn't check: secure connection failed. |
 | Needs you | The Studio of the Corning Museum of Glass | NY | GAS links it to UrbanGlass's website, so there's nothing of theirs to check. |
 | Needs you | [Brazee Street School of Glass](https://www.brazeestreetstudios.com/) | OH | No address and only kiln/flame wording on the homepage. |
@@ -109,7 +119,9 @@ Candidates come from two Glass Art Society lists: the public access studios list
 | Needs you | [Southwest School of Art & Craft](https://www.swschool.org/) | TX | Address shown is One UTSA Circle, San Antonio — the school appears to be part of UTSA now. |
 | Needs you | [The Glass Spot](https://www.richmondglassspot.com/) | VA | No address found on the homepage. |
 | Needs you | [Visual Arts Center of Richmond](https://www.visarts.org/) | VA | No address and only kiln/flame wording on the homepage. |
+| Needs you | [Workhouse Arts Center](https://www.workhousearts.org/glass-studio) | VA | Its glass page says hot shop rentals start once the glassblowing studio has fully launched. Not checked further. |
 | Needs you | [Fletcher Farm School for the Arts & Crafts](https://www.fletcherfarm.org/) | VT | No address or glass-studio wording on the homepage. |
+| Needs you | [Avalon Glassworks](https://avalonglassworks.com/) | WA | avalonglassworks.com's title now reads "Art Glass Made in West Seattle 1993-2026", and the studio was listed for sale in April 2026. May be closing. |
 | Needs you | [Blowing Sands](http://www.blowingsands.com/) | WA | Address on site: 5805 14th Ave NW Seattle, WA 98107. But no hot-shop wording on the homepage, so the type is unconfirmed. |
 | Needs you | [Firehouse Studio](https://www.callahansfirehouse.com/) | WA | Similar name to the published Firehouse Glass (Vancouver, WA), but a different website. Check they're not the same place. Couldn't check: security certificate has expired. |
 | Needs you | [Glass Expressions](https://www.glassexpressions.com/) | WA | Couldn't check: security certificate is for a different address. |
@@ -122,23 +134,6 @@ Candidates come from two Glass Art Society lists: the public access studios list
 | Needs you | [Schack Art Center](https://www.schack.org/contact-us/) | WA | Couldn't check: GAS link is now a 'page not found'. Address on that page: 2921 Hoyt Ave., Everett, WA. No glass wording to confirm the hot shop. |
 | Needs you | [Seattle Stained Glass](https://www.seattlestainedglass.com/) | WA | Name says stained glass. Probably not for this map. Address on site: 12015 3rd Ave S, Seattle, WA 98168. No glass-studio wording on the homepage, so the type is unconfirmed. |
 | Needs you | [Peninsula Art School](https://www.peninsulaschoolofart.org/) | WI | Address on site: 3900 County Road F Fish Creek, WI 54212. No glass-studio wording on the homepage, so the type is unconfirmed. |
-| Not checked | Hollywood Hot Glass | FL |  |
-| Not checked | Glick Glass Center, Ball State University | Muncie, IN | A university program. Check whether the public can take classes or rent time. |
-| Not checked | House of Glass | Elwood, IN |  |
-| Not checked | Kokomo Opalescent Glass | Kokomo, IN | Trail says it's an art-glass factory with tours, hand blowing by local artists, and classes. Probably not a rentable hot shop. |
-| Not checked | Cedar Creek Gallery | Creedmoor, NC |  |
-| Not checked | Dillsboro Creative Arts Center | Dillsboro, NC |  |
-| Not checked | Goldhagen Art Glass | Hayesville, NC |  |
-| Not checked | Hearth Glass and Gallery | Burnsville, NC |  |
-| Not checked | Hot Glass Alley | Charlotte, NC |  |
-| Not checked | [Liberty Arts](https://www.libertyartsnc.org/glass) | Durham, NC |  |
-| Not checked | Moon Girl Glass | Marshall, NC |  |
-| Not checked | The GlasStation | Farmville, NC |  |
-| Not checked | Woodhaven Glass | Brevard, NC |  |
-| Not checked | Hot Shops Art Center | Omaha, NE | An art center with many studios; check whether a glass hot shop there is open to the public. |
-| Not checked | Expressive Glass | Buffalo, NY |  |
-| Not checked | [Workhouse Arts Center](https://www.workhousearts.org/glass-studio) | VA | Its glass page says hot shop rentals start once the glassblowing studio has fully launched. |
-| Not checked | Avalon Glassworks | WA |  |
 | Likely closed | Stumpchuck | CA | Website's domain no longer exists. Likely closed. |
 | Likely closed | Art Glass Orlando | FL | Website's domain no longer exists. Likely closed. |
 | Likely closed | Chicago School of Glass | IL | Website's domain no longer exists. Likely closed. |

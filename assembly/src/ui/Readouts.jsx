@@ -2,9 +2,24 @@ import { useStore } from '../store.js'
 import { sceneTotals } from '../core/scene.js'
 import { fmtMass, fmtTotalMass } from '../core/units.js'
 import { Segmented } from './fields.jsx'
+import { footprint } from '../core/placement.js'
 
 const TYPE_LABEL = { blown: 'Blown forms', solid: 'Solid shapes', cane: 'Cane rods' }
 const HANG_LABEL = { loop: 'Glass loop', drilled: 'Drilled + wire', cap: 'Glued cap' }
+
+function Footprint({ scene }) {
+  const f = footprint(scene)
+  if (!f) return <p className="muted small">Nothing placed yet.</p>
+  return (
+    <dl className="measures">
+      <dt>On the base (W × D)</dt><dd>{Math.round(f.w)} × {Math.round(f.d)} mm</dd>
+      <dt>Overall height</dt><dd>{Math.round(f.height)} mm</dd>
+      {f.hangDrop != null && (<><dt>Tallest standing part / stack</dt><dd>{Math.round(f.restTop)} mm</dd></>)}
+      {f.hangDrop != null && (<><dt>Hang drop (armature → lowest)</dt><dd>{Math.round(f.hangDrop)} mm</dd></>)}
+      {f.hangDrop != null && (<><dt>Clearance above base</dt><dd>{Math.round(f.clearance)} mm</dd></>)}
+    </dl>
+  )
+}
 
 function dimsText(p) {
   const d = p.dims, s = p.scale
@@ -49,7 +64,7 @@ export default function Readouts() {
 
       <section className="panel">
         <h3>Footprint</h3>
-        <p className="muted small">Base W × D, overall height and hang drop appear once parts are arranged (step 2).</p>
+        <Footprint scene={scene} />
       </section>
 
       <section className="panel">
