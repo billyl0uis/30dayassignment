@@ -102,6 +102,34 @@ function initTheme() {
   };
 }
 
+// ---- Mix tab memory -------------------------------------------------------------------
+// The color being matched and the search options are UI state, kept apart from the
+// palette data (like the theme) so exports stay about paints. `ran` means a recipe
+// search was done for this color, so boot re-runs it and the recipes come back.
+
+const MIX_KEY = 'color-mixer:mix';
+function saveMix(ran) {
+  const prev = loadMix();
+  const mix = { hex: $('hex').value.trim(), level: $('level').value, allow4: $('allow4').checked, ran: ran ?? (prev?.ran && prev.hex === $('hex').value.trim()) };
+  try { localStorage.setItem(MIX_KEY, JSON.stringify(mix)); } catch {}
+}
+function loadMix() {
+  try { return JSON.parse(localStorage.getItem(MIX_KEY) || 'null'); } catch { return null; }
+}
+/** Put the saved Mix tab back. Returns true when the recipe search should re-run. */
+function restoreMix() {
+  const mix = loadMix();
+  if (!mix) return false;
+  const rgb = parseHex(mix.hex ?? '');
+  if (rgb) {
+    $('hex').value = mix.hex;
+    $('picker').value = labToHex(hexToLab(mix.hex));
+  }
+  if ([...$('level').options].some((o) => o.value === mix.level)) $('level').value = mix.level;
+  $('allow4').checked = !!mix.allow4;
+  return !!(rgb && mix.ran);
+}
+
 // ---- icons (one stroke family, drawn not typed) -------------------------------------
 
 const svg = (d, size = 20) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -368,6 +396,7 @@ function runSolver() {
     );
   }
   lastTarget = labToHex(hexToLab(hex));
+  saveMix(true);
   check?.setTarget(lastTarget);
   $('results').innerHTML = '';
   mixStatus('Searching…');
@@ -624,11 +653,17 @@ function bindEvents() {
     }
   };
 
-  $('picker').oninput = () => ($('hex').value = $('picker').value);
+  $('picker').oninput = () => {
+    $('hex').value = $('picker').value;
+    saveMix();
+  };
   $('hex').onchange = () => {
     const rgb = parseHex($('hex').value);
     if (rgb) $('picker').value = labToHex(hexToLab($('hex').value));
+    saveMix();
   };
+  $('level').onchange = () => saveMix();
+  $('allow4').onchange = () => saveMix();
   $('go').onclick = runSolver;
   $('save-target').onclick = () => {
     const hex = $('hex').value.trim();
@@ -699,9 +734,13 @@ async function boot() {
     capture: (onLab) => openCapture($('capture'), { mode: 'mix', onSave: (m) => onLab(m.lab) }),
   });
   reference = initReference({ getState: () => state, commit, showBanner, useTarget, storage: safeStorage });
+  const rerun = restoreMix();
   renderAll();
   setTab(location.hash.slice(1) || 'paints');
+  if (rerun && mixPalette().usable.length) runSolver();
   if (loadError) showBanner(loadError);
+  // Ask the browser not to clear this site's data when space runs low.
+  navigator.storage?.persist?.().catch(() => {});
 }
 
 boot();
