@@ -1,0 +1,535 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T22:17:08+00:00",
+  "title": "Design System: Hot Shop Atlas",
+  "extensions": {
+    "colorMeta": {
+      "rod-hot": {
+        "role": "primary",
+        "displayName": "Hot Shop Orange",
+        "canonical": "oklch(63.7% 0.184 36.5)",
+        "tonalRamp": [
+          "#290000",
+          "#510000",
+          "#7b1600",
+          "#a8330b",
+          "#d74f27",
+          "#fc7853",
+          "#ffa382",
+          "#ffceb0"
+        ]
+      },
+      "rod-flame": {
+        "role": "primary",
+        "displayName": "Flame Teal-Blue",
+        "canonical": "oklch(56.0% 0.109 230.6)",
+        "tonalRamp": [
+          "#000e22",
+          "#002a44",
+          "#004969",
+          "#006b90",
+          "#308db5",
+          "#63b0d5",
+          "#91d4f5",
+          "#bef8ff"
+        ]
+      },
+      "rod-kiln": {
+        "role": "primary",
+        "displayName": "Kiln Violet",
+        "canonical": "oklch(48.6% 0.156 309.9)",
+        "tonalRamp": [
+          "#19002c",
+          "#370551",
+          "#592479",
+          "#7c41a2",
+          "#9c68c0",
+          "#bd8edf",
+          "#deb6fe",
+          "#ffdeff"
+        ]
+      },
+      "rod-neon": {
+        "role": "primary",
+        "displayName": "Neon Amber",
+        "canonical": "oklch(81.1% 0.166 85.0)",
+        "tonalRamp": [
+          "#180700",
+          "#372000",
+          "#5a3c00",
+          "#805a00",
+          "#a77a00",
+          "#d09c00",
+          "#f9bf2a",
+          "#ffe772"
+        ]
+      },
+      "rod-mixed": {
+        "role": "primary",
+        "displayName": "Mixed Green",
+        "canonical": "oklch(57.5% 0.127 138.7)",
+        "tonalRamp": [
+          "#001100",
+          "#062e00",
+          "#214e0f",
+          "#3b7029",
+          "#5a9448",
+          "#81b671",
+          "#a9d99b",
+          "#d3fdc6"
+        ]
+      },
+      "chart-white": {
+        "role": "neutral",
+        "displayName": "Chart White",
+        "canonical": "oklch(98.7% 0.004 106.5)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252523",
+          "#424240",
+          "#61615f",
+          "#828280",
+          "#a5a5a2",
+          "#c9c9c6",
+          "#efefec"
+        ]
+      },
+      "chart-grey": {
+        "role": "neutral",
+        "displayName": "Chart Grey",
+        "canonical": "oklch(95.7% 0.007 106.5)",
+        "tonalRamp": [
+          "#0b0b08",
+          "#252522",
+          "#42423e",
+          "#61615d",
+          "#83837e",
+          "#a5a5a1",
+          "#c9c9c5",
+          "#efefea"
+        ]
+      },
+      "field-white": {
+        "role": "neutral",
+        "displayName": "Field White",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(18.6% 0.008 95.5)",
+        "tonalRamp": [
+          "#0c0b08",
+          "#262521",
+          "#43423d",
+          "#62615c",
+          "#84827d",
+          "#a6a59f",
+          "#cbc9c3",
+          "#f0eee9"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "oklch(40.1% 0.013 95.4)",
+        "tonalRamp": [
+          "#0d0b05",
+          "#27251e",
+          "#44423a",
+          "#636159",
+          "#85827a",
+          "#a7a59c",
+          "#ccc9c0",
+          "#f1efe5"
+        ]
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "canonical": "oklch(84.7% 0.012 96.4)",
+        "tonalRamp": [
+          "#0d0b06",
+          "#27251e",
+          "#44423b",
+          "#636159",
+          "#84827a",
+          "#a7a59c",
+          "#cbc9c0",
+          "#f1efe5"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(88.1% 0.011 100.8)",
+        "tonalRamp": [
+          "#0c0b06",
+          "#26251f",
+          "#43423c",
+          "#62615b",
+          "#84837b",
+          "#a6a59e",
+          "#cac9c2",
+          "#f0efe7"
+        ]
+      },
+      "status-yellow": {
+        "role": "neutral",
+        "displayName": "Status Yellow",
+        "canonical": "oklch(96.4% 0.065 97.1)",
+        "tonalRamp": [
+          "#0d0b04",
+          "#282518",
+          "#46422f",
+          "#676249",
+          "#8a8364",
+          "#aea681",
+          "#d3ca9f",
+          "#faefbe"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The Hot Shop Atlas wordmark only; 22px on phones."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Studio name in the detail view."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Studio names in chart rows (15.5px on phones); link rows use 800 at 16px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text; descriptions capped at 62ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Filter labels, sort, spec terms, chips, status; sentence case."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Chart numbers (HS-027) in rows and band tags; 13px for counts and distances."
+      },
+      "code-small": {
+        "displayName": "Code Small",
+        "purpose": "Family counts on tabs, pin codes, URLs on link rows."
+      }
+    },
+    "shadows": [
+      {
+        "name": "pin-lift",
+        "value": "0 2px 4px rgba(20, 19, 15, 0.35)",
+        "purpose": "Map pins only; separates swatch pins from tiles."
+      },
+      {
+        "name": "cluster-lift",
+        "value": "0 2px 6px rgba(20, 19, 15, 0.35)",
+        "purpose": "Cluster markers on the map."
+      },
+      {
+        "name": "sheet-lift",
+        "value": "0 -6px 24px rgba(20, 19, 15, 0.18)",
+        "purpose": "Phone bottom sheet over the map."
+      },
+      {
+        "name": "chip-inset",
+        "value": "inset 0 0 0 9px var(--paper), inset 0 0 0 10px var(--ink)",
+        "purpose": "Not elevation: draws the printed-chip margin and ink ring on row swatches (14px/15px on the detail band)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "All structural motion: row flood, family cap growth, pin scale, sheet height, filter chevron."
+      },
+      {
+        "name": "flood",
+        "value": "clip-path 0.3s",
+        "purpose": "Signature: rod colour sweeps left-to-right across the chosen row before the detail opens."
+      },
+      {
+        "name": "sheet",
+        "value": "height 0.3s",
+        "purpose": "Phone bottom sheet between peek, half and full."
+      },
+      {
+        "name": "family-cap",
+        "value": "height 0.25s",
+        "purpose": "Family tab colour cap grows 8px to 11px on hover and when pressed."
+      },
+      {
+        "name": "pin",
+        "value": "transform 0.2s",
+        "purpose": "Active pin scales to 1.3."
+      },
+      {
+        "name": "state",
+        "value": "background-color 0.15s, color 0.15s",
+        "purpose": "Button hover fills."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Disables sheet, pin, flood and family-cap transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "760px",
+        "purpose": "At or below: full-screen map with directory as a bottom sheet (peek 176px, half 52dvh, full 90dvh)."
+      }
+    ],
+    "baseMap": {
+      "default": "grayscale(0.7) contrast(1.02) brightness(1.03)",
+      "attribution": "OpenStreetMap attribution stays visible on a 92% chart-white strip."
+    },
+    "variants": {
+      "note": "Shipped defaults are the data-* values on <html>: palette=chart, font=schibsted, density=regular, swatch=chip, map=grey, pin=code. tweaks.js (visible only with ?tweak) switches these sanctioned alternates.",
+      "palette": {
+        "chart": {
+          "default": true,
+          "rod-hot": "#e4572e",
+          "rod-flame": "#0f7fa8",
+          "rod-kiln": "#7a3fa0",
+          "rod-neon": "#f2b705",
+          "rod-mixed": "#4f8a3c"
+        },
+        "deep": {
+          "rod-hot": "#c8102e",
+          "rod-flame": "#00558c",
+          "rod-kiln": "#5b2a86",
+          "rod-neon": "#d99e00",
+          "rod-mixed": "#2e6b3a",
+          "textOnRods": "white except neon and approximate pins"
+        },
+        "pale": {
+          "rod-hot": "#f2967a",
+          "rod-flame": "#6cb8d6",
+          "rod-kiln": "#b28fd0",
+          "rod-neon": "#f6d55c",
+          "rod-mixed": "#93c07c",
+          "textOnRods": "ink on every rod"
+        }
+      },
+      "font": {
+        "schibsted": {
+          "default": true,
+          "display": "Schibsted Grotesk"
+        },
+        "bricolage": {
+          "display": "Bricolage Grotesque (headings only; body stays Schibsted)"
+        },
+        "shoulders": {
+          "display": "Big Shoulders Display (headings only; wordmark 40px, letter-spacing 0)"
+        }
+      },
+      "density": {
+        "compact": {
+          "rowMinHeight": "52px",
+          "nameSize": "15px",
+          "textPadding": "7px 14px"
+        },
+        "regular": {
+          "default": true,
+          "rowMinHeight": "68px",
+          "nameSize": "16.5px"
+        },
+        "large": {
+          "rowMinHeight": "86px",
+          "nameSize": "19px",
+          "metaSize": "14.5px",
+          "codeSize": "16px"
+        }
+      },
+      "swatch": {
+        "flat": {
+          "description": "Plain full-bleed rod colour in the swatch cell and band."
+        },
+        "chip": {
+          "default": true,
+          "description": "Rod chip inset in a chart-white margin with a 1px ink ring."
+        },
+        "tint": {
+          "description": "Whole row tinted 13% of its rod colour (22% on hover)."
+        }
+      },
+      "map": {
+        "grey": {
+          "default": true,
+          "filter": "grayscale(0.7) contrast(1.02) brightness(1.03)"
+        },
+        "color": {
+          "filter": "none"
+        },
+        "ink": {
+          "filter": "grayscale(1) contrast(1.25) brightness(1.04)"
+        }
+      },
+      "pin": {
+        "code": {
+          "default": true,
+          "description": "Two-letter family code (HS, FW, KG, NE, MX)."
+        },
+        "number": {
+          "description": "Three-digit chart number (027)."
+        },
+        "dot": {
+          "description": "20px square, no text. Colour-only; not acceptable as a default under the Code Carries Type Rule."
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "The primary action (Near me). Ink fill, square, turns flame blue when distance sort is on.",
+      "html": "<button class=\"ds-btn-ink\" type=\"button\">Near me</button>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-btn-ink{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border:1px solid var(--rule);border-radius:0;padding:10px 14px;font:700 15px/1.4 var(--sans);cursor:pointer;transition:background-color .15s,color .15s;} .ds-btn-ink:hover{background:#33312a;} .ds-btn-ink:focus-visible{outline:3px solid var(--ink);outline-offset:2px;} .ds-btn-ink:active{background:var(--t-flame);}"
+    },
+    {
+      "name": "Plain Button",
+      "kind": "button",
+      "refersTo": "button-plain",
+      "description": "Secondary action (Copy link). Field white, ink rule, hovers to chart grey.",
+      "html": "<button class=\"ds-btn-plain\" type=\"button\">Copy link to this studio</button>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-btn-plain{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--ink);border:1px solid var(--rule);border-radius:0;padding:10px 14px;font:700 15px/1.4 var(--sans);cursor:pointer;transition:background-color .15s;} .ds-btn-plain:hover{background:var(--paper-2);} .ds-btn-plain:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Search row: field-white input beside the ink Near me button.",
+      "html": "<div class=\"ds-search\"><input class=\"ds-input\" type=\"search\" placeholder=\"Search studio, city, state\"><button class=\"ds-search-btn\" type=\"button\">Near me</button></div>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-search{display:flex;gap:8px;padding:14px 24px;background:var(--paper);border-bottom:1px solid var(--rule);} .ds-input{flex:1;min-width:0;background:#fff;color:var(--ink);border:1px solid var(--rule);border-radius:0;padding:10px 12px;font:400 16px var(--sans);} .ds-input::placeholder{color:#6d6a60;} .ds-input:focus-visible{outline:3px solid var(--ink);outline-offset:2px;} .ds-search-btn{background:var(--ink);color:#fff;border:1px solid var(--rule);border-radius:0;padding:10px 14px;font:700 15px var(--sans);cursor:pointer;} .ds-search-btn:hover{background:#33312a;}"
+    },
+    {
+      "name": "Offer Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Multi-select filter chip; pressed inverts to ink.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">Rentals</button><button class=\"ds-chip\" aria-pressed=\"false\">Classes</button><button class=\"ds-chip\" aria-pressed=\"false\">Demos</button></div>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-chips{display:flex;flex-wrap:wrap;gap:6px;} .ds-chip{border:1px solid var(--rule);background:#fff;color:var(--ink);border-radius:0;padding:5px 10px;font:600 13px var(--sans);cursor:pointer;} .ds-chip[aria-pressed=\"true\"]{background:var(--ink);color:#fff;} .ds-chip:hover{background:var(--paper-2);} .ds-chip[aria-pressed=\"true\"]:hover{background:#33312a;} .ds-chip:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}"
+    },
+    {
+      "name": "Family Strip",
+      "kind": "nav",
+      "refersTo": "family-tab",
+      "description": "The five-family type filter, each tab capped with its rod colour and carrying code plus count.",
+      "html": "<div class=\"ds-fams\"><button class=\"ds-fam\" style=\"--c:var(--t-hot)\" aria-pressed=\"true\">Hot shop<span>HS 45</span></button><button class=\"ds-fam\" style=\"--c:var(--t-flame)\" aria-pressed=\"false\">Flame<span>FW 0</span></button><button class=\"ds-fam\" style=\"--c:var(--t-kiln)\" aria-pressed=\"false\">Kiln<span>KG 0</span></button><button class=\"ds-fam\" style=\"--c:var(--t-neon)\" aria-pressed=\"false\">Neon<span>NE 0</span></button><button class=\"ds-fam\" style=\"--c:var(--t-mixed)\" aria-pressed=\"false\">Mixed<span>MX 0</span></button></div>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-fams{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule);max-width:520px;} .ds-fam{position:relative;border:0;border-right:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:18px 4px 10px;font:700 13px/1.15 var(--sans);cursor:pointer;} .ds-fam:last-child{border-right:0;} .ds-fam::before{content:\"\";position:absolute;left:0;right:0;top:0;height:8px;background:var(--c);transition:height .25s var(--ease);} .ds-fam span{display:block;font:500 12px var(--mono);color:var(--ink-2);margin-top:3px;font-variant-numeric:tabular-nums;} .ds-fam:hover::before{height:11px;} .ds-fam[aria-pressed=\"true\"]{background:var(--ink);color:#fff;} .ds-fam[aria-pressed=\"true\"] span{color:#cfcdc4;} .ds-fam[aria-pressed=\"true\"]::before{height:11px;} .ds-fam:focus-visible{outline:3px solid var(--ink);outline-offset:-3px;}"
+    },
+    {
+      "name": "Chart Row",
+      "kind": "card",
+      "refersTo": "chart-row",
+      "description": "Signature directory row: chip swatch, mono chart code, name over meta. Hover tints; choosing floods the row with its rod colour.",
+      "html": "<div class=\"ds-list\"><button class=\"ds-row\" style=\"--c:var(--t-hot)\"><span class=\"ds-sw\"></span><span class=\"ds-code\">HS-032</span><span class=\"ds-txt\"><span class=\"ds-name\">Pittsburgh Glass Center</span><span class=\"ds-meta\">Pittsburgh, PA · Public rental</span></span></button><button class=\"ds-row ds-light\" style=\"--c:var(--t-flame)\"><span class=\"ds-sw ds-approx\"></span><span class=\"ds-code\">FW-004</span><span class=\"ds-txt\"><span class=\"ds-name\">Example flame studio</span><span class=\"ds-meta\">City only · Classes</span></span></button></div>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-list{max-width:520px;border-top:1px solid var(--rule);} .ds-row{position:relative;isolation:isolate;display:grid;grid-template-columns:72px 92px 1fr;align-items:stretch;width:100%;min-height:68px;padding:0;text-align:left;background:var(--paper);color:var(--ink);border:0;border-bottom:1px solid var(--rule);cursor:pointer;} .ds-sw{background:var(--c);border-right:1px solid var(--rule);box-shadow:inset 0 0 0 9px var(--paper),inset 0 0 0 10px var(--ink);} .ds-sw.ds-approx{background:repeating-linear-gradient(135deg,var(--c) 0 6px,transparent 6px 12px),var(--paper);} .ds-code{display:grid;place-items:center;font:700 14px var(--mono);font-variant-numeric:tabular-nums;border-right:1px solid var(--rule);} .ds-txt{padding:12px 16px;display:grid;align-content:center;gap:2px;min-width:0;} .ds-name{font:800 16.5px/1.2 var(--sans);} .ds-meta{font:400 13px var(--sans);color:var(--ink-2);} .ds-row::before{content:\"\";position:absolute;inset:0;z-index:-1;background:var(--c);clip-path:inset(0 100% 0 0);transition:clip-path .3s var(--ease);} .ds-row:hover{background:color-mix(in srgb,var(--c) 10%,var(--paper));} .ds-row:active::before{clip-path:inset(0 0 0 0);} .ds-row.ds-light:active{color:#fff;} .ds-row.ds-light:active .ds-meta{color:rgba(255,255,255,.85);} .ds-row:active .ds-code,.ds-row:active .ds-sw{border-color:transparent;box-shadow:none;} .ds-row:focus-visible{outline:3px solid var(--ink);outline-offset:-3px;}"
+    },
+    {
+      "name": "Detail Band",
+      "kind": "custom",
+      "refersTo": "detail-band",
+      "description": "The rod-colour band that heads the detail view, with chip inset and the chart code tag.",
+      "html": "<div class=\"ds-band\" style=\"--c:var(--t-hot)\"><span class=\"ds-band-code\">HS-032</span></div>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-band{position:relative;height:112px;max-width:520px;background:var(--c);border-bottom:1px solid var(--rule);box-shadow:inset 0 0 0 14px var(--paper),inset 0 0 0 15px var(--ink);} .ds-band-code{position:absolute;left:30px;bottom:28px;font:700 15px var(--mono);background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:4px 8px;}"
+    },
+    {
+      "name": "Website Link List",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Outbound link rows; the first (Visit website) is the solid ink call to action.",
+      "html": "<ul class=\"ds-links\"><li><a href=\"#\"><b>Visit website →</b><span>pittsburghglasscenter.org</span></a></li><li><a href=\"#\"><b>Instagram →</b><span>instagram.com/example</span></a></li></ul>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-links{list-style:none;margin:0;padding:0;max-width:472px;border-top:1px solid var(--rule);} .ds-links a{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--rule);text-decoration:none;color:var(--ink);font:800 16px var(--sans);} .ds-links a span{font:500 13px var(--mono);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .ds-links a:hover span{color:var(--ink);} .ds-links li:first-child a{background:var(--ink);color:#fff;padding:14px 16px;} .ds-links li:first-child a span{color:#cfcdc4;} .ds-links a:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}"
+    },
+    {
+      "name": "Map Pin",
+      "kind": "custom",
+      "refersTo": "map-pin",
+      "description": "Swatch pin with family code; approximate pins are dashed; active pin scales and shows its chart code.",
+      "html": "<div class=\"ds-pins\"><div class=\"ds-pin\" style=\"--c:var(--t-hot)\">HS</div><div class=\"ds-pin ds-pin-light\" style=\"--c:var(--t-flame)\">FW</div><div class=\"ds-pin ds-pin-approx\" style=\"--c:var(--t-kiln)\">KG</div><div class=\"ds-pin ds-pin-active\" style=\"--c:var(--t-hot)\">HS<span class=\"ds-pin-label\">HS-032</span></div><div class=\"ds-cluster\">12</div></div>",
+      "css": ":host{--paper:#fbfbf8;--paper-2:#f1f1ec;--ink:#14130f;--ink-2:#4a4840;--rule:#14130f;--t-hot:#e4572e;--t-flame:#0f7fa8;--t-kiln:#7a3fa0;--t-neon:#f2b705;--t-mixed:#4f8a3c;--sans:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;--mono:'Chivo Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(0.16,1,0.3,1);} .ds-pins{display:flex;gap:28px;align-items:center;padding:24px;background:#e9e9e4;} .ds-pin{position:relative;width:42px;height:24px;display:grid;place-items:center;font:700 12px/1 var(--mono);letter-spacing:.02em;color:var(--ink);background:var(--c);border:1.5px solid var(--ink);box-shadow:0 2px 4px rgba(20,19,15,.35);transition:transform .2s var(--ease);} .ds-pin:hover{transform:scale(1.3);} .ds-pin-light{color:#fff;} .ds-pin-approx{background:var(--paper);color:var(--ink);border:2px dashed var(--c);outline:1px solid var(--ink);} .ds-pin-active{transform:scale(1.3);} .ds-pin-label{position:absolute;left:100%;top:50%;transform:translate(6px,-50%);white-space:nowrap;font:700 12px var(--mono);color:var(--ink);background:#fff;border:1px solid var(--ink);padding:2px 6px;} .ds-cluster{width:40px;height:40px;display:grid;place-items:center;font:700 14px var(--mono);color:#fff;background:var(--ink);border:2px solid #fff;outline:1px solid var(--ink);box-shadow:0 2px 6px rgba(20,19,15,.35);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Colour-Rod Chart",
+    "overview": "The directory is printed like a glass manufacturer's rod chart (the Reichenbach or Kugler bar card a glassblower keeps by the bench). Every studio is a flat, coded swatch on chart-white paper, ruled off from its neighbours with 1px ink lines. A working glassblower should read it the way they read a colour chart: family colour first, code second, name third. It deliberately refuses the default finder of rounded result cards floating beside a map.\n\nThe surface is dense, flat and square. Hierarchy comes from weight, ink rules and colour fields rather than containers or elevation. Type is a single grotesque at heavy weights for names, with a mono reserved for anything that is counted or coded (chart numbers, totals, distances, URLs). The base map is quietened to grey so the five rod colours are the only saturated thing on screen. Motion is short and purposeful: the signature is a colour flood across the chosen row.\n\nThe shipped default is the set of `data-*` values on `<html>`: Chart palette, Schibsted headings, Regular rows, Chip swatches, Soft-grey map, type-code pins. A developer-only options panel (`?tweak`) can switch to the sanctioned variants listed in the sidecar; visitors never see it.",
+    "keyCharacteristics": [
+      "Chart-white ground, ink text, 1px ink rules between every band and row.",
+      "Five rod colours, one per studio family, carried by swatches, bands, pins and the family filter.",
+      "Every colour is paired with a text code (HS, FW, KG, NE, MX, and HS-027 style chart numbers).",
+      "Square corners everywhere; no cards, no radius.",
+      "Schibsted Grotesk for words, Chivo Mono for codes and counts.",
+      "Desaturated base map; colour lives on the swatches, not the tiles."
+    ],
+    "rules": [
+      {
+        "name": "The Rods Are Families Rule",
+        "body": "The five rod colours mean studio type and nothing else (the two documented exceptions are the active Near me button and text selection). Never use a rod colour for decoration, emphasis or brand.",
+        "section": "colors"
+      },
+      {
+        "name": "The Code Carries Type Rule",
+        "body": "A rod colour never appears without its text code nearby: swatch beside a chart number, pin carrying HS/FW/KG/NE/MX, band carrying its HS-032 tag, family tab carrying its code and count. Colour must never be the only way to tell types apart.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Map Rule",
+        "body": "Map tiles are filtered to grey (grayscale 0.7, slight contrast and brightness lift) so the pins are the only saturated marks on the map.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Is For Numbers Rule",
+        "body": "Chivo Mono sets only codes, counts, distances and URLs. Names, labels and prose are always Schibsted.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Uppercase Rule",
+        "body": "Labels are sentence case at 600-700 weight; the build uses no letter-spaced uppercase labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Chart Rule",
+        "body": "Nothing in the directory column casts a shadow. Shadows belong only to marks and sheets that sit over the map.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** rule every band, row and cell with a 1px ink line; the rules are the structure.",
+      "**Do** pair every rod colour with its text code (HS, FW, KG, NE, MX or the full HS-027 number).",
+      "**Do** keep all corners square (0px), including third-party map controls.",
+      "**Do** set codes, counts, distances and URLs in Chivo Mono with tabular figures, and everything else in Schibsted Grotesk.",
+      "**Do** mark city-level locations with the diagonal hatch (swatches, bands) or dashed border (pins), never with an exact-looking solid mark.",
+      "**Do** keep the base map desaturated so rod colours are the only saturated marks.",
+      "**Do** put white text on flame and kiln, and ink text on hot, neon and mixed.",
+      "**Do** honour reduced motion: the flood, family caps, pins and sheet stop animating."
+    ],
+    "donts": [
+      "**Don't** use rounded corners or soft cards anywhere in the directory.",
+      "**Don't** fake glass lighting on swatches (no glossy highlights, specular gradients or translucency); swatches are flat printed chips. The approximate-location hatch is the only patterned fill.",
+      "**Don't** cast shadows inside the directory column; shadows are reserved for pins, clusters and the phone sheet over the map.",
+      "**Don't** use a rod colour for anything except its studio family (beyond the active Near me state and text selection).",
+      "**Don't** add studio images, logos or decorative illustration; the swatches are the imagery.",
+      "**Don't** ship the colour-only square pin variant as the default; it drops the type code that keeps families legible without colour."
+    ]
+  }
+}

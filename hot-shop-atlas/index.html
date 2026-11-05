@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" data-palette="chart" data-font="schibsted" data-density="regular" data-swatch="chip" data-map="grey" data-pin="code">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hot Shop Atlas</title>
+<meta name="description" content="A free map and directory of glassblowing studios in the United States, each checked against the studio's own website.">
+<meta name="theme-color" content="#fbfbf8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@500;700&family=Schibsted+Grotesk:wght@400..900&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="style.css?v=11">
+</head>
+<body>
+<div class="app">
+  <aside class="panel" id="panel" data-sheet="half" aria-label="Studio directory">
+    <button class="sheet-handle" id="sheetHandle" type="button" aria-label="Resize directory"><span></span></button>
+
+    <header class="brand">
+      <h1>Hot Shop Atlas</h1>
+      <p class="tag" id="tagline">Chart of US glass studios</p>
+    </header>
+
+    <!-- List view -->
+    <section class="view" id="listView">
+      <div class="search-row">
+        <input id="q" type="search" placeholder="Search studio, city, state" autocomplete="off" aria-label="Search studios">
+        <button id="nearMe" class="btn btn-ink" type="button" title="Sort by distance from you">Near me</button>
+      </div>
+
+      <div class="families" id="typeChips" role="group" aria-label="Filter by studio type"></div>
+
+      <details class="filters" id="filters">
+        <summary><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg><span>More filters</span> <span class="filter-count" id="filterCount"></span></summary>
+        <div class="filter-body">
+          <div class="field two">
+            <label>State
+              <select id="stateSel"><option value="">All states</option></select>
+            </label>
+            <label>Access
+              <select id="accessSel"><option value="">Any access</option></select>
+            </label>
+          </div>
+          <div class="field">
+            <span class="label">Offers (must have all)</span>
+            <div class="chips" id="offerChips"></div>
+          </div>
+          <button class="link-btn" id="clearFilters" type="button">Clear filters</button>
+        </div>
+      </details>
+
+      <div class="list-head">
+        <span id="count" aria-live="polite"></span>
+        <label class="sort">Sort
+          <select id="sortSel">
+            <option value="name">Name</option>
+            <option value="state">State</option>
+            <option value="code">Chart no.</option>
+            <option value="distance" disabled>Distance</option>
+          </select>
+        </label>
+      </div>
+      <p class="status" id="status" hidden></p>
+      <ul class="list" id="list"></ul>
+    </section>
+
+    <!-- Detail view -->
+    <section class="view" id="detailView" hidden>
+      <article class="detail" id="detail"></article>
+    </section>
+  </aside>
+
+  <main class="map-wrap">
+    <div id="map" aria-label="Map of glass studios"></div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="app.js?v=11"></script>
+<script src="tweaks.js?v=11"></script>
+</body>
+</html>
