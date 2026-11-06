@@ -1,0 +1,79 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+:root{--kraft:#d9bd8f;--kraft-deep:#c6a571;--tag:#f4ead2;--ink:#26211d;--ink-soft:#5b4f43;--red:#d4432c;--floor:#cfccc5;--cobalt:#2a5bd7}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--kraft);color:var(--ink);font-family:Archivo,sans-serif}
+header{height:64px;display:flex;align-items:center;gap:40px;padding:0 32px;border-bottom:3px solid var(--ink)}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font-stretch:125%;font-weight:900;font-size:30px;letter-spacing:-.01em;text-transform:uppercase}
+.brand span{font-size:13px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-soft)}
+.stat{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-soft)}
+.stat b{display:block;font-size:22px;letter-spacing:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.clock{margin-left:auto;text-align:right}
+.clock b{font-size:34px;font-stretch:70%}
+.line{position:relative;height:150px;padding:0 32px}
+.line:before{content:"";position:absolute;left:0;right:0;top:20px;border-top:2px solid var(--ink)}
+.tags{display:flex;gap:28px;padding-top:12px}
+.tag{position:relative;width:230px;height:120px;background:var(--tag);clip-path:polygon(18px 0,100% 0,100% 100%,0 100%,0 18px);padding:16px 16px 12px 30px;transform:rotate(-1.5deg)}
+.tag:nth-child(2){transform:rotate(1deg)}.tag:nth-child(3){transform:rotate(-.5deg)}
+.tag:before{content:"";position:absolute;left:12px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--kraft);box-shadow:0 0 0 2px var(--ink)}
+.tag h4{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-soft)}
+.tag p{font-weight:800;font-size:20px;font-stretch:90%;margin-top:4px}
+.tag .price{position:absolute;right:14px;bottom:8px;font-family:"Permanent Marker";font-size:30px;color:var(--ink)}
+.tag .dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--cobalt);vertical-align:middle;margin-right:6px}
+.tag small{font-size:13px;color:var(--ink-soft)}
+main{display:grid;grid-template-columns:1fr 440px;gap:24px;padding:8px 32px 0;height:686px}
+.floor{background:var(--floor);position:relative;overflow:hidden}
+.pipe{position:absolute;left:0;top:300px;width:620px;height:10px;background:#7a7570}
+.gob{position:absolute;left:600px;top:236px;width:230px;height:140px;border-radius:50% 60% 60% 50%;background:radial-gradient(circle at 55% 45%,#fff3d6,#ffb54a 45%,#e2561a 80%)}
+.hud{position:absolute;left:24px;top:20px;display:flex;gap:10px}
+.hud span{background:var(--tag);padding:6px 12px;font-weight:700;font-size:15px}
+.hud span.hot{background:var(--ink);color:#fff}
+.msg{position:absolute;left:24px;bottom:24px;background:var(--red);color:#fff;padding:10px 16px;font-weight:700;font-size:17px}
+.side{display:flex;flex-direction:column;gap:18px}
+.gauge{height:44px;display:flex;border:2px solid var(--ink)}
+.gauge i{flex:1;border-right:2px solid var(--ink);font-style:normal;font-size:11px;font-weight:700;text-transform:uppercase;padding:4px}
+.gauge i.w{flex:2;background:var(--tag)}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.18em;margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tool{height:64px;background:var(--tag);border:2px solid var(--ink);display:flex;flex-direction:column;justify-content:space-between;padding:8px;font-weight:800;font-size:17px}
+.tool kbd{font:600 12px Archivo;color:var(--ink-soft)}
+.tool.on{background:var(--ink);color:var(--tag)}.tool.on kbd{color:var(--kraft)}
+.jars{display:flex;gap:8px}
+.jar{flex:1;height:52px;border:2px solid var(--ink);background:var(--tag);display:flex;align-items:center;gap:8px;padding:0 8px;font-size:14px;font-weight:700}
+.jar i{width:20px;height:20px;border-radius:50%}
+.read{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;font-size:15px}
+.read div{display:flex;justify-content:space-between;border-bottom:1px solid var(--kraft-deep);padding:4px 0}
+.read b{font-variant-numeric:tabular-nums}
+</style></head><body>
+<header>
+ <div class="brand"><b>Gaffer</b><span>Glass</span></div>
+ <div class="stat">Day<b>4</b></div><div class="stat">Cash<b>$212</b></div><div class="stat">Reputation<b>2</b></div>
+ <div class="stat clock">Time left<b>1:42</b></div>
+</header>
+<div class="line"><div class="tags">
+ <div class="tag"><h4>Corner café</h4><p>Tumbler, 3–3.5 in</p><small><span class="dot"></span>Cobalt</small><span class="price">$57</span></div>
+ <div class="tag"><h4>Wedding registry</h4><p>Paperweight</p><small>Any color</small><span class="price">$30</span></div>
+ <div class="tag"><h4>Gallery consignment</h4><p>Bowl, 5–6 in</p><small>Clear</small><span class="price">$72</span></div>
+</div></div>
+<main>
+ <div class="floor">
+  <div class="hud"><span class="hot">1984°F Working</span><span>Jack line 42%</span><span>Centered 96%</span></div>
+  <div class="pipe"></div><div class="gob"></div>
+  <div class="msg">Glass is too hot to jack. Let it set up a moment.</div>
+ </div>
+ <aside class="side">
+  <div><h3>Temperature</h3><div class="gauge"><i>Crack</i><i>Stiff</i><i class="w">Working</i><i>Hot</i><i>Too hot</i></div></div>
+  <div><h3>Hold</h3><div class="grid">
+   <div class="tool">Gather<kbd>F</kbd></div><div class="tool on">Glory<kbd>G</kbd></div><div class="tool">Marver<kbd>M</kbd></div><div class="tool">Block<kbd>K</kbd></div>
+   <div class="tool">Blow<kbd>B</kbd></div><div class="tool">Jacks<kbd>J</kbd></div><div class="tool">Turn<kbd>Space</kbd></div></div></div>
+  <div><h3>Tap</h3><div class="grid">
+   <div class="tool">Color<kbd>C</kbd></div><div class="tool">Punty<kbd>P</kbd></div><div class="tool">Knock off<kbd>X</kbd></div><div class="tool">Cullet<kbd>Q</kbd></div></div></div>
+  <div><h3>Color jar</h3><div class="jars">
+   <div class="jar"><i style="background:#2646c4"></i>Cobalt 4</div><div class="jar"><i style="background:#cd801e"></i>Amber 5</div><div class="jar"><i style="background:#28a06e"></i>Green 2</div></div></div>
+  <div class="read"><div>Glass<b>9.4 in³</b></div><div>Diameter<b>2.8 in</b></div><div>Height<b>3.1 in</b></div><div>Wall<b>0.21 in</b></div></div>
+ </aside>
+</main>
+</body></html>

@@ -1,0 +1,627 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T21:52:29+00:00",
+  "title": "Design System: Gaffer Glass",
+  "extensions": {
+    "colorMeta": {
+      "wall": {
+        "role": "neutral",
+        "displayName": "Whitewash",
+        "canonical": "#e7e3db",
+        "cssVar": "--wall",
+        "tonalRamp": [
+          "#0d0b06",
+          "#28251f",
+          "#45423b",
+          "#64615a",
+          "#85827b",
+          "#a8a59d",
+          "#cdc9c1",
+          "#f2eee6"
+        ]
+      },
+      "wall-shade": {
+        "role": "neutral",
+        "displayName": "Whitewash Shade",
+        "canonical": "#d9d4ca",
+        "cssVar": "--wall-2",
+        "tonalRamp": [
+          "#0e0b05",
+          "#28251d",
+          "#464139",
+          "#656158",
+          "#868279",
+          "#a9a49b",
+          "#cec9bf",
+          "#f3eee4"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Bench Ink",
+        "canonical": "#23262b",
+        "cssVar": "--ink",
+        "tonalRamp": [
+          "#090b10",
+          "#22252a",
+          "#3f4248",
+          "#5e6167",
+          "#7f8289",
+          "#a1a5ac",
+          "#c5c9d0",
+          "#ebeff6"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Bench Ink, Muted",
+        "canonical": "#5d636b",
+        "cssVar": "--ink-muted",
+        "tonalRamp": [
+          "#070b11",
+          "#20252c",
+          "#3d424a",
+          "#5c626a",
+          "#7d838b",
+          "#9fa6ae",
+          "#c3cad3",
+          "#e8eff9"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Slate Panel",
+        "canonical": "rgba(28, 32, 40, 0.92)",
+        "cssVar": "--panel",
+        "tonalRamp": [
+          "#080b12",
+          "#21252d",
+          "#3e424b",
+          "#5c616b",
+          "#7d828d",
+          "#a0a5b0",
+          "#c4c9d4",
+          "#e9effa"
+        ]
+      },
+      "panel-solid": {
+        "role": "neutral",
+        "displayName": "Slate, Solid",
+        "canonical": "#1c2028",
+        "cssVar": "--panel-solid",
+        "tonalRamp": [
+          "#080b12",
+          "#21252d",
+          "#3e424b",
+          "#5c616b",
+          "#7d828d",
+          "#a0a5b0",
+          "#c4c9d4",
+          "#e9effa"
+        ]
+      },
+      "panel-raised": {
+        "role": "neutral",
+        "displayName": "Slate, Raised",
+        "canonical": "#272c36",
+        "cssVar": "--panel-2",
+        "tonalRamp": [
+          "#070b14",
+          "#20252f",
+          "#3d424d",
+          "#5c616d",
+          "#7c828f",
+          "#9fa5b2",
+          "#c3c9d6",
+          "#e8effc"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#3a414d",
+        "cssVar": "--line",
+        "tonalRamp": [
+          "#060b15",
+          "#1f2530",
+          "#3b424e",
+          "#5a626e",
+          "#7b8390",
+          "#9da5b4",
+          "#c1cad8",
+          "#e6effe"
+        ]
+      },
+      "line-hi": {
+        "role": "neutral",
+        "displayName": "Rule, Lit",
+        "canonical": "#525b69",
+        "cssVar": "--line-hi",
+        "tonalRamp": [
+          "#050b16",
+          "#1e2532",
+          "#3a4250",
+          "#596270",
+          "#798392",
+          "#9ca6b5",
+          "#bfcada",
+          "#e5efff"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Panel Text",
+        "canonical": "#e8edf3",
+        "cssVar": "--text",
+        "tonalRamp": [
+          "#080b0f",
+          "#22252a",
+          "#3e4247",
+          "#5d6267",
+          "#7e8388",
+          "#a1a5ab",
+          "#c5cacf",
+          "#eaeff5"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Panel Muted",
+        "canonical": "#9aa4b2",
+        "cssVar": "--muted",
+        "tonalRamp": [
+          "#050b15",
+          "#1e2630",
+          "#3a434f",
+          "#59626f",
+          "#7a8391",
+          "#9ca6b4",
+          "#c0cad9",
+          "#e5efff"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Panel Faint",
+        "canonical": "#6b7480",
+        "cssVar": "--faint",
+        "tonalRamp": [
+          "#060b14",
+          "#1e2630",
+          "#3b434e",
+          "#59626e",
+          "#7a838f",
+          "#9ca6b3",
+          "#c0cad7",
+          "#e5f0fd"
+        ]
+      },
+      "heat": {
+        "role": "primary",
+        "displayName": "Working Heat",
+        "canonical": "#ff7a2f",
+        "cssVar": "--heat",
+        "tonalRamp": [
+          "#180500",
+          "#401701",
+          "#6c2c06",
+          "#9b440f",
+          "#d05a09",
+          "#fe792e",
+          "#fdb696",
+          "#ffe9e0"
+        ]
+      },
+      "heat-hi": {
+        "role": "primary",
+        "displayName": "Working Heat, Bright",
+        "canonical": "#ffb067",
+        "cssVar": "--heat-hi",
+        "tonalRamp": [
+          "#150700",
+          "#391d00",
+          "#613603",
+          "#8c510b",
+          "#b86e1d",
+          "#de9147",
+          "#fcb97d",
+          "#ffeada"
+        ]
+      },
+      "heat-dim": {
+        "role": "primary",
+        "displayName": "Working Heat, Banked",
+        "canonical": "#b8480f",
+        "cssVar": "--heat-dim",
+        "tonalRamp": [
+          "#1a0400",
+          "#411503",
+          "#712701",
+          "#a13d07",
+          "#cd5b29",
+          "#f57f4f",
+          "#fbb79c",
+          "#fee9e2"
+        ]
+      },
+      "heat-ink": {
+        "role": "primary",
+        "displayName": "Heat Ink",
+        "canonical": "#241005",
+        "tonalRamp": [
+          "#180600",
+          "#351f13",
+          "#533c2f",
+          "#745b4d",
+          "#977c6d",
+          "#ba9e8f",
+          "#dfc2b3",
+          "#feeadf"
+        ],
+        "note": "Hard-coded #241005 in styles.css (text on Working Heat); no custom property yet."
+      },
+      "breath": {
+        "role": "secondary",
+        "displayName": "Breath",
+        "canonical": "#5b7cfa",
+        "cssVar": "--breath",
+        "tonalRamp": [
+          "#030033",
+          "#0e0971",
+          "#1f2ba5",
+          "#3851cb",
+          "#5576f3",
+          "#82a0fb",
+          "#b5c8fc",
+          "#e8eefe"
+        ]
+      },
+      "breath-hi": {
+        "role": "secondary",
+        "displayName": "Breath, Bright",
+        "canonical": "#8fa6ff",
+        "cssVar": "--breath-hi",
+        "tonalRamp": [
+          "#040132",
+          "#141663",
+          "#2c3886",
+          "#4859ab",
+          "#677bd1",
+          "#889ff7",
+          "#b7c7fe",
+          "#e9eefe"
+        ]
+      },
+      "ok": {
+        "role": "status",
+        "displayName": "Working Green",
+        "canonical": "#5fd08a",
+        "cssVar": "--ok",
+        "tonalRamp": [
+          "#010f05",
+          "#032e16",
+          "#005029",
+          "#05753f",
+          "#1c9b58",
+          "#4cbf7a",
+          "#74e49d",
+          "#c8fed8"
+        ]
+      },
+      "warn": {
+        "role": "status",
+        "displayName": "Amber Warning",
+        "canonical": "#f3b33d",
+        "cssVar": "--warn",
+        "tonalRamp": [
+          "#120900",
+          "#332101",
+          "#583c05",
+          "#7f590e",
+          "#aa7806",
+          "#d6980e",
+          "#fdbc48",
+          "#feeccf"
+        ]
+      },
+      "bad": {
+        "role": "status",
+        "displayName": "Crack Red",
+        "canonical": "#ff5a4a",
+        "cssVar": "--bad",
+        "tonalRamp": [
+          "#1e0100",
+          "#4c0302",
+          "#7e0d09",
+          "#b31a14",
+          "#e23e31",
+          "#fe7463",
+          "#feb4a8",
+          "#fee9e6"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Wordmark",
+        "purpose": "The \"Gaffer\" wordmark only; 1.25rem on phones."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Card and dialog headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Order types on the order board."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Card copy, notes and the toast. Root size is 15px, so 1rem = 15px."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Muted labels beside figures in panels and the header."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Hold-tool labels; 1.05rem on the big thumb buttons."
+      },
+      "readout": {
+        "displayName": "Readout",
+        "purpose": "The clock and live temperature."
+      },
+      "numeric": {
+        "displayName": "Numeric",
+        "purpose": "Readout values, stats, prices, totals and key hints."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 8px 24px rgba(30, 28, 24, 0.22)",
+        "purpose": "Every floating panel and control (CSS --shadow)."
+      },
+      {
+        "name": "active-ring",
+        "value": "0 0 0 3px var(--heat-hi), 0 8px 24px rgba(30, 28, 24, 0.22)",
+        "purpose": "A hold tool being held."
+      },
+      {
+        "name": "hover-ring",
+        "value": "0 0 0 2px var(--line-hi), 0 8px 24px rgba(30, 28, 24, 0.22)",
+        "purpose": "A hold or tap tool under the pointer."
+      },
+      {
+        "name": "ember",
+        "value": "0 0 10px var(--heat)",
+        "purpose": "The round brand mark only."
+      },
+      {
+        "name": "scrim",
+        "value": "rgba(30, 28, 24, 0.45)",
+        "purpose": "Warm dimming behind the end-of-block dialog (background, not a shadow)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press",
+        "value": "transform 0.08s",
+        "purpose": "Hold tools scaling to 0.94 while held."
+      },
+      {
+        "name": "tool-fill",
+        "value": "background 0.12s",
+        "purpose": "Small hold tools filling with Working Heat."
+      },
+      {
+        "name": "gauge-marker",
+        "value": "left 0.1s linear",
+        "purpose": "Temperature marker tracking the piece."
+      },
+      {
+        "name": "progress",
+        "value": "width 0.4s",
+        "purpose": "Own-furnace progress fill."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact",
+        "value": "1100px",
+        "purpose": "Jar tray and tap pills move to their own row above the pads."
+      },
+      {
+        "name": "phone",
+        "value": "760px",
+        "purpose": "104px/50px thumb buttons, HUD replaces the readout rail, key hints hide."
+      }
+    ],
+    "canvas": {
+      "note": "Painted by src/render/scene.ts paintRoom(); not tokens, recorded for reference.",
+      "wallGradient": [
+        "#f1eee8",
+        "#dcd7ce"
+      ],
+      "sky": [
+        "#bcd9ea",
+        "#e4f0f4"
+      ],
+      "floorGradient": [
+        "#bdb7ac",
+        "#cfcac0"
+      ],
+      "furnaceDoor": [
+        "#fff1c4",
+        "#ffa23a",
+        "#d4521a"
+      ],
+      "gloryPort": [
+        "#fff0c0",
+        "#ff8a2a",
+        "#b8400f"
+      ],
+      "incandescence": "src/render/heat.ts heatRGB(): dull red to orange to yellow-white by temperature"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action on a card or dialog: book the hot shop, close up, back to the studio.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Book the hot shop</button>",
+      "css": ".ds-btn { font: 600 0.95rem var(--sans); border-radius: 8px; border: 1px solid var(--line-hi); background: var(--panel-2); color: var(--text); padding: 0.55rem 1rem; cursor: pointer; } .ds-btn:hover:not(:disabled) { border-color: var(--heat); } .ds-btn:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.4; cursor: not-allowed; } .ds-btn-primary { background: var(--heat); border-color: var(--heat); color: #241005; } .ds-btn-primary:hover:not(:disabled) { background: var(--heat-hi); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Everyday actions on slate cards: buying a jar or tool, End early, teaching a class (ghost variant).",
+      "html": "<button class=\"ds-btn-secondary\">$12</button> <button class=\"ds-btn-secondary ds-btn-ghost\">Teach a beginner class (+$35)</button>",
+      "css": ".ds-btn-secondary { font: 600 0.95rem var(--sans); border-radius: 8px; border: 1px solid var(--line-hi); background: var(--panel-2); color: var(--text); padding: 0.55rem 1rem; cursor: pointer; } .ds-btn-secondary:hover { border-color: var(--heat); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; } .ds-btn-ghost { background: transparent; }"
+    },
+    {
+      "name": "Glory Hole Thumb Button",
+      "kind": "custom",
+      "refersTo": "tool-glory",
+      "description": "The big round hold button under the left thumb; Working Heat.",
+      "html": "<button class=\"ds-tool ds-tool-glory\"><span>Glory hole</span><kbd>G</kbd></button>",
+      "css": ".ds-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 138px; height: 138px; border-radius: 50%; border: none; font: 600 1.05rem/1.1 var(--sans); cursor: pointer; box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22); user-select: none; transition: transform 0.08s, background 0.12s; } .ds-tool kbd { font: 0.75rem var(--mono); } .ds-tool-glory { background: radial-gradient(circle at 50% 35%, #ff9a52, var(--heat) 55%, var(--heat-dim)); color: #241005; } .ds-tool-glory kbd { color: rgba(36, 16, 5, 0.7); } .ds-tool:hover { box-shadow: 0 0 0 2px var(--line-hi), 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-tool:active { transform: scale(0.94); box-shadow: 0 0 0 3px var(--heat-hi), 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-tool:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; }"
+    },
+    {
+      "name": "Blow Thumb Button",
+      "kind": "custom",
+      "refersTo": "tool-blow",
+      "description": "The big round hold button under the right thumb; the only use of Breath blue. Label color shown as built (white), which measures about 3.7:1 on Breath and is not a recorded token.",
+      "html": "<button class=\"ds-tool ds-tool-blow\"><span>Blow</span><kbd>B</kbd></button>",
+      "css": ".ds-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 138px; height: 138px; border-radius: 50%; border: none; font: 600 1.05rem/1.1 var(--sans); cursor: pointer; box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22); user-select: none; transition: transform 0.08s, background 0.12s; } .ds-tool kbd { font: 0.75rem var(--mono); } .ds-tool-blow { background: radial-gradient(circle at 50% 35%, var(--breath-hi), var(--breath) 60%, #3550c8); color: #fff; } .ds-tool-blow kbd { color: rgba(255, 255, 255, 0.75); } .ds-tool:hover { box-shadow: 0 0 0 2px var(--line-hi), 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-tool:active { transform: scale(0.94); box-shadow: 0 0 0 3px var(--heat-hi), 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-tool:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; }"
+    },
+    {
+      "name": "Small Hold Tool",
+      "kind": "custom",
+      "refersTo": "tool-hold",
+      "description": "64px round slate hold buttons clustered beside the thumb buttons (Gather, Turn, Marver, Block, Jacks); fill with Working Heat while held.",
+      "html": "<button class=\"ds-hold\"><span>Marver</span><kbd>M</kbd></button> <button class=\"ds-hold ds-hold-active\"><span>Jacks</span><kbd>J</kbd></button>",
+      "css": ".ds-hold { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 64px; height: 64px; padding: 4px; border-radius: 50%; border: none; background: var(--panel); color: var(--text); font: 600 0.8rem/1.1 var(--sans); cursor: pointer; box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22); transition: transform 0.08s, background 0.12s; } .ds-hold kbd { font: 0.65rem var(--mono); color: var(--muted); } .ds-hold:hover { box-shadow: 0 0 0 2px var(--line-hi), 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-hold:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; } .ds-hold-active, .ds-hold:active { transform: scale(0.94); background: var(--heat); color: #241005; box-shadow: 0 0 0 3px var(--heat-hi), 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-hold-active kbd, .ds-hold:active kbd { color: rgba(36, 16, 5, 0.7); }"
+    },
+    {
+      "name": "Tap Pill",
+      "kind": "chip",
+      "refersTo": "tool-tap",
+      "description": "Tap actions (color, transfer, knock off, new pipe, dump) as slate pills with the key inline.",
+      "html": "<button class=\"ds-tap\">Knock off <kbd>X</kbd></button>",
+      "css": ".ds-tap { display: inline-flex; align-items: center; gap: 0.45rem; height: 40px; padding: 0 0.9rem; border-radius: 999px; border: none; background: var(--panel); color: var(--text); font: 600 0.875rem/1.1 var(--sans); cursor: pointer; box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-tap kbd { font: 0.65rem var(--mono); color: var(--muted); } .ds-tap:hover { box-shadow: 0 0 0 2px var(--line-hi), 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-tap:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; }"
+    },
+    {
+      "name": "Color Jar Tray",
+      "kind": "custom",
+      "refersTo": "jar-tray",
+      "description": "Slate pill of round glass swatches with mono count badges; selected jar ringed in Working Heat Bright.",
+      "html": "<div class=\"ds-jars\"><button class=\"ds-jar ds-jar-sel\"><span style=\"background:rgb(38,70,196)\"></span><i>5</i></button><button class=\"ds-jar\"><span style=\"background:rgb(205,128,30)\"></span><i>3</i></button><button class=\"ds-jar\"><span style=\"background:rgb(40,160,110)\"></span><i>2</i></button><button class=\"ds-jar ds-jar-empty\"><span style=\"background:rgb(200,28,76)\"></span><i>0</i></button></div>",
+      "css": ".ds-jars { display: inline-flex; gap: 8px; padding: 6px; border-radius: 999px; background: var(--panel); box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-jar { position: relative; width: 38px; height: 38px; padding: 0; border-radius: 50%; border: 2px solid transparent; background: none; cursor: pointer; } .ds-jar span { display: block; width: 100%; height: 100%; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.3); } .ds-jar i { position: absolute; right: -4px; bottom: -4px; min-width: 17px; padding: 0 3px; border-radius: 999px; background: var(--panel-solid); color: var(--text); font: normal 500 0.65rem/17px var(--mono); } .ds-jar-sel { border-color: var(--heat-hi); } .ds-jar-empty { opacity: 0.35; } .ds-jar:focus-visible { outline: 2px solid var(--heat-hi); outline-offset: 2px; }"
+    },
+    {
+      "name": "Readout Rail",
+      "kind": "card",
+      "refersTo": "float-panel",
+      "description": "The floating instrument panel: live temperature, five-zone gauge, label/value rows.",
+      "html": "<aside class=\"ds-rail\"><div class=\"ds-temp\"><span class=\"ds-lbl\">Temperature</span><span class=\"ds-val ds-big\">1780°F</span></div><div class=\"ds-gauge\"><div style=\"left:0;width:15%;background:#5a2320\"></div><div style=\"left:15%;width:25%;background:#3a404a\"></div><div style=\"left:40%;width:40%;background:#2f6a46\"></div><div style=\"left:80%;width:10%;background:#9a6418\"></div><div style=\"left:90%;width:10%;background:#a3301c\"></div><b style=\"left:74%\"></b></div><div class=\"ds-row\"><span class=\"ds-lbl\">Diameter</span><span class=\"ds-val\">3.2&quot;</span></div><div class=\"ds-row\"><span class=\"ds-lbl\">Centered</span><span class=\"ds-val\">94%</span></div></aside>",
+      "css": ".ds-rail { width: 250px; padding: 0.75rem 0.85rem; background: var(--panel); color: var(--text); border-radius: 10px; box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22); font: 15px/1.5 var(--sans); } .ds-temp, .ds-row { display: flex; justify-content: space-between; align-items: baseline; } .ds-row { padding: 2px 0; border-bottom: 1px solid rgba(82, 91, 105, 0.4); } .ds-lbl { color: var(--muted); font-size: 0.75rem; } .ds-val { font: 0.875rem var(--mono); font-variant-numeric: tabular-nums; } .ds-big { font-size: 1.35rem; } .ds-gauge { position: relative; height: 22px; margin: 0.35rem 0 0.6rem; border-radius: 5px; overflow: hidden; } .ds-gauge div { position: absolute; top: 0; bottom: 0; } .ds-gauge b { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; background: #fff; box-shadow: 0 0 6px #fff; }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "One-line status pill above the controls; failure turns it deep red.",
+      "html": "<p class=\"ds-toast\">Reheat before it drops under 1150°F.</p> <p class=\"ds-toast ds-toast-fail\">Cold-checked: it went into the glory hole under 850°F.</p>",
+      "css": ".ds-toast { display: inline-block; margin: 4px; padding: 0.5rem 0.95rem; border-radius: 999px; background: var(--panel); color: var(--text); font: 0.925rem/1.5 var(--sans); box-shadow: 0 8px 24px rgba(30, 28, 24, 0.22); } .ds-toast-fail { background: rgba(150, 34, 20, 0.95); color: #fff; }"
+    },
+    {
+      "name": "Header Bar",
+      "kind": "nav",
+      "refersTo": "header-bar",
+      "description": "Solid slate bar: ember mark, Gaffer wordmark with small Glass, mono stats, furnace progress.",
+      "html": "<header class=\"ds-head\"><div class=\"ds-brand\"><span class=\"ds-mark\"></span>Gaffer<span class=\"ds-sub\">Glass</span></div><dl class=\"ds-stats\"><div><dt>Day</dt><dd>4</dd></div><div><dt>Cash</dt><dd>$212</dd></div></dl><div class=\"ds-goal\"><div class=\"ds-goal-bar\"><div style=\"width:21%\"></div></div></div></header>",
+      "css": ".ds-head { display: flex; align-items: center; gap: 1.5rem; padding: 0.55rem 16px; background: var(--panel-solid); color: var(--text); font: 15px/1.5 var(--sans); } .ds-brand { display: flex; align-items: baseline; gap: 0.4rem; font: 700 1.5rem/1 var(--sans); letter-spacing: -0.01em; } .ds-mark { align-self: center; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #ffe2a8, var(--heat) 55%, var(--heat-dim)); box-shadow: 0 0 10px var(--heat); } .ds-sub { font: 500 0.8rem/1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--heat-hi); } .ds-stats { display: flex; gap: 1.25rem; margin: 0; } .ds-stats div { display: flex; gap: 0.4rem; align-items: baseline; } .ds-stats dt { color: var(--muted); font-size: 0.75rem; } .ds-stats dd { margin: 0; font: 500 1rem var(--mono); } .ds-goal { flex: 1; min-width: 120px; } .ds-goal-bar { height: 6px; border-radius: 3px; background: var(--panel-2); overflow: hidden; } .ds-goal-bar div { height: 100%; background: linear-gradient(90deg, var(--heat-dim), var(--heat), var(--heat-hi)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shop Is the Screen",
+    "overview": "A bright, daylit hot shop fills the window: a whitewashed block wall, a steel-sash window throwing light across the concrete, the furnace glowing at the left and the glory hole at the right. Every control floats over that room in compact dark slate panels, so the game reads as standing at the bench in daylight, never as a dark app with a picture inside it. The piece on the pipe is the brightest thing on screen because it is incandescent, and it glows against a light room rather than out of a black void.\n\nDensity is instrument-like where the numbers live (a narrow readout panel of mono figures, a five-zone temperature gauge) and generous where the hands live: the two big round hold buttons sit under the thumbs at the bottom corners, heat on the left and breath on the right, with the smaller tools clustered beside them. The studio and morning-results screens keep the same grammar on the plain wall: dark cards floating on a light ground.\n\nThe look sits deliberately close in feel to Glassworks (lit scene, floating dark panels, round thumb buttons) while drawing its own room, controls and copy. The earlier dark \"hot shop at night\" treatment was rejected as too gloomy.",
+    "keyCharacteristics": [
+      "Light ground everywhere: the painted daylit room in a session, the whitewashed wall elsewhere.",
+      "Dark slate panels at 92% opacity, 10px corners, one soft drop shadow.",
+      "One warm accent, Working Heat, carrying heat, primary actions and the Glory hole; one cool Breath blue reserved for Blow.",
+      "Anything you hold is a circle; anything you tap is a pill.",
+      "Numbers are always IBM Plex Mono with tabular figures."
+    ],
+    "rules": [
+      {
+        "name": "The Lit Shop Rule",
+        "body": "The ground is always light: the painted daylit room during a session, Whitewash on every other screen. Dark is reserved for the floating panels and the header bar.",
+        "section": "colors"
+      },
+      {
+        "name": "The Working Heat Rule",
+        "body": "Working Heat means heat or the action that matters most: one primary button per view, the Glory hole, the active tool, focus and selection. It is never a background wash or a decorative stripe.",
+        "section": "colors"
+      },
+      {
+        "name": "The Breath Rule",
+        "body": "Breath blue appears on the Blow button only. No other control, chart or label takes it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Glass Is the Color Rule",
+        "body": "Outside Working Heat, Breath and the status triad inside readouts, every saturated color on screen is glass: the piece, the jar swatches, the jars on the painted shelf.",
+        "section": "colors"
+      },
+      {
+        "name": "The Numbers in Mono Rule",
+        "body": "Every figure the player reads as a measurement (time, temperature, inches, percent, dollars, counts, key letters) is IBM Plex Mono with tabular figures. Words stay in Plex Sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Small Word Rule",
+        "body": "\"Glass\" sits beside the \"Gaffer\" wordmark as a small Plex Mono word (500, 0.8rem, 0.18em tracking, uppercase, Working Heat Bright). That tracked uppercase mono treatment belongs to the wordmark alone.",
+        "section": "typography"
+      },
+      {
+        "name": "The Thumb Rule",
+        "body": "The two actions held longest get the biggest targets in the bottom corners: Glory hole under the left thumb, Blow under the right. Other hold tools cluster beside them; nothing interactive floats mid-screen over the piece.",
+        "section": "layout"
+      },
+      {
+        "name": "The Float Rule",
+        "body": "Every control over the shop is a dark slate panel at 92% opacity with the Float shadow. Nothing sits flush with the scene and nothing is drawn as a hard-edged or offset slab.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Incandescence Rule",
+        "body": "Glow belongs to hot things: the piece, the furnace door, the glory hole port, and the UI elements that stand for heat (the Glory hole button, the brand mark). Cool controls do not glow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Round Hand Rule",
+        "body": "If you hold it, it is round; if you tap it, it is a pill; if it holds information, it is a 10px rectangle.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** keep the ground light: the painted daylit shop in a session, Whitewash (#e7e3db) behind studio and results cards.",
+      "**Do** float every control on Slate Panel (rgba(28, 32, 40, 0.92)) with the single Float shadow and 10px corners.",
+      "**Do** put Glory hole (Working Heat) at the bottom left and Blow (Breath) at the bottom right as the two biggest round buttons, 138px on desktop and 104px on phones.",
+      "**Do** set every measurement in IBM Plex Mono with tabular figures.",
+      "**Do** let the glass carry the color: the incandescent piece against the light room is the image the screen is built around.",
+      "**Do** give every unavailable control a reason in its title, and keep every hold target free of text selection and long-press menus."
+    ],
+    "donts": [
+      "**Don't** use a dark full-screen ground. The \"hot shop at night\" look was rejected as too gloomy; dark belongs to the panels, the header bar and the dialog card only.",
+      "**Don't** use Breath blue anywhere but the Blow button, and don't introduce a second warm or cool accent.",
+      "**Don't** spend Working Heat on decoration: no orange washes, stripes or borders that do not mean heat, the primary action, focus or selection.",
+      "**Don't** make a hold tool square or a tap action round; the shape tells the hand how to use it.",
+      "**Don't** use the tracked uppercase mono treatment for anything but the \"Glass\" word in the wordmark: no small labels above headings.",
+      "**Don't** add shadows beyond Float and the state rings, and never hard or offset ones."
+    ]
+  }
+}

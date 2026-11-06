@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:#f3f5f8;color:#1f2937;font-family:Nunito,sans-serif}
+header{height:76px;display:flex;align-items:center;gap:14px;padding:0 32px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.brand{font-size:28px;font-weight:900;margin-right:24px}.brand span{font-size:15px;color:#6b7280;font-weight:800}
+.pill{background:#f3f5f8;border-radius:999px;padding:8px 18px;font-weight:800;font-size:16px}
+.pill.gold{background:#fef3c7;color:#92400e}
+.timer{margin-left:auto;background:#3b82f6;color:#fff;border-radius:999px;padding:10px 22px;font-weight:900;font-size:22px}
+main{display:grid;grid-template-columns:1fr 360px;gap:24px;padding:24px 32px}
+.card{background:#fff;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:20px}
+.stage{height:520px;position:relative;background:#fff7ed}
+.pipe{position:absolute;left:0;top:250px;width:560px;height:10px;background:#9ca3af;border-radius:5px}
+.gob{position:absolute;left:540px;top:186px;width:220px;height:140px;border-radius:50%;background:radial-gradient(circle at 55% 45%,#fff3d6,#ffb54a 45%,#ef6a22 85%)}
+.toast{position:absolute;left:50%;top:24px;transform:translateX(-50%);background:#fee2e2;color:#b91c1c;border-radius:999px;padding:8px 18px;font-weight:800}
+.tools{grid-column:1;display:grid;grid-template-columns:repeat(11,1fr);gap:10px}
+.tool{background:#fff;border-radius:16px;height:96px;box-shadow:0 4px 12px rgba(0,0,0,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:14px}
+.tool i{width:34px;height:34px;border-radius:10px;background:#dbeafe}
+.tool.on{background:#3b82f6;color:#fff}.tool.on i{background:#93c5fd}
+.side{grid-row:1 / span 2;grid-column:2;display:flex;flex-direction:column;gap:16px}
+h3{font-size:16px;font-weight:900;margin-bottom:10px}
+.order{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eef0f3;font-weight:700}
+.order b{background:#dcfce7;color:#166534;border-radius:999px;padding:2px 10px}
+.bar{height:14px;border-radius:7px;background:#e5e7eb;overflow:hidden}.bar i{display:block;height:100%;width:62%;background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.jars{display:flex;gap:10px}.jars i{width:40px;height:40px;border-radius:12px}
+</style></head><body>
+<header><div class="brand">Gaffer <span>Glass</span></div><span class="pill">Day 4</span><span class="pill gold">$212</span><span class="pill">★ 2</span><span class="timer">1:42</span></header>
+<main>
+ <div class="card stage"><div class="toast">Glass is too hot to jack</div><div class="pipe"></div><div class="gob"></div></div>
+ <div class="tools">
+  <div class="tool"><i></i>Gather</div><div class="tool on"><i></i>Glory</div><div class="tool"><i></i>Marver</div><div class="tool"><i></i>Block</div><div class="tool"><i></i>Blow</div><div class="tool"><i></i>Jacks</div><div class="tool"><i></i>Turn</div><div class="tool"><i></i>Color</div><div class="tool"><i></i>Punty</div><div class="tool"><i></i>Knock off</div><div class="tool"><i></i>Cullet</div>
+ </div>
+ <aside class="side">
+  <div class="card"><h3>Orders</h3><div class="order">Tumbler · Cobalt<b>$57</b></div><div class="order">Paperweight<b>$30</b></div><div class="order">Bowl 5–6 in<b>$72</b></div></div>
+  <div class="card"><h3>Temperature 1984°F</h3><div class="bar"><i></i></div></div>
+  <div class="card"><h3>Color jars</h3><div class="jars"><i style="background:#2646c4"></i><i style="background:#cd801e"></i><i style="background:#28a06e"></i><i style="background:#ece8dc"></i><i style="background:#c81c4c"></i></div></div>
+ </aside>
+</main>
+</body></html>
