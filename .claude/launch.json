@@ -1,0 +1,86 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gaffer-glass",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "gaffer-glass",
+        "run",
+        "dev"
+      ],
+      "port": 5196
+    },
+    {
+      "name": "pony",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5197",
+        "--directory",
+        "pony"
+      ],
+      "port": 5197
+    },
+    {
+      "name": "hot-shop-atlas",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5198",
+        "--directory",
+        "hot-shop-atlas"
+      ],
+      "port": 5198
+    },
+    {
+      "name": "paint-mixer-fix",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5199",
+        "--directory",
+        "/private/tmp/claude-501/-Users-baileywheeler-Desktop-Githubsite-30dayassignment/46a68d56-e915-411a-8624-3f6bbf6a564b/scratchpad/wt/paint-mixer"
+      ],
+      "port": 5199
+    },
+    {
+      "name": "mass",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5200",
+        "--directory",
+        "mass"
+      ],
+      "port": 5200
+    },
+    {
+      "name": "assembly",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "assembly",
+        "run",
+        "dev"
+      ],
+      "port": 5201
+    },
+    {
+      "name": "armature",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "armature",
+        "run",
+        "dev"
+      ],
+      "port": 5214
+    }
+  ]
+}
