@@ -38,11 +38,25 @@ function lerp(a, b, ta, tb, t) {
   return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
 }
 
+// Wall thickness at every sample of the outer curve. `wall` is one number for
+// the whole piece, or one per control point (a heavy base, a thin lip), eased
+// between points so the inside never steps.
+export function wallAlong(wall, seg, perSeg = 20) {
+  if (!Array.isArray(wall)) return seg.map(() => wall)
+  return seg.map((s, j) => {
+    const u = Math.min(1, (j - s * perSeg) / perSeg)
+    const e = u * u * (3 - 2 * u)
+    const a = wall[s] ?? wall[wall.length - 1], b = wall[s + 1] ?? a
+    return a + (b - a) * e
+  })
+}
+
 // The drawn line is the outside of the glass. The inside is that line pushed
 // inward by the wall thickness, cut off at the cavity floor. Below the floor
 // the glass is solid: a thick base on a tumbler, the whole stem on a goblet.
-export function buildSection({ points, wall, floor }) {
+export function buildSection({ points, wall: wallIn, floor }) {
   const { pts: outer, seg } = sampleCurve(points)
+  const walls = wallAlong(wallIn, seg)
   const last = outer.length - 1
   const tangent = (i) => {
     const a = outer[Math.max(0, i - 1)], b = outer[Math.min(last, i + 1)]
@@ -52,7 +66,7 @@ export function buildSection({ points, wall, floor }) {
   // Walking up the wall, the glass is on the left: rotate the tangent 90°.
   const off = outer.map((p, i) => {
     const [tx, ty] = tangent(i)
-    return [Math.max(0, p[0] - ty * wall), p[1] + tx * wall]
+    return [Math.max(0, p[0] - ty * walls[i]), p[1] + tx * walls[i]]
   })
 
   // How far along the outside wall each sample sits, 0 at the foot edge and
@@ -99,7 +113,10 @@ export function buildSection({ points, wall, floor }) {
   const brimY = inner[inner.length - 1][1]
   const cavity = [[0, cavityFloor], ...inner, [0, brimY]]
   const height = Math.max(...section.map((p) => p[1]))
-  return { outer, outerS, outerLen, seg, sectionTags, inner, innerS, rim, section, cavity, floorY: cavityFloor, brimY, height, footR: points[0][0], wall }
+  // `wall` stays one number for the color model: the piece's wall, or the
+  // average when it's given per control point (Bits); `walls` has every sample.
+  const wall = Array.isArray(wallIn) ? walls.reduce((a, w) => a + w, 0) / walls.length : wallIn
+  return { outer, outerS, outerLen, seg, walls, sectionTags, inner, innerS, rim, section, cavity, floorY: cavityFloor, brimY, height, footR: points[0][0], wall }
 }
 
 // Volume and center-of-mass height of the solid you get by spinning a closed

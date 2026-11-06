@@ -2,8 +2,8 @@
 // mesh only to refine one number), so it works for any shape the tools make.
 
 import { MATERIAL, STABILITY, annealHours } from './config.js';
+import { edt3, BIG } from './edt.js';
 
-const BIG = 1e20;
 
 export function analyze(vol, mesh) {
   const mass = massProperties(vol);
@@ -65,38 +65,8 @@ function interiorDistance(vol) {
   for (let k = 0; k < Z; k++) for (let j = 0; j < Y; j++) for (let i = 0; i < X; i++) {
     d[i + X * (j + Y * k)] = sdf[vol.index(i + lo[0], j + lo[1], k + lo[2])] < 0 ? BIG : 0;
   }
-  const L = Math.max(X, Y, Z);
-  const f = new Float64Array(L), out = new Float64Array(L), v = new Int32Array(L), z = new Float64Array(L + 1);
-  const pass = (len, count, at) => {
-    for (let c = 0; c < count; c++) {
-      for (let q = 0; q < len; q++) f[q] = d[at(c, q)];
-      dt1(f, len, out, v, z);
-      for (let q = 0; q < len; q++) d[at(c, q)] = out[q];
-    }
-  };
-  pass(X, Y * Z, (c, q) => q + X * c);
-  pass(Y, X * Z, (c, q) => (c % X) + X * (q + Y * ((c / X) | 0)));
-  pass(Z, X * Y, (c, q) => c + X * Y * q);
+  edt3(d, X, Y, Z);
   return { d2: d, lo, dims: [X, Y, Z] };
-}
-
-function dt1(f, n, d, v, z) {
-  let k = 0;
-  v[0] = 0; z[0] = -BIG; z[1] = BIG;
-  for (let q = 1; q < n; q++) {
-    let s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
-    while (s <= z[k]) {
-      k--;
-      s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
-    }
-    k++; v[k] = q; z[k] = s; z[k + 1] = BIG;
-  }
-  k = 0;
-  for (let q = 0; q < n; q++) {
-    while (z[k + 1] < q) k++;
-    const dq = q - v[k];
-    d[q] = dq * dq + f[v[k]];
-  }
 }
 
 // ── Thickest point ──────────────────────────────────────────────────────────
