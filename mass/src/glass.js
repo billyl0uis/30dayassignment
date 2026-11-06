@@ -51,6 +51,12 @@ export function createGlassMaterial() {
       ior: { value: 1.5 },
       mode: { value: 0 },
       maxT: { value: 10 },
+      heat: { value: 1 },
+      tVolA: { value: null },
+      tVolB: { value: null },
+      gridOrigin: { value: new THREE.Vector3() },
+      gridH: { value: 0.19 },
+      gridN: { value: 128 },
     },
     vertexShader: /* glsl */`
       varying vec3 vViewPos, vViewN, vWorldPos, vWorldN;
@@ -68,8 +74,11 @@ export function createGlassMaterial() {
       uniform mat4 projectionMatrix; // not auto-declared in the fragment stage
       uniform vec2 resolution;
       uniform vec3 sigma;
-      uniform float ior, maxT;
+      uniform float ior, maxT, heat, gridH, gridN;
       uniform int mode;
+      uniform highp sampler3D tVolA, tVolB;
+      uniform vec3 gridOrigin;
+      const float SIGMA_MAX = 8.0;
       varying vec3 vViewPos, vViewN, vWorldPos, vWorldN;
 
       // Soft studio: pale cyclorama, warm floor bounce, two softboxes.
@@ -99,12 +108,33 @@ export function createGlassMaterial() {
           vec2 off = r.xy * min(t, 6.0) * focal / max(-vViewPos.z, 1.0) * 0.5;
           off.x *= resolution.y / resolution.x;
           vec3 bg = texture2D(tBack, clamp(uv + off, 0.001, 0.999)).rgb;
-          vec3 transmit = exp(-sigma * t);
-          col = bg * transmit * (1.0 - F) + env(reflect(-Vw, Nw)) * F;
+          // March the straight eye ray from this entry point through the
+          // absorption volume, summing σ·ds over the glass it crosses, and
+          // stop once it has crossed exactly the measured thickness t.
+          // For uniform glass this is exactly exp(−σ·t).
+          vec3 rd = -Vw, p = vWorldPos;
+          float ds = gridH * 0.6, crossed = 0.0;
+          vec3 optical = vec3(0.0), behind = bg;
+          for (int i = 0; i < 480; i++) {
+            if (crossed >= t) break;
+            p += rd * ds;
+            vec3 uvw = ((p - gridOrigin) / gridH + 0.5) / gridN;
+            if (any(lessThan(uvw, vec3(0.0))) || any(greaterThan(uvw, vec3(1.0)))) break;
+            vec4 A = texture(tVolA, uvw);
+            float occ = A.a;
+            if (occ < 0.01) continue;
+            vec4 B = texture(tVolB, uvw);
+            if (B.a > 0.5 && occ > 0.5) { behind = B.rgb * 0.85; break; } // opaque colour: stops the light
+            float seg = min(occ * ds, t - crossed);
+            optical += A.rgb * A.rgb * SIGMA_MAX * seg;
+            crossed += seg;
+          }
+          vec3 transmit = exp(-optical);
+          col = behind * transmit * (1.0 - F) + env(reflect(-Vw, Nw)) * F;
         } else if (mode == 1) {
           float g = 1.0 - exp(-0.45 * t);
           vec3 orange = vec3(1.0, 0.22, 0.02), core = vec3(1.0, 0.6, 0.2);
-          col = mix(orange, core, pow(1.0 - exp(-0.08 * t), 2.0)) * g * 0.9;
+          col = mix(orange, core, pow(1.0 - exp(-0.08 * t), 2.0)) * g * 0.9 * (0.3 + 0.7 * heat);
           col += env(reflect(-Vw, Nw)) * F * 0.35;
         } else {
           float x = clamp(t / maxT, 0.0, 1.0);

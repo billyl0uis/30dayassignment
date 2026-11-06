@@ -38,6 +38,19 @@ export const MATERIAL = {
   density: 2.5,          // g/cm³ — soda-lime / soft glass
 };
 
+// Thick-to-thin check: warn where a thin part (≤ maxThinCm thick) sits
+// within overCm of glass at least `ratio` times thicker (and ≥ minThickCm).
+// Thin glass chills faster than the thick glass it joins and can crack there.
+export const CHECKS = {
+  ratio: 4,
+  overCm: 1,
+  minThickCm: 1,
+  maxThinCm: 1.5,
+  // Centreline points whose distance-to-surface changes faster than this per
+  // unit length are corner branches (a 90° edge climbs at ≈0.71), not limbs.
+  maxRidgeSlope: 0.5,
+};
+
 export const STABILITY = {
   minTipAngleDeg: 10,    // a base must allow this lean before tipping (step 5)
   contactTolCm: 0.01,    // glass surface within 0.1 mm of the floor counts as touching
