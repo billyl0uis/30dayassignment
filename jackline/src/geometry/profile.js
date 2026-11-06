@@ -55,16 +55,27 @@ export function buildSection({ points, wall, floor }) {
     return [Math.max(0, p[0] - ty * wall), p[1] + tx * wall]
   })
 
+  // How far along the outside wall each sample sits, 0 at the foot edge and
+  // 1 at the rim. Color bands are placed by this, not by height: a folded
+  // foot or a flared lip passes the same height twice, but never the same s.
+  const outerS = [0]
+  for (let i = 1; i <= last; i++) outerS.push(outerS[i - 1] + Math.hypot(outer[i][0] - outer[i - 1][0], outer[i][1] - outer[i - 1][1]))
+  const outerLen = outerS[last] || 1
+  for (let i = 0; i <= last; i++) outerS[i] /= outerLen
+
   const floorY = clamp(floor, 0, off[last][1] - 0.1)
   // Walk down from the rim until the inner wall drops below the floor.
   let k = last
   while (k > 0 && off[k - 1][1] >= floorY) k--
   const inner = off.slice(k)
+  // Each inside point is the offset of an outside one, so it shares its s.
+  const innerS = outerS.slice(k)
   let cavityFloor = floorY
   if (k > 0) {
     const a = off[k - 1], b = off[k]
     const u = (floorY - a[1]) / (b[1] - a[1] || 1)
     inner.unshift([a[0] + (b[0] - a[0]) * u, floorY])
+    innerS.unshift(outerS[k - 1] + (outerS[k] - outerS[k - 1]) * u)
   } else {
     cavityFloor = inner[0][1]
   }
@@ -82,10 +93,13 @@ export function buildSection({ points, wall, floor }) {
   }
 
   const section = [[0, 0], ...outer, ...rim, ...[...inner].reverse(), [0, cavityFloor]]
+  // For each section point: [s, side], side 0 on the outside (with the rim
+  // and the foot's underside), 1 on the inside. Color is drawn from these.
+  const sectionTags = [[0, 0], ...outerS.map((v) => [v, 0]), ...rim.map(() => [1, 0]), ...[...innerS].reverse().map((v) => [v, 1]), [innerS[0], 1]]
   const brimY = inner[inner.length - 1][1]
   const cavity = [[0, cavityFloor], ...inner, [0, brimY]]
   const height = Math.max(...section.map((p) => p[1]))
-  return { outer, seg, inner, rim, section, cavity, floorY: cavityFloor, brimY, height, footR: points[0][0] }
+  return { outer, outerS, outerLen, seg, sectionTags, inner, innerS, rim, section, cavity, floorY: cavityFloor, brimY, height, footR: points[0][0], wall }
 }
 
 // Volume and center-of-mass height of the solid you get by spinning a closed
