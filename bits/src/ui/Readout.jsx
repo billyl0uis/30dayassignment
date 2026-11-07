@@ -30,6 +30,7 @@ function comText(com, units) {
 export default function Readout() {
   const units = useStore((s) => s.units)
   const fill = useStore((s) => s.fill)
+  const showWater = useStore((s) => s.showWater)
   const { empty: m, filled: f, worst } = useLiquid()
   const bitsMass = m.bits.reduce((a, b) => a + b.mass, 0)
   const holds = f.capacity > 0.5
@@ -48,7 +49,7 @@ export default function Readout() {
     <div className="readout" aria-live="polite">
       <div className="card">
         {holds && (
-          <label className="fill">
+          <div className="fill">
             <span>Fill</span>
             <input type="range" min={0} max={100} step={1} value={pct} aria-label="Fill level, percent of capacity"
               onPointerDown={() => useStore.getState().checkpoint()}
@@ -56,7 +57,11 @@ export default function Readout() {
               onChange={(e) => useStore.getState().live({ fill: Number(e.target.value) / 100 })} />
             <b>{pct}%</b>
             <small>of {fmtVol(f.capacity, units)} to the brim</small>
-          </label>
+            <label className="check" title="Draw the water in the 3D view. Off shows the glass's own color.">
+              <input type="checkbox" checked={showWater} onChange={(e) => useStore.getState().setView({ showWater: e.target.checked })} />
+              Show water
+            </label>
+          </div>
         )}
         <table className="compare">
           <thead>

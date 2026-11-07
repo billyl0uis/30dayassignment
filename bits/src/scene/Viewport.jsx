@@ -345,10 +345,12 @@ function TagLayer() {
 }
 
 // The water at the slider's fill, standing level in the cavity, and the
-// filled piece's center of mass in blue beside the empty one.
+// filled piece's center of mass in blue beside the empty one. Only drawn
+// when "Show water" is on: the numbers use the fill either way.
 const WATER_BLUE = '#6fb7ff'
 function Water() {
   const { filled, empty } = useLiquid()
+  const show = useStore((s) => s.showWater)
   const poly = filled.water.poly
   const geo = useMemo(() => {
     if (!poly || poly.length < 3) return null
@@ -356,12 +358,14 @@ function Water() {
     return new THREE.LatheGeometry(poly.map(([r, y]) => new THREE.Vector2(Math.max(0, r * 0.994), y)), 64)
   }, [poly])
   useEffect(() => () => geo?.dispose(), [geo])
-  if (!geo) return null
+  if (!geo || !show) return null
   return (
     <group>
       <mesh geometry={geo} position={[0, empty.lift, 0]} raycast={() => null} renderOrder={1}>
-        {/* Solid, so the glass's transmission shows it: a see-through mesh would be hidden behind the glass. */}
-        <meshStandardMaterial color="#9ccff5" emissive="#2f6f9f" emissiveIntensity={0.45} roughness={0.12} metalness={0} />
+        {/* Solid, so the glass's transmission shows it (a see-through mesh is
+            hidden behind the glass). Nearly colorless, so the glass keeps its
+            own color: a strong blue here turned green glass blue-purple. */}
+        <meshStandardMaterial color="#e3edf0" roughness={0.08} metalness={0} />
       </mesh>
       <ComMarker com={filled.total.com} color={WATER_BLUE} />
     </group>

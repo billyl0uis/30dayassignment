@@ -42,6 +42,7 @@ export const useStore = create((set, get) => ({
   units: 'mm',
   maker: '', // your name, for the views sheet; remembered, not undone
   paper: 'letter', // views sheet paper: 'letter' | 'a4'
+  showWater: false, // draw the fill in 3D (it hides the glass's own color); remembered, not undone
   ...load(),
   capturing: false, // drawing the views sheet: working overlays are hidden
   tool: 'prunt', // the bit type armed for placing, or null
@@ -180,7 +181,7 @@ export const useStore = create((set, get) => ({
 
 useStore.subscribe((s) => {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ ...pick(s), units: s.units, maker: s.maker, paper: s.paper }))
+    localStorage.setItem(KEY, JSON.stringify({ ...pick(s), units: s.units, maker: s.maker, paper: s.paper, showWater: s.showWater }))
   } catch {
     // Private windows and full storage: the piece just won't be remembered.
   }
