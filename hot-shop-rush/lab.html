@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heat Lab</title>
+    <style>
+      :root { --soot: #2B1E1A; --paper: #F6ECD7; --glory: #FFD45C; --green: #4FA65A; }
+      body { margin: 0; padding: 16px; background: #3b2620; color: var(--paper); font: 15px system-ui, sans-serif; }
+      h1 { margin: 0 0 4px; font-size: 22px; }
+      p { margin: 0 0 12px; opacity: 0.8; max-width: 70ch; }
+      .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+      select, button { font: inherit; padding: 6px 10px; border: 2px solid var(--soot); border-radius: 8px; background: var(--paper); }
+      #gh { background: var(--glory); font-weight: 700; min-width: 170px; user-select: none; touch-action: none; }
+      #gh.on { box-shadow: 0 0 18px var(--glory); }
+      canvas { width: 100%; max-width: 960px; height: auto; border: 3px solid var(--soot); border-radius: 10px; background: #2a1c18; display: block; }
+      #readout { font-variant-numeric: tabular-nums; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Heat Lab</h1>
+    <p>The heat model from <code>src/heat.js</code> on its own, reading every number from <code>src/config.js</code>. Change a constant, reload, and watch the curve. Hold the button to reheat.</p>
+    <div class="controls">
+      <label>Size <select id="size"><option>S</option><option selected>M</option><option>L</option><option>solid</option></select></label>
+      <label>Contact <select id="contact"><option>air</option><option>marver</option><option>blocks</option><option>tool</option><option>mold</option></select></label>
+      <button id="gh">Hold: glory hole</button>
+      <button id="reset">New gather</button>
+    </div>
+    <canvas id="cv" width="960" height="420"></canvas>
+    <div id="readout"></div>
+    <script type="module">
+      import { CFG, heatToF } from './src/config.js';
+      import { createPiece, tickPiece } from './src/heat.js';
+
+      const cv = document.querySelector('#cv');
+      const g = cv.getContext('2d');
+      const WINDOW_S = 60;
+      let piece, hist, t, reheating = false;
+
+      function reset() {
+        piece = createPiece(CFG, document.querySelector('#size').value);
+        hist = [];
+        t = 0;
+      }
+      reset();
+
+      const ghBtn = document.querySelector('#gh');
+      ghBtn.addEventListener('pointerdown', () => { reheating = true; ghBtn.classList.add('on'); });
+      window.addEventListener('pointerup', () => { reheating = false; ghBtn.classList.remove('on'); });
+      document.querySelector('#reset').addEventListener('click', reset);
+      document.querySelector('#size').addEventListener('change', reset);
+
+      let last = performance.now();
+      function frame(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        if (!piece.cracked) {
+          tickPiece(CFG, piece, dt, { reheating, contact: document.querySelector('#contact').value });
+          t += dt;
+          hist.push([t, piece.heat, piece.stress, piece.off]);
+          while (hist.length && hist[0][0] < t - WINDOW_S) hist.shift();
+        }
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      function draw() {
+        const W = cv.width, H = cv.height, L = 40, B = 24;
+        const x = (s) => L + ((s - (t - WINDOW_S)) / WINDOW_S) * (W - L - 10);
+        const y = (v) => H - B - (v / 100) * (H - B - 10);
+        g.clearRect(0, 0, W, H);
+        // Zones.
+        g.fillStyle = 'rgba(200,50,58,0.25)'; g.fillRect(L, y(100), W - L, y(CFG.heat.SLUMP_THRESHOLD) - y(100));
+        g.fillStyle = 'rgba(160,160,160,0.25)'; g.fillRect(L, y(CFG.heat.CRACK_INSTANT), W - L, y(0) - y(CFG.heat.CRACK_INSTANT));
+        g.fillStyle = 'rgba(79,166,90,0.15)'; g.fillRect(L, y(CFG.heat.WORK_BAND[1]), W - L, y(CFG.heat.WORK_BAND[0]) - y(CFG.heat.WORK_BAND[1]));
+        g.fillStyle = '#F6ECD7'; g.font = '12px system-ui';
+        for (let v = 0; v <= 100; v += 20) { g.fillText(String(v), 8, y(v) + 4); g.fillStyle = 'rgba(246,236,215,0.08)'; g.fillRect(L, y(v), W - L, 1); g.fillStyle = '#F6ECD7'; }
+        const line = (i, color) => {
+          g.strokeStyle = color; g.lineWidth = 2.5; g.beginPath();
+          hist.forEach((h, k) => (k ? g.lineTo(x(h[0]), y(h[i])) : g.moveTo(x(h[0]), y(h[i]))));
+          g.stroke();
+        };
+        line(1, '#FF8A1F');
+        line(2, '#8FC7E8');
+        line(3, '#C8323A');
+        g.fillStyle = '#FF8A1F'; g.fillText('heat', W - 120, 20);
+        g.fillStyle = '#8FC7E8'; g.fillText('stress', W - 80, 20);
+        g.fillStyle = '#C8323A'; g.fillText('off', W - 34, 20);
+        document.querySelector('#readout').textContent =
+          `t ${t.toFixed(1)}s · heat ${piece.heat.toFixed(1)} (~${heatToF(piece.heat)}°F) · stress ${piece.stress.toFixed(1)} (peak ${piece.stressPeak.toFixed(1)}) · off-center ${piece.off.toFixed(1)}${piece.cracked ? ' · CRACKED' : ''}`;
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

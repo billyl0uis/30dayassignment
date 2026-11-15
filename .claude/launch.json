@@ -94,6 +94,18 @@
         "--strictPort"
       ],
       "port": 5216
+    },
+    {
+      "name": "hot-shop-rush",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5222",
+        "--directory",
+        "hot-shop-rush"
+      ],
+      "port": 5222
     }
   ]
 }
