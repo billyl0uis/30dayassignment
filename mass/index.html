@@ -36,6 +36,19 @@
     </section>
 
     <section>
+      <h2>Tools</h2>
+      <div id="toolbar" class="toolbar"></div>
+      <div class="heat">
+        <label class="mark"><input type="checkbox" id="gravity" checked>Gravity</label>
+        <div class="heat-track" title="Heat: glass on the punty sags while hot and idle"><div id="heat-bar"></div></div>
+        <output id="heat-out">hot</output>
+        <button id="reheat" title="Back into the glory hole">Reheat</button>
+      </div>
+    </section>
+
+    <section id="tool-panel" class="tool-panel" hidden></section>
+
+    <section>
       <h2>Readouts</h2>
       <dl class="readouts">
         <dt>Weight</dt><dd id="r-weight">—</dd>
@@ -49,17 +62,50 @@
     </section>
 
     <section>
-      <h2>Glass colour</h2>
+      <h2>Checks</h2>
+      <ul id="checks" class="checks"></ul>
+    </section>
+
+    <section>
+      <h2>Finish</h2>
+      <div class="row-inline">
+        <select id="orient" title="Which way the piece lands when knocked off">
+          <option value="puntyDown">Punty end down</option>
+          <option value="asIs">As it hangs</option>
+        </select>
+        <button id="set-down">Set down</button>
+      </div>
+      <label class="row">Grind depth <output id="grind-out">0.30 cm</output></label>
+      <input id="grind-depth" type="range" min="0.05" max="1.5" step="0.05" value="0.3">
+      <button id="grind">Grind base flat</button>
+      <div class="row-inline">
+        <label class="mark"><input type="checkbox" id="mounted">Mounted / on a stand</label>
+        <button id="pick-mount" title="Click the glass where the rod goes in">Pick point</button>
+      </div>
+      <p class="hint" id="finish-note"></p>
+    </section>
+
+    <section>
+      <h2>History</h2>
+      <div class="pair">
+        <button id="undo" title="⌘Z">Undo</button>
+        <button id="redo" title="⇧⌘Z">Redo</button>
+      </div>
+      <ol id="history" class="history"></ol>
+    </section>
+
+    <section>
+      <h2>Base glass</h2>
       <div class="swatches">
         <button data-tint="#f1f7f2" title="Clear (soda-lime)" style="--c:#f1f7f2"></button>
         <button data-tint="#e8a64a" title="Amber" style="--c:#e8a64a"></button>
         <button data-tint="#5a7fe0" title="Cobalt" style="--c:#5a7fe0"></button>
         <button data-tint="#4fbf7a" title="Emerald" style="--c:#4fbf7a"></button>
         <button data-tint="#e0507a" title="Gold ruby" style="--c:#e0507a"></button>
-        <input id="tint" type="color" title="Custom tint" value="#5a7fe0">
+        <input id="tint" type="color" title="Custom tint" value="#f1f7f2">
       </div>
-      <label class="row">Absorption strength <output id="strength-out">0.35</output></label>
-      <input id="strength" type="range" min="0" max="2" step="0.05" value="0.35">
+      <label class="row">Absorption strength <output id="strength-out">0.50</output></label>
+      <input id="strength" type="range" min="0" max="2" step="0.05" value="0.5">
       <p class="hint">Tint is the colour after 1 cm of glass. Light passing through is attenuated by e<sup>−σ·t</sup> per channel, where t is the measured thickness.</p>
     </section>
 
@@ -79,14 +125,6 @@
       <div class="pair">
         <button id="test-sphere" title="8 cm sphere: any ray through the centre crosses 8 cm">Sphere</button>
         <button id="test-wedge" title="16 × 7 cm wedge rising 0 → 5 cm">Wedge</button>
-      </div>
-    </section>
-
-    <section>
-      <h2>History</h2>
-      <div class="pair">
-        <button id="undo" title="⌘Z">Undo</button>
-        <button id="redo" title="⇧⌘Z">Redo</button>
       </div>
     </section>
 

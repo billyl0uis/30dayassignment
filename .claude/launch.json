@@ -52,10 +52,8 @@
       "name": "mass",
       "runtimeExecutable": "python3",
       "runtimeArgs": [
-        "-m",
-        "http.server",
+        "mass/dev-server.py",
         "5200",
-        "--directory",
         "mass"
       ],
       "port": 5200
@@ -81,6 +79,21 @@
         "dev"
       ],
       "port": 5214
+    },
+    {
+      "name": "jackline",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "jackline",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5216",
+        "--strictPort"
+      ],
+      "port": 5216
     }
   ]
 }
