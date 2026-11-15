@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hot Shop Rush</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="rail">
+        <div id="rail-tickets"></div>
+        <div id="status">
+          <span id="dayno">Day 1</span>
+          <span id="clock">10:00 AM</span>
+          <span id="coins">$0.0</span>
+          <span id="rep">★ 3.0</span>
+          <button id="mute" title="Sound on/off">🔊</button>
+        </div>
+      </header>
+
+      <main>
+        <div id="stage-wrap">
+          <canvas id="stage"></canvas>
+          <div id="toasts"></div>
+          <div id="overlay"></div>
+        </div>
+        <aside id="side">
+          <canvas id="heat" style="width:150px;height:340px"></canvas>
+          <div class="side-label">Garage</div>
+          <div id="garage-slots"></div>
+          <button id="gh">Hold:<br />Glory hole</button>
+        </aside>
+      </main>
+
+      <nav id="tabs">
+        <button data-station="counter">Counter</button>
+        <button data-station="furnace">Furnace</button>
+        <button data-station="color">Color</button>
+        <button data-station="bench">Bench</button>
+        <button data-station="finish">Finish</button>
+      </nav>
+    </div>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

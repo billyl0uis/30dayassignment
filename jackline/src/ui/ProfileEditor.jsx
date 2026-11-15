@@ -3,6 +3,9 @@ import { sampleCurve } from '../geometry/profile.js'
 import { useDerived } from '../model/derived.js'
 import { useStore } from '../model/store.js'
 import { fmtLen, fmtVol } from '../model/units.js'
+import { moveSeam, nearestS, pointAtS, shiftRegion, updateRegion } from '../model/color.js'
+import ColorBands from './ColorBands.jsx'
+import StackReadout from './StackReadout.jsx'
 
 // A drafting sheet in centimetres. SVG y runs down, the vessel's runs up, so
 // every height is drawn negated.
@@ -21,6 +24,7 @@ export default function ProfileEditor() {
   const svg = useRef()
   const drag = useRef(null)
   const [dragging, setDragging] = useState(false)
+  const [hover, setHover] = useState(null) // { s, x, y }: where the layer stack is being read
   const [size, setSize] = useState({ w: 600, h: 600 })
   useEffect(() => {
     const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }))
@@ -57,10 +61,21 @@ export default function ProfileEditor() {
     svg.current.setPointerCapture(e.pointerId)
     drag.current = what
     setDragging(true)
+    setHover(null)
   }
+  const toS = (e) => nearestS(sec, toCm(e))
   const onMove = (e) => {
     const g = drag.current
-    if (!g) return
+    if (!g) {
+      // Not dragging: read the layer stack where the pointer is on the wall.
+      const q = toCm(e)
+      const s = nearestS(sec, q)
+      const p = pointAtS(sec, s)
+      const box = wrap.current.getBoundingClientRect()
+      const reach = Math.max(18 * u, sec.wall + 10 * u)
+      setHover(Math.hypot(p[0] - q[0], p[1] - q[1]) < reach && q[0] > -0.2 ? { s, x: e.clientX - box.left, y: e.clientY - box.top } : null)
+      return
+    }
     let [r, y] = toCm(e)
     if (e.shiftKey) (r = snap(r)), (y = snap(y))
     const s = useStore.getState()
@@ -70,6 +85,12 @@ export default function ProfileEditor() {
       live({ points: next })
     } else if (g.kind === 'floor') {
       live({ floor: Math.max(s.wall, Math.min(sec.brimY - 0.3, y)) })
+    } else if (g.kind === 'edge') {
+      live({ colors: updateRegion(s.colors, g.id, { [g.end]: nearestS(sec, [r, y]) }) })
+    } else if (g.kind === 'band') {
+      live({ colors: shiftRegion(g.base, g.id, nearestS(sec, [r, y]) - g.grab) })
+    } else if (g.kind === 'seam') {
+      live({ colors: { ...s.colors, incalmo: moveSeam(s.colors.incalmo, g.i, nearestS(sec, [r, y])) } })
     }
   }
   const onUp = (e) => {
@@ -115,7 +136,8 @@ export default function ProfileEditor() {
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
-        onPointerDown={() => setView({ selected: null })}
+        onPointerDown={() => setView({ selected: null, colorSel: null })}
+        onPointerLeave={() => setHover(null)}
         style={{ '--u': u }}
       >
         <g className="grid">{grid}</g>
@@ -135,6 +157,8 @@ export default function ProfileEditor() {
 
         <path className="control" d={d(points)} />
         <path className="hit" d={d(sec.outer)} strokeWidth={14 * u} onPointerDown={insert} />
+        <ColorBands sec={sec} u={u} startDrag={startDrag} toS={toS} />
+        {hover && <HoverMark sec={sec} s={hover.s} u={u} />}
 
         {points.map(([r, y], i) => {
           const on = selected === i
@@ -163,12 +187,19 @@ export default function ProfileEditor() {
           </text>
         </g>
       </svg>
+      {hover && <StackReadout sec={sec} s={hover.s} x={hover.x} y={hover.y} width={size.w} />}
       {metrics.sculpted && <span className="sculpt-badge">Turned profile · sculpting is applied on top</span>}
       <p className="editor-hint">
         Drag points to shape the outside wall · click the wall to add a point · double-click a point to remove it · hold Shift to snap to ½ cm
       </p>
     </div>
   )
+}
+
+// A tick across the wall where the layer stack is being read.
+function HoverMark({ sec, s, u }) {
+  const p = pointAtS(sec, s)
+  return <circle className="hover-mark" cx={p[0]} cy={-p[1]} r={4 * u} />
 }
 
 function Dim({ x1, y1, x2, y2, label, vertical, below, u }) {

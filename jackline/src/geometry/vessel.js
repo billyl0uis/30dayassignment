@@ -35,9 +35,35 @@ function splitAtCorners(path, maxDeg = 38) {
 function lathe(run, cut, deform) {
   const opts = cut ? HALF : FULL
   const geo = new THREE.LatheGeometry(run.map(([r, y]) => new THREE.Vector2(Math.max(r, 0), y)), opts.segments, opts.start, opts.length)
+  tagLathe(geo, run, opts)
   if (deform) deform(geo)
   geo.computeVertexNormals()
   if (!cut) closeSeam(geo, run.length, opts.segments)
+  return geo
+}
+
+// Color lookup for every vertex, before any sculpting moves it:
+// aJl = (s along the wall, side 0 out / 1 in, arc length around in cm, radius).
+// LatheGeometry lays vertices out ring by ring, one per run point.
+function tagLathe(geo, run, opts) {
+  const np = run.length
+  const a = new Float32Array((opts.segments + 1) * np * 4)
+  for (let i = 0; i <= opts.segments; i++) {
+    const phi = opts.start + (i / opts.segments) * opts.length
+    for (let j = 0; j < np; j++) {
+      const [r, , s = -1, side = 0] = run[j]
+      a.set([s, side, phi * r, Math.max(r, 0)], (i * np + j) * 4)
+    }
+  }
+  geo.setAttribute('aJl', new THREE.BufferAttribute(a, 4))
+}
+
+// Parts with no place on the profile (the handle) still need the attribute
+// to merge; s = -1 tells the shader to leave them plain.
+function untagged(geo) {
+  const a = new Float32Array(geo.attributes.position.count * 4)
+  for (let i = 0; i < a.length; i += 4) a[i] = -1
+  geo.setAttribute('aJl', new THREE.BufferAttribute(a, 4))
   return geo
 }
 
@@ -119,9 +145,11 @@ function handleGeometry(handle) {
 // hatched wall in a section drawing.
 export function glassGeometry(sec, { handle, spout, sculpt, cut }) {
   const deform = shaper(sec, { spout, sculpt })
-  const parts = splitAtCorners(sec.section).map((run) => lathe(run, cut, deform))
+  const tagged = sec.section.map((p, i) => [p[0], p[1], ...sec.sectionTags[i]])
+  const parts = splitAtCorners(tagged).map((run) => lathe(run, cut, deform))
   if (handle) {
     for (const g of handleGeometry(handle)) {
+      untagged(g)
       if (deform) {
         deform(g)
         g.computeVertexNormals()
