@@ -1,36 +1,21 @@
 import { functionChecks } from '../model/checks.js'
+import { colorChecks } from '../model/colorChecks.js'
+import CheckLimits from './CheckLimits.jsx'
 import { useDerived } from '../model/derived.js'
 import { NO_SCULPT, isSculpted } from '../geometry/sculpt.js'
 import { GLASS_COLORS } from '../model/presets.js'
 import { useStore } from '../model/store.js'
 import { fmtLen, fmtMass, fmtVol } from '../model/units.js'
-
-// A slider whose whole drag is one step of undo.
-function Slider({ label, value, shown, min, max, step, onChange }) {
-  const checkpoint = useStore((s) => s.checkpoint)
-  return (
-    <label className="range">
-      <span className="field-label">
-        {label} <b>{shown}</b>
-      </span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onPointerDown={checkpoint}
-        onKeyDown={checkpoint}
-        onChange={(e) => onChange(Number(e.target.value))}
-      />
-    </label>
-  )
-}
+import Slider from './Slider.jsx'
+import ColorPanel from './ColorPanel.jsx'
+import MaterialsPanel from './MaterialsPanel.jsx'
 
 export default function SidePanel() {
   const s = useStore()
   const { sec, metrics: m } = useDerived()
-  const checks = functionChecks(m, { units: s.units, spout: s.spout })
+  const RANK = { bad: 0, warn: 1, info: 2 }
+  const color = colorChecks(sec, s.colors, s.studio, s.units).sort((a, b) => RANK[a.check.level] - RANK[b.check.level])
+  const checks = [...functionChecks(m, { units: s.units, spout: s.spout }), ...color]
 
   return (
     <aside className="side">
@@ -70,6 +55,9 @@ export default function SidePanel() {
         <Slider label="Frost" value={s.frost} shown={`${Math.round(s.frost * 100)}%`} min={0} max={1} step={0.01} onChange={(frost) => s.live({ frost })} />
       </section>
 
+      <ColorPanel />
+      <MaterialsPanel />
+
       <section className="panel">
         <h3>Measures</h3>
         <dl className="measures">
@@ -103,6 +91,7 @@ export default function SidePanel() {
             ) : null,
           )}
         </ul>
+        {(s.colors.regions.length > 0 || s.colors.incalmo.seams.length > 0) && <CheckLimits />}
       </section>
     </aside>
   )
