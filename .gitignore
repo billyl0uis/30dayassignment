@@ -14,3 +14,10 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Tab Shelf: exported tab backups are private, never commit them
+tabs-*.json
+tab-shelf-*.json
+# extension signing keys (only the public key belongs in manifest.json)
+*.pem
+*.crx
