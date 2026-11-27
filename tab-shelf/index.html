@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tab Shelf</title>
+<meta name="description" content="Save, sort and reopen your Chrome tabs. Everything stays in your browser and in files you export.">
+<meta name="referrer" content="no-referrer">
+<!-- No outside requests: the only network loads are site icons the extension captured, and those can be turned off. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: data:; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='6' width='26' height='6' rx='2' fill='%23c4581a'/%3E%3Crect x='3' y='14' width='20' height='6' rx='2' fill='%23c4581a' opacity='.65'/%3E%3Crect x='3' y='22' width='26' height='4' rx='2' fill='%231f1a15'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="top">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="Show shelves and sessions" aria-expanded="false">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+  </button>
+  <div class="brand">
+    <b>Tab Shelf</b>
+    <span class="tagline">Your tabs, kept.</span>
+  </div>
+  <label class="search">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.2 13.2 3.8 3.8"/></svg>
+    <input id="search" type="search" placeholder="Search titles and sites" autocomplete="off" aria-label="Search tabs">
+  </label>
+  <nav class="actions" aria-label="Main actions">
+    <button class="btn primary" id="extBtn" title="Pull saved snapshots from the Tab Shelf extension">Get from extension</button>
+    <button class="btn" id="pasteBtn">Paste URLs</button>
+    <button class="btn" id="dupBtn">Duplicates</button>
+    <span class="divider" aria-hidden="true"></span>
+    <button class="btn" id="exportBtn" title="Download everything as a .json backup">Export</button>
+    <button class="btn" id="importBtn" title="Load a .json backup">Import</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+    <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark mode">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6 16 16M4 16l1.4-1.4M14.6 5.4 16 4"/></svg>
+    </button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="side" id="side">
+    <section>
+      <h2 class="side-h">Shelves</h2>
+      <ul class="nav-list" id="shelfList"></ul>
+      <form class="new-group" id="newGroupForm">
+        <input id="newGroupName" placeholder="New shelf, e.g. Read later" maxlength="40" aria-label="New shelf name">
+        <button class="icon-btn" aria-label="Add shelf">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
+        </button>
+      </form>
+    </section>
+    <section>
+      <h2 class="side-h">Sessions</h2>
+      <ul class="nav-list sessions" id="sessionList"></ul>
+    </section>
+    <div class="side-note">
+      <label class="toggle"><input type="checkbox" id="iconsToggle"> Show site icons</label>
+      <p>Saved only in this browser. <button class="link" id="sideExport">Export a backup</button> now and then.</p>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="view-head">
+      <div class="view-title">
+        <p class="eyebrow" id="viewKind"></p>
+        <h1 id="viewName"></h1>
+        <p class="meta" id="viewMeta"></p>
+      </div>
+      <div class="view-actions" id="viewActions"></div>
+    </div>
+    <ul class="tab-list" id="tabList"></ul>
+    <div class="empty" id="empty" hidden></div>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- Paste URLs -->
+<dialog id="pasteDlg" class="dlg">
+  <form method="dialog">
+    <h2>Paste a list of URLs</h2>
+    <p class="dlg-sub">One per line, or any text with links in it. Only <code>http://</code> and <code>https://</code> links are kept.</p>
+    <textarea id="pasteText" rows="8" placeholder="https://example.com/article&#10;https://another.site/page"></textarea>
+    <label class="field">Session name <input id="pasteName" maxlength="60"></label>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn primary" value="ok" id="pasteOk">Add tabs</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Import choice -->
+<dialog id="importDlg" class="dlg">
+  <form method="dialog">
+    <h2>Import backup</h2>
+    <p class="dlg-sub" id="importSummary"></p>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn danger-ghost" value="replace">Replace everything</button>
+      <button class="btn primary" value="merge">Merge in</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Extension snapshots -->
+<dialog id="extDlg" class="dlg wide">
+  <form method="dialog">
+    <h2>Snapshots in the extension</h2>
+    <p class="dlg-sub" id="extSub"></p>
+    <ul class="check-list" id="extList"></ul>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel">Close</button>
+      <button class="btn" value="save" id="extSaveNow">Save all tabs now</button>
+      <button class="btn primary" value="import" id="extImport">Import selected</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Duplicates -->
+<dialog id="dupDlg" class="dlg wide">
+  <form method="dialog">
+    <h2>Duplicates</h2>
+    <p class="dlg-sub" id="dupSub"></p>
+    <ul class="dup-list" id="dupList"></ul>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel">Close</button>
+      <button class="btn primary" value="all" id="dupAll">Merge all</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Confirm -->
+<dialog id="confirmDlg" class="dlg">
+  <form method="dialog">
+    <h2 id="confirmTitle"></h2>
+    <p class="dlg-sub" id="confirmText"></p>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn danger" value="ok" id="confirmOk">Delete</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
