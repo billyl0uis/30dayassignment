@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Shelf",
+  "version": "1.0.0",
+  "description": "Save every open tab in one click, and keep auto-saved snapshots, for the Tab Shelf web app. Nothing leaves your computer.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq95NbnsUEUcoOemb5uquyoZOQY80X9DlPpCUgtvWJCbGWslbVlQgSMAWM06WLjU51c3b4CQ6UpgitXclkUwq0XHyJ+um8YoYmXVYKOp3IcOlSFVaEd8YY8H11xeWphlhbmS/zne38GmY4Gsd2bQQIEEMnJvE4bb0/tf3lEMRBH+apohVwjrwbJapOMqx9cWQdbbJEXZYnbMvLrkXZVa1EY7Wgw0OssN+XXiN2xmKx/gSDYXO8kNHdP0h5ADctRCKopXnBfXHt+eJNCYuxh4bj5dTpFGYWPuRQOnxgo2Ah845z1XOVxu3jyzhc6327H7OlrOvO4WBUCARJ9wbJA8PeQIDAQAB",
+  "permissions": ["tabs", "storage", "alarms"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Tab Shelf",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png" }
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "externally_connectable": {
+    "matches": [
+      "https://billyl0uis.github.io/30dayassignment/*",
+      "http://localhost/*",
+      "http://127.0.0.1/*"
+    ]
+  }
+}

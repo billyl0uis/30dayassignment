@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tab Shelf</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <b>Tab Shelf</b>
+    <span id="count">Counting tabs…</span>
+  </header>
+  <button id="save" class="primary">Save all tabs</button>
+  <p id="status" class="status" role="status"></p>
+
+  <div class="row">
+    <button id="open" class="ghost">Open Tab Shelf</button>
+    <button id="download" class="ghost" title="Download all snapshots as a .json file you can import">Download .json</button>
+  </div>
+
+  <section class="settings">
+    <label class="check"><input type="checkbox" id="auto"> Auto-save every 30 min and when Chrome starts</label>
+    <p class="small" id="kept"></p>
+    <label class="field">Open in
+      <select id="target">
+        <option value="live">Live site (GitHub Pages)</option>
+        <option value="local">Local test server (localhost:5223)</option>
+      </select>
+    </label>
+  </section>
+  <p class="small fine">Saved on this computer only. Nothing is uploaded.</p>
+  <script src="popup.js"></script>
+</body>
+</html>

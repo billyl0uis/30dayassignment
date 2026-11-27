@@ -106,6 +106,20 @@
         "hot-shop-rush"
       ],
       "port": 5222
+    },
+    {
+      "name": "tab-shelf",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5223",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "tab-shelf"
+      ],
+      "port": 5223
     }
   ]
 }
